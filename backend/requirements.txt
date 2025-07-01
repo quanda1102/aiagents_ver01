@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-pydantic
-python-dotenv
-openai
+dotenv
+openai-agents
 pydantic[email]
