@@ -27,7 +27,6 @@ user_request = """{
     "session_id": "",
     "user_message": "I want to create a new document in Google Drive"
 }"""
-print(user_request)
 
 class ChatRequest(BaseModel):
     user_id: int
@@ -48,7 +47,6 @@ try:
 except ValidationError as e:
     print(f"Validation error: {e}")
 
-
 class ChatResponse(BaseModel):
     response: str
     session_id: str
@@ -65,12 +63,10 @@ app.add_middleware(
 def format_validation_errors(errors):
     """Convert Pydantic errors to user-friendly messages"""
     formatted_errors = []
-    
     for error in errors:
         field = " -> ".join(str(loc) for loc in error["loc"])
         message = error["msg"]
         invalid_value = error.get("input", "")
-        
         formatted_errors.append({
             "field": field,
             "message": message,
@@ -82,18 +78,13 @@ def format_validation_errors(errors):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     formatted_errors = format_validation_errors(exc.errors())
-    
-    # Create user-friendly error message
-    error_details = []
-    for err in formatted_errors:
-        error_details.append(f"Field '{err['field']}': {err['message']}")
-    
+    error_details = [f"Field '{err['field']}': {err['message']}" for err in formatted_errors]
     return JSONResponse(
         status_code=422,
         content={
             "response": f"Request validation failed: {'; '.join(error_details)}",
             "session_id": None,
-            "validation_errors": formatted_errors  # Detailed errors for debugging
+            "validation_errors": formatted_errors
         }
     )
 
@@ -107,4 +98,4 @@ async def chat_response(request: ChatRequest) -> ChatResponse:
   
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000,reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
