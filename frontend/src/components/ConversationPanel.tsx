@@ -4,18 +4,6 @@ import { SendIcon, PaperclipIcon } from 'lucide-react';
 const ConversationPanel = () => {
   const [message, setMessage] = useState('');
   const [conversation, setConversation] = useState([
-    {
-      id: 1,
-      sender: 'user',
-      text: "Hello, I'm having an issue with my account.",
-      time: '10:32 AM'
-    },
-    {
-      id: 2,
-      sender: 'agent',
-      text: "Hi there! I'm sorry to hear that. Could you please provide more details about the issue you're experiencing?",
-      time: '10:33 AM'
-    }
   ]);
   const messagesEndRef = useRef(null);
 
@@ -58,7 +46,7 @@ const ConversationPanel = () => {
           user_country: 'Vietnam',
           user_role: 'admin',
           session_id: '',
-          user_input: newUserMessage.text
+          user_message: newUserMessage.text
         })
       });
 
