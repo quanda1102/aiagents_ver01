@@ -6,6 +6,12 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ValidationError, EmailStr
 import uvicorn
 import fastapi
+
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
+
 user_request = """{
     "user_id": "1",
     "user_name": "Dang Anh Quan",
