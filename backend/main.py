@@ -8,8 +8,9 @@ from pydantic import BaseModel, ValidationError, EmailStr
 import uvicorn
 import fastapi
 from dotenv import load_dotenv
+from my_agents.my_agents import run_agents
 import os
-load_dotenv()
+load_dotenv(override=True)
 
 
 user_request = """{
@@ -23,7 +24,8 @@ user_request = """{
     "user_zip": "123456",
     "user_country": "Vietnam",
     "user_role": "admin",
-    "session_id": ""
+    "session_id": "",
+    "user_message": "I want to create a new document in Google Drive"
 }"""
 print(user_request)
 
@@ -39,7 +41,7 @@ class ChatRequest(BaseModel):
     user_country: str 
     user_role: str
     session_id: str | None = None
-
+    user_message: str
 try:
     ChatRequest1 = ChatRequest.model_validate_json(user_request)
     print(ChatRequest1)
@@ -97,7 +99,11 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.post("/chat", response_model=ChatResponse, status_code=200)
 async def chat_response(request: ChatRequest) -> ChatResponse:
-        return ChatResponse(response="Hello, how can I help you today?", session_id=request.session_id or str(uuid.uuid4()))
+    try:
+        ai_response = await run_agents(request.user_message)
+        return ChatResponse(response=ai_response, session_id=request.session_id or str(uuid.uuid4()))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
   
 
 if __name__ == "__main__":

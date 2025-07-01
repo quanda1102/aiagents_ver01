@@ -1,7 +1,6 @@
 from agents import Agent, Runner, trace, function_tool
 from openai.types.responses import ResponseTextDeltaEvent
 import asyncio
-from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
@@ -32,18 +31,19 @@ chatting_agent = Agent(
     handoffs=[router_agent]
 )
 router_agent.handoffs.append(google_drive_agent)
-async def run_agents(input = "I want to create a new document in Google Drive"):
+
+async def run_agents(input="I want to create a new document in Google Drive"):
     runner = Runner.run_streamed(
         starting_agent=router_agent,
         input=input
     )
+    output = ""  # Initialize output variable
     async for event in runner.stream_events():
         if event.type == "raw_response_event":
             data = event.data
             if hasattr(data, "delta"):
-                print(data.delta, end="", flush=True)
-
-
+                output += str(data.delta)
+    return output
 
 
 if __name__ == "__main__":
