@@ -2,6 +2,9 @@ from agents import Agent, Runner, trace, function_tool
 from openai.types.responses import ResponseTextDeltaEvent
 import asyncio
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 router_instruction = """
 You are a router agent that can route the user's request to the appropriate agent.
 """
