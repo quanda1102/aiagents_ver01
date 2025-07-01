@@ -1,0 +1,42 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.env
+.env/
+.venv/
+venv/
+env/
+ENV/
+
+# Poetry
+poetry.lock
+
+# VSCode & IDE config
+.vscode/
+.idea/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Pytest cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+coverage.xml
+.cache
+
+# MyPy & Pylint
+.mypy_cache/
+.dmypy.json
+.pyre/
+
+# Logs
+*.log
