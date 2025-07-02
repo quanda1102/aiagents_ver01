@@ -102,5 +102,27 @@ async def chat_response(request: ChatRequest) -> ChatResponse:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+
+@app.get("/", status_code=200)
+async def root(request: Request):
+    # Get client IP with fallback chain
+    client_ip = (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip() or
+        request.headers.get("x-real-ip") or
+        request.headers.get("cf-connecting-ip") or  # Cloudflare
+        request.headers.get("x-forwarded-proto") or
+        (request.client.host if request.client else None) or
+        "unknown"
+    )
+    
+    return JSONResponse(
+        status_code=200,
+        content={
+            "client_ip": client_ip,
+            "all_headers": dict(request.headers)  # For debugging
+        }
+    )
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
