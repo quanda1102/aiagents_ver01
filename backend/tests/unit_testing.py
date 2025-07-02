@@ -1,7 +1,7 @@
 import unittest
 
-from agents.faq_lookup import faq_look_up, personal_info
-from agents.tasks_management import TaskManagement
+from my_agents.faq_lookup import faq_look_up, personal_info
+from my_agents.tasks_management import TaskManagement
 # Unit testing for the faq_look_up function
 class TestFAQLookup(unittest.TestCase):
 

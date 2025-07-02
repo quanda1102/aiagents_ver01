@@ -3,3 +3,7 @@ uvicorn
 dotenv
 openai-agents
 pydantic[email]
+redis
+pytest
+fakeredis
+unittest-mock
