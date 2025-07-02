@@ -44,11 +44,11 @@ class ChatRequest(BaseModel):
     user_role: str
     session_id: str | None = None
     user_message: str
-try:
-    ChatRequest1 = ChatRequest.model_validate_json(user_request)
-    print(ChatRequest1)
-except ValidationError as e:
-    print(f"Validation error: {e}")
+# try:
+#     ChatRequest1 = ChatRequest.model_validate_json(user_request)
+#     print(ChatRequest1)
+# except ValidationError as e:
+#     print(f"Validation error: {e}")
 
 
 class ChatResponse(BaseModel):
