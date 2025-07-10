@@ -1,9 +1,4 @@
-from my_agents.agents.query_understanding_agent import QueryUnderstandingAgent
-from my_agents.agents.schema_explorer_agent import SchemaExplorerAgent
-from my_agents.agents.sql_generator_agent import SqlGeneratorAgent
-from my_agents.agents.execution_validator_agent import ExecutionValidatorAgent
-from my_agents.agents.explanation_agent import ExplanationAgent
-from my_agents.agents.response_formatter_agent import ResponseFormatterAgent
-from my_agents.agents.router_agent import RouterAgent
-from my_agents.agents.base_agent import BaseAgent
-from my_agents.agents.agent_communication import AgentCommunication
+# This file can be empty, or used for package-level initialization.
+# The previous imports were causing circular dependency and module not found errors
+# due to an incorrect folder structure assumption.
+# We will rely on direct imports within the agent files themselves.

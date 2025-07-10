@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 
-from my_agents.agents.query_understanding_agent import QueryUnderstandingAgent
+from my_agents.sql_agents.query_understanding_agent_oa import analyze_question
 from my_agents.agents.schema_explorer_agent import SchemaExplorerAgent
 from my_agents.agents.sql_generator_agent import SqlGeneratorAgent
 from my_agents.agents.execution_validator_agent import ExecutionValidatorAgent
@@ -10,7 +10,6 @@ from my_agents.agents.router_agent import RouterAgent
 
 router = APIRouter()
 
-query_agent = QueryUnderstandingAgent()
 schema_agent = SchemaExplorerAgent()
 sql_agent = SqlGeneratorAgent()
 validator_agent = ExecutionValidatorAgent()
@@ -21,7 +20,7 @@ class QuestionRequest(BaseModel):
 
 class GenerateSQLRequest(BaseModel):
     intent: str
-    entities: Dict[str, Any]
+    entities: List[str]
     schema_context: Optional[Dict[str, Any]] = None
     probes: Optional[List[Any]] = None
 
@@ -33,12 +32,13 @@ class TextToSQLRequest(BaseModel):
     sessionId: Optional[str] = None
 
 @router.post("/analyze-query")
-async def analyze_query(body: QuestionRequest):
+async def analyze_query_endpoint(body: QuestionRequest):
     if not body.question:
         raise HTTPException(status_code=400, detail="Missing question")
 
-    result = await query_agent.process(body.question, {})
-    return { "success": True, "data": result }
+    result = await analyze_question(body.question)
+    return { "success": True, "data": result.model_dump() }
+
 
 @router.post("/explore-schema")
 async def explore_schema(body: QuestionRequest):

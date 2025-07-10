@@ -1,36 +1,34 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
-
-def get_env(name: str) -> str:
-    value = os.getenv(name)
-    if value is None:
-        raise EnvironmentError(f"{name} is required")
-    return value
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+load_dotenv(dotenv_path=dotenv_path, override=True)
 
 config = {
-    "databaseClients": {
-        "mysql": {
-            "host": get_env("DB_HOST"),
-            "port": int(get_env("DB_PORT")),
-            "user": get_env("DB_USER"),
-            "password": get_env("DB_PASSWORD"),
-            "database": get_env("DB_NAME"),
-        },
-        "qdrant": {
-            "url": get_env("QDRANT_URL"),
-            "apiKey": get_env("QDRANT_API_KEY"),
-            "port": 443,
-            "checkCompatibility": False,
-            "timeout": 30000,
-        },
+    "server": {
+        "port": os.getenv("PORT", 8000)
     },
     "openai": {
-        "apiKey": get_env("OPENAI_API_KEY"),
-        "timeout": 30000,
+        "api_key": os.getenv("OPENAI_API_KEY")
     },
-    "server": {
-        "port": int(os.getenv("PORT", 3000)),
+    "databaseClients": {
+        "mysql": {
+            "host": os.getenv("DB_HOST"),
+            "port": int(os.getenv("DB_PORT", 3306)),
+            "user": os.getenv("DB_USER"),
+            "password": os.getenv("DB_PASSWORD"),
+            "database": os.getenv("DB_NAME")
+        }
     },
+    "qdrant": {
+        "url": os.getenv("QDRANT_URL"),
+        "api_key": os.getenv("QDRANT_API_KEY"),
+        "collection_name": "sql_query_cache"
+    },
+    "redis": {
+        "host": os.getenv("REDIS_HOST", "localhost"),
+        "port": int(os.getenv("REDIS_PORT", 6379)),
+        "password": os.getenv("REDIS_PASSWORD")
+    }
+    
 }

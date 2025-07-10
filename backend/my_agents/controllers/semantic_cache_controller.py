@@ -4,13 +4,15 @@ from my_agents.config import config
 
 router = APIRouter()
 
+# Cấu hình lại QdrantClient tương thích HTTPS
 qdrant_client = QdrantClient(
-    url=config["databaseClients"]["qdrant"]["url"],
-    api_key=config["databaseClients"]["qdrant"]["apiKey"],
-    port=config["databaseClients"]["qdrant"]["port"]
+    url=config["qdrant"]["url"],
+    api_key=config["qdrant"]["api_key"],
+    timeout=30.0,
+    prefer_grpc=False
 )
 
-COLLECTION = "sql_query_cache"
+COLLECTION = config["qdrant"]["collection_name"]
 
 @router.get("/all")
 async def get_all_cache():
@@ -21,10 +23,11 @@ async def get_all_cache():
         )
         return {
             "success": True,
-            "points": result.points
+            "points": result[0]  # result là Tuple[List[ScoredPoint], Optional[int]]
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.delete("/clear")
 async def clear_cache():

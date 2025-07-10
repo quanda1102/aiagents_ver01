@@ -1,8 +1,10 @@
-from my_agents.agents.base_agent import BaseAgent
+from my_agents.sql_agents.base_agent import BaseAgent
 from openai import OpenAI
 from my_agents.config import config
+import json
+import re
 
-openai = OpenAI(api_key=config["openai"]["apiKey"])
+openai = OpenAI(api_key=config["openai"]["api_key"])
 
 class SqlGeneratorAgent(BaseAgent):
     def __init__(self):
@@ -46,18 +48,21 @@ Hãy tạo câu SQL phù hợp với ngữ cảnh. Trả về kết quả dướ
         raw_text = response.choices[0].message.content.strip()
 
         try:
-            import json
-            parsed = json.loads(raw_text)
+            # Loại bỏ ```json
+            cleaned_text = re.sub(r'^```json\n|\n```$', '', raw_text.strip())
+            parsed = json.loads(cleaned_text)
             parsed["raw_prompt"] = prompt
             parsed["raw_response"] = raw_text
             return parsed
-        except Exception:
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON: {e}")
+            print(f"Raw response: {raw_text}")
             return {
                 "sql": None,
                 "reasoning": None,
                 "confidence": 0.0,
                 "database": None,
-                "error": "Không parse được JSON từ mô hình",
+                "error": f"Không parse được JSON từ mô hình: {str(e)}",
                 "raw_prompt": prompt,
                 "raw_response": raw_text
             }

@@ -45,4 +45,7 @@ class BaseAgent(ABC):
 
     @abstractmethod
     async def run(self, input_data: Any, context: Dict[str, Any]) -> Any:
+        """
+        Các agent con phải implement method này để xử lý logic chính.
+        """
         pass

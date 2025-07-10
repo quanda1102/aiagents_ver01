@@ -4,6 +4,7 @@ import redis
 import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from my_agents.config import config
 import logging
 
 # Set up logging
@@ -11,19 +12,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class AIMemoryService:
-    def __init__(self, redis_host="localhost", redis_port=6379, redis_password="your_secure_password"):
-        """Initialize the AI Memory Service with Redis connection"""
+    def __init__(self):
         try:
             self.client = redis.Redis(
-                host=redis_host, 
-                port=redis_port, 
-                password=redis_password,
-                decode_responses=True  # This ensures strings are returned instead of bytes
+                host=config["redis"]["host"],
+                port=config["redis"]["port"],
+                password=config["redis"]["password"],
+                decode_responses=True
             )
-            # Test the connection
             self.client.ping()
-            logger.info("Successfully connected to Redis")
-        except redis.ConnectionError as e:
+            logger.info("Connected to Redis successfully.")
+
+        except redis.RedisError as e:
             logger.error(f"Failed to connect to Redis: {e}")
             self.client = None
     
