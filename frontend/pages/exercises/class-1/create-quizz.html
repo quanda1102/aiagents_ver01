@@ -148,19 +148,18 @@
       console.log('Sending data to backend:', data);
     
       // Gửi về API giả định (bạn đổi URL theo BE thật của bạn)
-      fetch('/api/quiz/create', {
+      fetch('https://api.aagents.vn/api/v1/quiz/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       }).then(res => {
-        if (res.ok) {
-          alert('Tạo bài thành công!');
-          form.reset();
-          document.getElementById('questionsContainer').innerHTML = '';
-        } else {
-          alert('Lỗi khi tạo bài tập');
-        }
-      }).catch(err => {
+          if (res.ok) {
+            alert('Tạo bài thành công!');
+            window.location.href = '/pages/exercises/class-1/list-quizz.html'; // hoặc /quiz/list nếu dùng route SPA
+          } else {
+            alert('Lỗi khi tạo bài tập');
+          }
+        }).catch(err => {
         console.error(err);
         alert('Lỗi kết nối đến máy chủ');
       });
