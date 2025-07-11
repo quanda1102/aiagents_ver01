@@ -10,7 +10,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-TEXT_TO_SQL_API_URL = f"http://localhost:{config['server']['port']}/text-to-sql-workflow"
+TEXT_TO_SQL_API_URL = f"http://{config['server']['host']}:{config['server']['port']}/text-to-sql-workflow"
 
 @function_tool
 async def text_to_sql_tool(question: str, session_id: str = None):

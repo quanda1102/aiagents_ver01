@@ -6,7 +6,8 @@ load_dotenv(dotenv_path=dotenv_path, override=True)
 
 config = {
     "server": {
-        "port": os.getenv("PORT", 8000)
+        "port": os.getenv("PORT", 8000),
+        "host": os.getenv("SERVER_HOST", "localhost")
     },
     "openai": {
         "api_key": os.getenv("OPENAI_API_KEY")
