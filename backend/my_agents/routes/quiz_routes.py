@@ -10,7 +10,7 @@ from my_agents.models.quiz_models import (
     GenerateQuizResponse
 )
 from services.quiz_service import QuizService
-from my_agents.agents.quiz_generation_agent import QuizGenerationAgent
+from my_agents.quiz_generation_agent import QuizGenerationAgent
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
