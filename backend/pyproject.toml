@@ -9,6 +9,7 @@ dependencies = [
     "fastapi>=0.115.13",
     "openai-agents>=0.1.0",
     "pydantic[email]>=2.11.7",
+    "qdrant-client>=1.14.3",
     "redis>=6.2.0",
     "redis-chatgpt>=0.1.2",
 ]

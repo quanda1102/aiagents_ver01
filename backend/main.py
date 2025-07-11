@@ -11,19 +11,20 @@ import uvicorn
 from my_agents.sql_agents.router_agent import RunResult
 from my_agents.my_agents import run_agents
 from services.ai_memory import AIMemoryService
+from my_agents.routes.quiz_routes import router as quiz_router
 
-# Thiết lập logging
+# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Tải biến môi trường
+# Load environment variables
 load_dotenv(override=True)
 
-# Khởi tạo dịch vụ
+# Initialize services
 ai_memory = AIMemoryService()
 
 class ChatRequest(BaseModel):
-    user_id: str
+    user_id: int
     user_name: str
     user_email: EmailStr
     user_phone: str
@@ -40,9 +41,13 @@ class ChatResponse(BaseModel):
     response: str
     session_id: str
 
-app = FastAPI()
+app = FastAPI(
+    title="AI Agent Backend API",
+    description="Backend API for AI Agent system with quiz functionality",
+    version="1.0.0"
+)
 
-# Cấu hình CORS Middleware
+# Configure CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -51,13 +56,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include quiz routes
+app.include_router(quiz_router, prefix="/api/v1", tags=["quiz"])
+
 def format_validation_errors(errors):
     """Chuyển đổi lỗi của Pydantic thành thông báo thân thiện."""
     formatted_errors = []
+    
     for error in errors:
         field = " -> ".join(str(loc) for loc in error["loc"])
         message = error["msg"]
         invalid_value = error.get("input", "")
+        
         formatted_errors.append({
             "field": field,
             "message": message,
@@ -70,13 +80,13 @@ def format_validation_errors(errors):
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Xử lý lỗi validation cho request body."""
     formatted_errors = format_validation_errors(exc.errors())
-    error_details = [f"Trường '{err['field']}': {err['message']}" for err in formatted_errors]
+    error_details = [f"Field '{err['field']}': {err['message']}" for err in formatted_errors]
     return JSONResponse(
         status_code=422,
         content={
             "response": f"Yêu cầu không hợp lệ: {'; '.join(error_details)}",
             "session_id": None,
-            "validation_errors": formatted_errors
+            "validation_errors": formatted_errors  # Detailed errors for debugging
         }
     )
 
@@ -95,7 +105,7 @@ def ensure_serializable(obj):
 
 @app.post("/chat", response_model=ChatResponse, status_code=200)
 async def chat_response(request: ChatRequest) -> ChatResponse:
-    """Endpoint chính để xử lý chat của người dùng."""
+    """Main endpoint to handle user chat requests."""
     session_id = request.session_id or str(uuid.uuid4())
     request.session_id = session_id
     ai_memory.store_user_request(request.model_dump())
@@ -103,10 +113,10 @@ async def chat_response(request: ChatRequest) -> ChatResponse:
     try:
         result = await run_agents(user_input=request.user_message, session_id=session_id)
         
-        # Debug: In ra result để kiểm tra
+        # Debug: Log result for inspection
         logger.info(f"Result from run_agents: {result}")
         
-        # Xử lý kết quả
+        # Process result
         if isinstance(result, RunResult):
             output = result.output
             logger.debug(f"Extracted output from RunResult: {output}")
@@ -114,21 +124,21 @@ async def chat_response(request: ChatRequest) -> ChatResponse:
             output = result
             logger.debug(f"Result is not RunResult, using directly: {output}")
         
-        # Đảm bảo output có thể serialize
+        # Ensure output is serializable
         serializable_output = ensure_serializable(output)
         
-        # Chuyển đổi final_response thành JSON string
+        # Convert final_response to JSON string
         ai_response = json.dumps(serializable_output, ensure_ascii=False)
         logger.info(f"Final ai_response (JSON): {ai_response}")
         
-        # Lưu phản hồi của AI
+        # Store AI response
         ai_memory.store_assistant_response(request.user_id, session_id, ai_response)
         
         return ChatResponse(response=ai_response, session_id=session_id)
         
     except Exception as e:
-        logger.error(f"Đã xảy ra lỗi nghiêm trọng: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Đã xảy ra lỗi phía server: {str(e)}")
+        logger.error(f"Serious error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Server error occurred: {str(e)}")
 
 @app.get("/", status_code=200, include_in_schema=False)
 async def root():

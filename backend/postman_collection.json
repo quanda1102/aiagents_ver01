@@ -1,0 +1,419 @@
+{
+  "info": {
+    "name": "Quiz Test Module API",
+    "description": "Comprehensive API collection for testing the Quiz Test Module with manual quiz creation and AI-powered quiz generation. IMPORTANT: For Submit Quiz requests, you must use actual question IDs from the quiz, not hardcoded values like 'q1', 'q2', etc. Use the 'Get Quiz for Taking' endpoint to retrieve the actual question IDs first.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
+    },
+    {
+      "key": "quizId",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": "user_123"
+    },
+    {
+      "key": "attemptId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Quiz Management",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Manual Quiz",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.quiz_id) {",
+                  "        pm.collectionVariables.set('quizId', response.data.quiz_id);",
+                  "        console.log('Quiz ID saved: ' + response.data.quiz_id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Python Programming Fundamentals\",\n  \"description\": \"Test your knowledge of Python basics including variables, data types, and control structures\",\n  \"created_by\": \"instructor_john\",\n  \"time_limit\": 1800,\n  \"allow_multiple_attempts\": true,\n  \"shuffle_questions\": false,\n  \"questions\": [\n    {\n      \"question_text\": \"What is the correct way to create a variable in Python?\",\n      \"question_type\": \"multiple_choice\",\n      \"options\": [\n        \"var x = 10\",\n        \"x = 10\",\n        \"int x = 10\",\n        \"declare x = 10\"\n      ],\n      \"correct_answer\": \"x = 10\",\n      \"points\": 1,\n      \"explanation\": \"Python uses dynamic typing, so you don't need to declare variable types explicitly\"\n    },\n    {\n      \"question_text\": \"Python is an interpreted language.\",\n      \"question_type\": \"true_false\",\n      \"correct_answer\": true,\n      \"points\": 1,\n      \"explanation\": \"Python is indeed an interpreted language, executed line by line\"\n    },\n    {\n      \"question_text\": \"Which keyword is used to define a function in Python?\",\n      \"question_type\": \"text\",\n      \"correct_answer\": \"def\",\n      \"points\": 2,\n      \"explanation\": \"The 'def' keyword is used to define functions in Python\"\n    },\n    {\n      \"question_text\": \"What will be the output of print(type([1, 2, 3]))?\",\n      \"question_type\": \"multiple_choice\",\n      \"options\": [\n        \"<class 'tuple'>\",\n        \"<class 'list'>\",\n        \"<class 'array'>\",\n        \"<class 'set'>\"\n      ],\n      \"correct_answer\": \"<class 'list'>\",\n      \"points\": 2,\n      \"explanation\": \"[1, 2, 3] is a list in Python, so type() returns <class 'list'>\"\n    },\n    {\n      \"question_text\": \"What is the result of 3 ** 2 in Python?\",\n      \"question_type\": \"text\",\n      \"correct_answer\": \"9\",\n      \"points\": 1,\n      \"explanation\": \"** is the exponentiation operator in Python, so 3 ** 2 equals 9\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quiz/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "create"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Quizzes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/list?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "list"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Quiz for Taking",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/{{quizId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "{{quizId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Quiz",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/{{quizId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "{{quizId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Quiz Taking & Validation",
+      "item": [
+        {
+          "name": "Submit Quiz Answers (Working Example)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.attempt_id) {",
+                  "        pm.collectionVariables.set('attemptId', response.data.attempt_id);",
+                  "        console.log('Attempt ID saved: ' + response.data.attempt_id);",
+                  "        console.log('Score: ' + response.data.score_percentage + '%');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quiz_id\": \"ee252939-bcdd-4469-8b7b-d8c1895afb94\",\n  \"user_id\": \"test_user_456\",\n  \"answers\": [\n    {\n      \"question_id\": \"2402c7ca-71d2-4c18-a00e-310a42c96df6\",\n      \"answer\": \"x = 10\"\n    },\n    {\n      \"question_id\": \"ad10e108-f0bd-4629-a7dd-81f3a7a47c77\",\n      \"answer\": true\n    },\n    {\n      \"question_id\": \"d96ee716-d7d7-4ab3-892a-6ee7e535c267\",\n      \"answer\": \"def\"\n    },\n    {\n      \"question_id\": \"6bafecee-099b-4037-b73a-4d61514d9747\",\n      \"answer\": \"<class 'list'>\"\n    },\n    {\n      \"question_id\": \"b298a963-2ee5-4860-8ac8-82d40dcb0df5\",\n      \"answer\": \"9\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quiz/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "submit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Quiz Answers (Template)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.attempt_id) {",
+                  "        pm.collectionVariables.set('attemptId', response.data.attempt_id);",
+                  "        console.log('Attempt ID saved: ' + response.data.attempt_id);",
+                  "        console.log('Score: ' + response.data.score_percentage + '%');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quiz_id\": \"{{quizId}}\",\n  \"user_id\": \"{{userId}}\",\n  \"answers\": [\n    {\n      \"question_id\": \"REPLACE_WITH_ACTUAL_QUESTION_ID_1\",\n      \"answer\": \"x = 10\"\n    },\n    {\n      \"question_id\": \"REPLACE_WITH_ACTUAL_QUESTION_ID_2\",\n      \"answer\": true\n    },\n    {\n      \"question_id\": \"REPLACE_WITH_ACTUAL_QUESTION_ID_3\",\n      \"answer\": \"def\"\n    },\n    {\n      \"question_id\": \"REPLACE_WITH_ACTUAL_QUESTION_ID_4\",\n      \"answer\": \"<class 'list'>\"\n    },\n    {\n      \"question_id\": \"REPLACE_WITH_ACTUAL_QUESTION_ID_5\",\n      \"answer\": \"9\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quiz/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "submit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Validate Single Answer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quiz_id\": \"{{quizId}}\",\n  \"question_id\": \"REPLACE_WITH_ACTUAL_QUESTION_ID_1\",\n  \"user_answer\": \"x = 10\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quiz/validate-answer",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "validate-answer"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Quiz Attempt Results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/attempt/{{attemptId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "attempt", "{{attemptId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Quiz History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/user/{{userId}}/attempts?limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "user", "{{userId}}", "attempts"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "AI Quiz Generation",
+      "item": [
+        {
+          "name": "Generate Quiz from Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.quiz_id) {",
+                  "        pm.collectionVariables.set('quizId', response.quiz_id);",
+                  "        console.log('AI Generated Quiz ID: ' + response.quiz_id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document_text\": \"Python is a high-level, interpreted programming language with dynamic semantics. Its high-level built-in data structures, combined with dynamic typing and dynamic binding, make it very attractive for Rapid Application Development, as well as for use as a scripting or glue language to connect existing components together. Python's simple, easy to learn syntax emphasizes readability and therefore reduces the cost of program maintenance. Python supports modules and packages, which encourages program modularity and code reuse. The Python interpreter and the extensive standard library are available in source or binary form without charge for all major platforms, and can be freely distributed. Often, programmers fall in love with Python because of the increased productivity it provides. Since there is no compilation step, the edit-test-debug cycle is incredibly fast. Debugging Python programs is easy: a bug or bad input will never cause a segmentation fault. Instead, when the interpreter discovers an error, it raises an exception. When the program doesn't catch the exception, the interpreter prints a stack trace. A source level debugger allows inspection of local and global variables, evaluation of arbitrary expressions, setting breakpoints, stepping through the code a line at a time, and so on. Variables in Python are created when they are first assigned a value. Variables can hold different types of data, such as integers, floats, strings, lists, dictionaries, and more. Python uses indentation to define code blocks instead of curly braces or keywords. This makes Python code more readable and forces programmers to write well-structured code.\",\n  \"quiz_title\": \"Python Programming Basics\",\n  \"number_of_questions\": 5,\n  \"difficulty_level\": \"medium\",\n  \"question_types\": [\"multiple_choice\", \"true_false\", \"text\"],\n  \"created_by\": \"AI_Agent\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quiz/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Advanced Quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document_text\": \"Machine Learning is a subset of artificial intelligence (AI) that focuses on the use of data and algorithms to imitate the way that humans learn, gradually improving its accuracy. Machine learning algorithms build a model based on training data in order to make predictions or decisions without being explicitly programmed to do so. Machine learning algorithms are used in a wide variety of applications, such as in medicine, email filtering, speech recognition, and computer vision, where it is difficult or unfeasible to develop conventional algorithms to perform the needed tasks. A subset of machine learning is closely related to computational statistics, which focuses on making predictions using computers; but not all machine learning is statistical learning. The study of mathematical optimization delivers methods, theory and application domains to the field of machine learning. Data mining is a related field of study, focusing on exploratory data analysis through unsupervised learning. Some machine learning algorithms such as neural networks are inspired by the structure and function of the brain. Supervised learning algorithms are trained using labeled examples, such as an input where the desired output is known. Unsupervised learning algorithms are used when the information used to train is neither classified nor labeled. Reinforcement learning is an area of machine learning concerned with how software agents ought to take actions in an environment in order to maximize the notion of cumulative reward.\",\n  \"quiz_title\": \"Introduction to Machine Learning\",\n  \"number_of_questions\": 8,\n  \"difficulty_level\": \"hard\",\n  \"question_types\": [\"multiple_choice\", \"true_false\", \"text\"],\n  \"created_by\": \"AI_Expert_Agent\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quiz/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "generate"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error Testing",
+      "item": [
+        {
+          "name": "Create Quiz with Invalid Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\",\n  \"questions\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quiz/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "create"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Non-existent Quiz",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/non-existent-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "non-existent-id"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Quiz with Missing Answers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quiz_id\": \"{{quizId}}\",\n  \"user_id\": \"{{userId}}\",\n  \"answers\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quiz/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "submit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Quiz with No Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document_text\": \"\",\n  \"created_by\": \"test_user\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quiz/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "generate"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

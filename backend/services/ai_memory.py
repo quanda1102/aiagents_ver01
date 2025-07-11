@@ -1,11 +1,10 @@
 from dotenv import load_dotenv
 load_dotenv(override=True)
-import redis
 import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-from my_agents.config import config
 import logging
+from services.redis_manager import get_redis_client
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -13,19 +12,12 @@ logger = logging.getLogger(__name__)
 
 class AIMemoryService:
     def __init__(self):
-        try:
-            self.client = redis.Redis(
-                host=config["redis"]["host"],
-                port=config["redis"]["port"],
-                password=config["redis"]["password"],
-                decode_responses=True
-            )
-            self.client.ping()
-            logger.info("Connected to Redis successfully.")
-
-        except redis.RedisError as e:
-            logger.error(f"Failed to connect to Redis: {e}")
-            self.client = None
+        """Initialize the AI Memory Service with shared Redis connection"""
+        self.client = get_redis_client()
+        if self.client:
+            logger.info("AIMemoryService initialized with shared Redis connection")
+        else:
+            logger.error("AIMemoryService failed to get Redis connection")
     
     def store_message(self, user_id: str, session_id: str, role: str, content: str, metadata: Optional[Dict] = None) -> bool:
         """Store a single message in the conversation history"""

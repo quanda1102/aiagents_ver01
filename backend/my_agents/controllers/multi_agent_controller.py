@@ -54,7 +54,7 @@ async def generate_sql(body: GenerateSQLRequest):
     if not body.intent or not body.entities:
         raise HTTPException(status_code=400, detail="Thiếu intent hoặc entities")
 
-    result = await sql_agent.process(body.dict(), {})
+    result = await sql_agent.process(body.model_dump(), {})
     return { "success": True, "data": result }
 
 @router.post("/validate-sql")
