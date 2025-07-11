@@ -10,18 +10,17 @@ from agents import Agent, Runner
 from pydantic import BaseModel, Field
 
 from services.quiz_service import QuizService
-from my_agents.models.quiz_models import QuestionType
+from my_agents.models.quiz_models import QuestionType, QuizQuestion as StandardQuizQuestion
 
 # ---------------------------------------------------------------------------
 # 1. Define the structured output of the agent using `pydantic`.
 # ---------------------------------------------------------------------------
 
 class QuizQuestion(BaseModel):
-    """A single quiz question with its metadata."""
+    """A single quiz question with its metadata - for AI generation output."""
     
-    question_id: str = Field(description="Unique identifier for the question")
     question_text: str = Field(description="The actual question text")
-    question_type: str = Field(description="Type of question: multiple_choice, true_false, text, or essay")
+    question_type: QuestionType = Field(description="Type of question: multiple_choice, true_false, text, or essay")
     options: Optional[List[str]] = Field(None, description="Options for multiple choice questions")
     correct_answer: Union[str, bool, int] = Field(description="The correct answer - string for text/multiple choice, boolean for true/false")
     points: int = Field(default=1, description="Points awarded for correct answer")
@@ -64,7 +63,6 @@ QUIZ_GENERATION_AGENT = Agent(
         "- easy: 1 point, basic recall questions\n"
         "- medium: 2 points, comprehension and application questions\n"
         "- hard: 3 points, analysis and evaluation questions\n\n"
-        "Generate unique question IDs using format 'q_{number}' (e.g., 'q_1', 'q_2').\n"
         "Ensure the quiz covers the main topics in the document comprehensively."
     ),
     output_type=QuizGenerationOutput,
@@ -109,19 +107,21 @@ class QuizGenerationAgent:
             quiz_dict = quiz_data.model_dump()
             quiz_dict["created_by"] = created_by
             
-            # Convert questions to the format expected by QuizService
-            quiz_dict["questions"] = [
-                {
-                    "question_id": q["question_id"],
-                    "question_text": q["question_text"],
-                    "question_type": q["question_type"],
-                    "options": q.get("options", []),
-                    "correct_answer": q["correct_answer"],
-                    "points": q.get("points", 1),
-                    "explanation": q.get("explanation")
-                }
-                for q in quiz_dict["questions"]
-            ]
+            # Convert questions to the format expected by QuizService (using proper UUID generation)
+            formatted_questions = []
+            for q in quiz_dict["questions"]:
+                # Create a proper QuizQuestion with UUID
+                standard_question = StandardQuizQuestion(
+                    question_text=q["question_text"],
+                    question_type=q["question_type"],
+                    options=q.get("options"),
+                    correct_answer=q["correct_answer"],
+                    points=q.get("points", 1),
+                    explanation=q.get("explanation")
+                )
+                formatted_questions.append(standard_question.model_dump())
+            
+            quiz_dict["questions"] = formatted_questions
             
             # Create the quiz in the database
             quiz_id = self.quiz_service.create_quiz(quiz_dict)
