@@ -10,8 +10,7 @@ from agents import Agent, Runner
 from pydantic import BaseModel, Field
 
 from services.quiz_service import QuizService
-from my_agents.models.quiz_models import QuestionType, QuizQuestion as StandardQuizQuestion
-
+from schemas.quiz_models import QuestionType, QuizQuestion as StandardQuizQuestion
 # ---------------------------------------------------------------------------
 # 1. Define the structured output of the agent using `pydantic`.
 # ---------------------------------------------------------------------------

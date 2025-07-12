@@ -3,7 +3,7 @@ from pydantic import BaseModel, ValidationError
 from typing import Optional, List, Dict, Any
 import logging
 
-from my_agents.models.quiz_models import (
+from schemas.quiz_models import (
     CreateQuizRequest, QuizSummary, QuizForTaking, SubmitQuizRequest, 
     QuizAttempt, ValidateAnswerRequest, ValidateAnswerResponse,
     QuizListResponse, QuizResponse, UserQuizStats, GenerateQuizRequest,
@@ -38,6 +38,9 @@ async def create_quiz(
     try:
         # Convert Pydantic model to dict
         quiz_data = request.model_dump()
+        
+        # Set created_by to authenticated user's email
+        quiz_data["created_by"] = current_user["email"]
         
         # Create quiz
         quiz_id = quiz_service.create_quiz(quiz_data)
@@ -366,8 +369,12 @@ async def generate_quiz_from_document(
         raise HTTPException(status_code=503, detail="Quiz service or AI agent unavailable")
     
     try:
+        # Convert request to dict and set created_by to authenticated user's email
+        request_data = request.model_dump()
+        request_data["created_by"] = current_user["email"]
+        
         # Process the request using the quiz generation agent
-        result = await quiz_generation_agent.process(request.model_dump(), {})
+        result = await quiz_generation_agent.process(request_data, {})
         
         if not result or "quiz_id" not in result:
             raise HTTPException(status_code=500, detail="Failed to generate quiz")

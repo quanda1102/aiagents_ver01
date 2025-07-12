@@ -48,7 +48,7 @@ class CreateQuizRequest(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = Field(default=None, max_length=1000)
     questions: List[QuizQuestion] = Field(..., min_items=1, max_items=100)
-    created_by: str = Field(..., min_length=1, max_length=100)
+    created_by: Optional[str] = Field(default=None, min_length=1, max_length=100)
     time_limit: Optional[int] = Field(default=None, ge=1, le=10800)  # Max 3 hours in seconds
     allow_multiple_attempts: bool = Field(default=True)
     shuffle_questions: bool = Field(default=False)
@@ -150,7 +150,7 @@ class GenerateQuizRequest(BaseModel):
     number_of_questions: int = Field(default=5, ge=1, le=20)
     difficulty_level: str = Field(default="medium", pattern="^(easy|medium|hard)$")
     question_types: List[QuestionType] = Field(default=[QuestionType.MULTIPLE_CHOICE])
-    created_by: str = Field(..., min_length=1, max_length=100)
+    created_by: Optional[str] = Field(default=None, min_length=1, max_length=100)
     
     @field_validator('question_types')
     def validate_question_types(cls, v):
