@@ -4,6 +4,7 @@ import logging
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import fastapi
 from my_agents.routes.quiz_routes import router as quiz_router
@@ -18,6 +19,13 @@ app = FastAPI(
     title="AI Agent Backend API",
     description="Backend API",
     version="1.0.0"
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include quiz routes
