@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request, Query
+from fastapi import APIRouter, HTTPException, Request, Query, Depends
 from pydantic import BaseModel, ValidationError
 from typing import Optional, List, Dict, Any
 import logging
@@ -11,6 +11,7 @@ from my_agents.models.quiz_models import (
 )
 from services.quiz_service import QuizService
 from my_agents.quiz_generation_agent import QuizGenerationAgent
+from utils.auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/quiz", tags=["quiz"])
 logger = logging.getLogger(__name__)
@@ -26,7 +27,10 @@ except Exception as e:
 
 
 @router.post("/create", response_model=QuizResponse)
-async def create_quiz(request: CreateQuizRequest):
+async def create_quiz(
+    request: CreateQuizRequest, 
+    current_user: dict = Depends(get_current_user)
+):
     """Create a new quiz manually"""
     if not quiz_service:
         raise HTTPException(status_code=503, detail="Quiz service unavailable")
@@ -104,7 +108,10 @@ async def health_check():
 
 
 @router.get("/list", response_model=QuizListResponse)
-async def list_quizzes(limit: int = Query(default=50, ge=1, le=100)):
+async def list_quizzes(
+    limit: int = Query(default=50, ge=1, le=100),
+    current_user: dict = Depends(get_current_user)
+):
     """List all available quizzes"""
     if not quiz_service:
         raise HTTPException(status_code=503, detail="Quiz service unavailable")
@@ -124,7 +131,10 @@ async def list_quizzes(limit: int = Query(default=50, ge=1, le=100)):
 
 
 @router.get("/{quiz_id}", response_model=QuizResponse)
-async def get_quiz(quiz_id: str):
+async def get_quiz(
+    quiz_id: str, 
+    current_user: dict = Depends(get_current_user)
+):
     """Get quiz details for taking (questions without answers)"""
     if not quiz_service:
         raise HTTPException(status_code=503, detail="Quiz service unavailable")
@@ -164,7 +174,10 @@ async def get_quiz(quiz_id: str):
 
 
 @router.post("/submit", response_model=QuizResponse)
-async def submit_quiz(request: SubmitQuizRequest):
+async def submit_quiz(
+    request: SubmitQuizRequest, 
+    current_user: dict = Depends(get_current_user)
+):
     """Submit quiz answers and get results"""
     if not quiz_service:
         raise HTTPException(status_code=503, detail="Quiz service unavailable")
@@ -202,7 +215,10 @@ async def submit_quiz(request: SubmitQuizRequest):
 
 
 @router.get("/attempt/{attempt_id}", response_model=QuizResponse)
-async def get_quiz_attempt(attempt_id: str):
+async def get_quiz_attempt(
+    attempt_id: str, 
+    current_user: dict = Depends(get_current_user)
+):
     """Get quiz attempt results"""
     if not quiz_service:
         raise HTTPException(status_code=503, detail="Quiz service unavailable")
@@ -228,7 +244,11 @@ async def get_quiz_attempt(attempt_id: str):
 
 
 @router.get("/user/{user_id}/attempts", response_model=QuizResponse)
-async def get_user_attempts(user_id: str, limit: int = Query(default=10, ge=1, le=50)):
+async def get_user_attempts(
+    user_id: str, 
+    limit: int = Query(default=10, ge=1, le=50),
+    current_user: dict = Depends(get_current_user)
+):
     """Get all quiz attempts for a user"""
     if not quiz_service:
         raise HTTPException(status_code=503, detail="Quiz service unavailable")
@@ -280,7 +300,10 @@ async def get_user_attempts(user_id: str, limit: int = Query(default=10, ge=1, l
 
 
 @router.post("/validate-answer", response_model=ValidateAnswerResponse)
-async def validate_answer(request: ValidateAnswerRequest):
+async def validate_answer(
+    request: ValidateAnswerRequest, 
+    current_user: dict = Depends(get_current_user)
+):
     """Validate a single answer"""
     if not quiz_service:
         raise HTTPException(status_code=503, detail="Quiz service unavailable")
@@ -307,7 +330,10 @@ async def validate_answer(request: ValidateAnswerRequest):
 
 
 @router.delete("/{quiz_id}", response_model=QuizResponse)
-async def delete_quiz(quiz_id: str):
+async def delete_quiz(
+    quiz_id: str, 
+    current_user: dict = Depends(get_current_user)
+):
     """Delete a quiz"""
     if not quiz_service:
         raise HTTPException(status_code=503, detail="Quiz service unavailable")
@@ -331,7 +357,10 @@ async def delete_quiz(quiz_id: str):
 
 
 @router.post("/generate", response_model=GenerateQuizResponse)
-async def generate_quiz_from_document(request: GenerateQuizRequest):
+async def generate_quiz_from_document(
+    request: GenerateQuizRequest, 
+    current_user: dict = Depends(get_current_user)
+):
     """Generate a quiz from document text using AI"""
     if not quiz_service or not quiz_generation_agent:
         raise HTTPException(status_code=503, detail="Quiz service or AI agent unavailable")

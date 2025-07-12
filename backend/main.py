@@ -11,6 +11,7 @@ from my_agents.routes.quiz_routes import router as quiz_router
 from routes.auth_routes import router as auth_router
 from routes.user_routes import router as user_router
 from routes.chat_routes import router as chat_router
+from routes.auth_routes import router as auth_router
 from utils.pydantic_helper import format_validation_errors
 from utils.serialization import ensure_serializable
 from schemas.chat import ChatRequest, ChatResponse
@@ -29,7 +30,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include quiz routes
+# Include all routes
+app.include_router(auth_router)
 app.include_router(quiz_router)
 app.include_router(chat_router)
 app.include_router(user_router)
