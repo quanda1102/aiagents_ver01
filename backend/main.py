@@ -12,7 +12,9 @@ from my_agents.sql_agents.router_agent import RunResult
 from my_agents.my_agents import run_agents
 from services.ai_memory import AIMemoryService
 from my_agents.routes.quiz_routes import router as quiz_router
-
+from routes.auth_routes import router as auth_router
+from utils.error_handling import validation_exception_handler
+from utils.auth import get_current_user
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -56,8 +58,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Register exception handlers
+app.exception_handler(RequestValidationError)(validation_exception_handler)
+
 # Include quiz routes
 app.include_router(quiz_router, prefix="/api/v1", tags=["quiz"])
+app.include_router(auth_router) 
 
 def format_validation_errors(errors):
     """Chuyển đổi lỗi của Pydantic thành thông báo thân thiện."""
