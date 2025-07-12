@@ -12,7 +12,7 @@ from my_agents.models.quiz_models import (
 from services.quiz_service import QuizService
 from my_agents.quiz_generation_agent import QuizGenerationAgent
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/quiz", tags=["quiz"])
 logger = logging.getLogger(__name__)
 
 # Initialize services
