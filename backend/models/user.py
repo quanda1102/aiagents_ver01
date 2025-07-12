@@ -5,15 +5,23 @@ from enum import Enum as PyEnum
 Base = declarative_base()
 
 class Role(PyEnum):
-    ADMIN = "admin"
-    TEACHER = "teacher"
-    STUDENT = "student"
+    ADMIN = 8686
+    TEACHER = 2
+    STUDENT = 3
+
+class Gender(PyEnum):
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
 
 class User(Base):
     __tablename__ = "users"
+    
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, index=True)
-    hashed_password = Column(String(255))
-    role = Column(SqlEnum(Role, values_callable=lambda x: [e.value for e in x]), default=Role.STUDENT.value)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(Integer, default=Role.STUDENT.value)
     full_name = Column(String(255))
     age = Column(Integer, nullable=True)
+    class_name = Column(String(100), nullable=True)
+    gender = Column(SqlEnum(Gender, values_callable=lambda x: [e.value for e in x]), default=Gender.OTHER.value)

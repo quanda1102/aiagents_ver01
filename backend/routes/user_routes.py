@@ -1,0 +1,59 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import create_engine
+from config import config
+from models.user import Base, Role
+from schemas.user import UserCreate, UserUpdate, UserOut
+from services.auth_service import AuthService
+from utils.auth import get_current_user
+
+engine = create_engine(config.DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base.metadata.create_all(bind=engine)
+
+router = APIRouter(prefix="/api/v1/users", tags=["users"])
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def require_admin(current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+@router.get("/", response_model=list[UserOut])
+def get_users(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_admin)
+):
+    return AuthService.get_users(db)
+
+@router.post("/", response_model=UserOut)
+def create_user(
+    user: UserCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_admin)
+):
+    return AuthService.create_user(user, db)
+
+@router.put("/{user_id}", response_model=UserOut)
+def update_user(
+    user_id: int,
+    user: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_admin)
+):
+    return AuthService.update_user(user_id, user, db)
+
+@router.delete("/{user_id}")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_admin)
+):
+    return AuthService.delete_user(user_id, db)
