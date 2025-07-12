@@ -25,7 +25,7 @@ except Exception as e:
     quiz_generation_agent = None
 
 
-@router.post("/quiz/create", response_model=QuizResponse)
+@router.post("/create", response_model=QuizResponse)
 async def create_quiz(request: CreateQuizRequest):
     """Create a new quiz manually"""
     if not quiz_service:
@@ -72,7 +72,7 @@ async def create_quiz(request: CreateQuizRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/quiz/health", response_model=QuizResponse)
+@router.get("/health", response_model=QuizResponse)
 async def health_check():
     """Health check endpoint for quiz service"""
     try:
@@ -103,7 +103,7 @@ async def health_check():
 
 
 
-@router.get("/quiz/list", response_model=QuizListResponse)
+@router.get("/list", response_model=QuizListResponse)
 async def list_quizzes(limit: int = Query(default=50, ge=1, le=100)):
     """List all available quizzes"""
     if not quiz_service:
@@ -123,7 +123,7 @@ async def list_quizzes(limit: int = Query(default=50, ge=1, le=100)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/quiz/{quiz_id}", response_model=QuizResponse)
+@router.get("/{quiz_id}", response_model=QuizResponse)
 async def get_quiz(quiz_id: str):
     """Get quiz details for taking (questions without answers)"""
     if not quiz_service:
@@ -163,7 +163,7 @@ async def get_quiz(quiz_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/quiz/submit", response_model=QuizResponse)
+@router.post("/submit", response_model=QuizResponse)
 async def submit_quiz(request: SubmitQuizRequest):
     """Submit quiz answers and get results"""
     if not quiz_service:
@@ -201,7 +201,7 @@ async def submit_quiz(request: SubmitQuizRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/quiz/attempt/{attempt_id}", response_model=QuizResponse)
+@router.get("/attempt/{attempt_id}", response_model=QuizResponse)
 async def get_quiz_attempt(attempt_id: str):
     """Get quiz attempt results"""
     if not quiz_service:
@@ -227,7 +227,7 @@ async def get_quiz_attempt(attempt_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/quiz/user/{user_id}/attempts", response_model=QuizResponse)
+@router.get("/user/{user_id}/attempts", response_model=QuizResponse)
 async def get_user_attempts(user_id: str, limit: int = Query(default=10, ge=1, le=50)):
     """Get all quiz attempts for a user"""
     if not quiz_service:
@@ -279,7 +279,7 @@ async def get_user_attempts(user_id: str, limit: int = Query(default=10, ge=1, l
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/quiz/validate-answer", response_model=ValidateAnswerResponse)
+@router.post("/validate-answer", response_model=ValidateAnswerResponse)
 async def validate_answer(request: ValidateAnswerRequest):
     """Validate a single answer"""
     if not quiz_service:
@@ -306,7 +306,7 @@ async def validate_answer(request: ValidateAnswerRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.delete("/quiz/{quiz_id}", response_model=QuizResponse)
+@router.delete("/{quiz_id}", response_model=QuizResponse)
 async def delete_quiz(quiz_id: str):
     """Delete a quiz"""
     if not quiz_service:
@@ -330,7 +330,7 @@ async def delete_quiz(quiz_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/quiz/generate", response_model=GenerateQuizResponse)
+@router.post("/generate", response_model=GenerateQuizResponse)
 async def generate_quiz_from_document(request: GenerateQuizRequest):
     """Generate a quiz from document text using AI"""
     if not quiz_service or not quiz_generation_agent:
