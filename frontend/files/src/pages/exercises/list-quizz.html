@@ -423,6 +423,7 @@
           <div class="card">
             <div class="card-header">
               <h5>Danh sách bài tập</h5>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#generateQuizModal">Tạo bằng AI</button>
             </div>
             <div class="card-body">
                 <div id="quizList" class="row g-4"></div>
@@ -556,7 +557,7 @@
                   <li class="list-group-item"><strong>Số câu hỏi:</strong> ${quiz.question_count}</li>
                   <li class="list-group-item"><strong>Tổng điểm:</strong> ${quiz.total_points}</li>
                 </ul>
-                <a href="/pages/exercises/class-1/attempt-quizz.html?id=${quiz.quiz_id}" class="btn btn-primary btn-sm">Làm bài</a>
+                <a href="/pages/exercises/attempt-quizz.html?id=${quiz.quiz_id}" class="btn btn-primary btn-sm">Làm bài</a>
                 <button type="button" class="btn btn-danger btn-sm ms-2" onclick="deleteQuiz('${quiz.quiz_id}', this)">Xoá</button>
               </div>
             </div>
