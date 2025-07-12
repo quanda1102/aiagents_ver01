@@ -31,7 +31,8 @@ def get_users(
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_admin)
 ):
-    return AuthService.get_users(db)
+    users = AuthService.get_users(db)
+    return [UserOut.from_orm_with_role_name(u) for u in users]
 
 @router.post("/", response_model=UserOut)
 def create_user(
