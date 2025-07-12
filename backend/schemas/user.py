@@ -23,8 +23,7 @@ class UserOut(BaseModel):
     class_name: Optional[str]
     gender: Optional[str]
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None

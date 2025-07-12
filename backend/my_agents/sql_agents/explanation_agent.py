@@ -1,4 +1,4 @@
-from my_agents.agents.base_agent import BaseAgent
+from my_agents.sql_agents.base_agent import BaseAgent
 from openai import OpenAI
 from my_agents.config import config
 

@@ -8,8 +8,6 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 class RedisManager:
-    """Singleton Redis connection manager to avoid duplicate connections"""
-    
     _instance = None
     _client = None
     
@@ -97,33 +95,3 @@ def get_redis_client():
     """Convenience function to get Redis client"""
     return redis_manager.client
 
-
-# Example usage and testing
-if __name__ == "__main__":
-    # Test the Redis manager
-    print("Testing Redis Manager...")
-    
-    # Test connection
-    client = get_redis_client()
-    if client:
-        print("✅ Redis connection successful")
-        
-        # Test basic operations
-        try:
-            client.set("test_key", "test_value")
-            value = client.get("test_key")
-            print(f"✅ Test operation successful: {value}")
-            
-            # Clean up
-            client.delete("test_key")
-            print("✅ Cleanup successful")
-            
-        except Exception as e:
-            print(f"❌ Test operation failed: {e}")
-    else:
-        print("❌ Redis connection failed")
-    
-    # Test singleton pattern
-    manager1 = RedisManager()
-    manager2 = RedisManager()
-    print(f"✅ Singleton test: {manager1 is manager2}")

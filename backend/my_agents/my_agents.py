@@ -1,58 +1,52 @@
+from agents import Agent, Runner, trace, function_tool
+from openai.types.responses import ResponseTextDeltaEvent
 import asyncio
-import httpx
-import json
-from agents import Agent, Runner, function_tool
-from my_agents.config import config
-from my_agents.sql_agents.router_agent import RouterAgent as TextToSqlRouterAgent, RunResult
-import logging
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
-# Thiết lập logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+router_instruction = """
+You are a router agent that can route the user's request to the appropriate agent.
+"""
 
-TEXT_TO_SQL_API_URL = f"http://{config['server']['host']}:{config['server']['port']}/text-to-sql-workflow"
-
-@function_tool
-async def text_to_sql_tool(question: str, session_id: str = None):
-    """
-    Sử dụng công cụ này cho bất kỳ câu hỏi nào liên quan đến việc truy vấn cơ sở dữ liệu,
-    ví dụ: "doanh thu là bao nhiêu?", "hiển thị cho tôi tất cả người dùng", v.v.
-    Công cụ này sẽ khởi chạy một quy trình nội bộ để chuyển đổi câu hỏi của bạn thành SQL và thực thi nó.
-    """
-    router = TextToSqlRouterAgent()
-    result = await router.run({"question": question, "sessionId": session_id}, None)
-    logger.debug(f"Result from text_to_sql_tool: {result}")
-    return result
-
-main_router_agent = Agent(
-    name="MainQueryRouter",
-    instructions=(
-        "Bạn là một agent định tuyến thông minh. Nhiệm vụ của bạn là phân tích câu hỏi của người dùng. "
-        "Nếu câu hỏi có vẻ như là một truy vấn cho cơ sở dữ liệu (ví dụ: hỏi về doanh thu, người dùng, dữ liệu, sản phẩm...), "
-        "hãy sử dụng `text_to_sql_tool` để trả lời. "
-        "Đối với các câu hỏi khác không liên quan đến dữ liệu trong cơ sở dữ liệu (ví dụ: chào hỏi, hỏi về chức năng của bạn), "
-        "hãy trả lời một cách thân thiện và cho biết bạn có thể giúp truy vấn dữ liệu."
-    ),
+router_agent = Agent(
+    name="Router",
+    instructions=router_instruction,
     model="gpt-4o-mini",
-    tools=[text_to_sql_tool],
+    handoffs=[]
 )
 
-async def run_agents(user_input: str, session_id: str):
-    logger.info(f"Đang xử lý câu hỏi: '{user_input}' cho session: {session_id}")
 
-    final_response = await Runner.run(
-        starting_agent=main_router_agent,
-        input=user_input,
+google_drive_agent = Agent(
+    name="Google Drive",
+    instructions="You are a Google Drive agent that can help with Google Drive tasks.",
+    model="gpt-4o-mini",
+    handoffs=[router_agent]
+)
+
+
+chatting_agent = Agent(
+    name="Chatting",
+    instructions="You are a chatting agent that can chat with the user.",
+    model="gpt-4o-mini",
+    handoffs=[router_agent]
+)
+
+router_agent.handoffs.append(google_drive_agent)
+router_agent.handoffs.append(chatting_agent)
+
+async def run_agents(input="I want to create a new document in Google Drive"):
+    runner = Runner.run_streamed(
+        starting_agent=router_agent,
+        input=input
     )
-    logger.debug(f"Raw final_response from Runner.run: {final_response}")
+    output = ""  # Initialize output variable
+    async for event in runner.stream_events():
+        if event.type == "raw_response_event":
+            data = event.data
+            if hasattr(data, "delta"):
+                output += str(data.delta)
+    return output
 
-    if isinstance(final_response, dict) and "final_response" in final_response:
-        logger.debug(f"Returning RunResult with dict output: {final_response}")
-        return RunResult(output=final_response)
-    elif isinstance(final_response, str):
-        logger.debug(f"Returning RunResult with string output: {final_response}")
-        return RunResult(output={"final_response": final_response})
-    else:
-        serialized_response = json.dumps(final_response, ensure_ascii=False)
-        logger.debug(f"Returning RunResult with serialized output: {serialized_response}")
-        return RunResult(output={"final_response": serialized_response})
+
+if __name__ == "__main__":
+    asyncio.run(run_agents("I want to create a new document in Google Drive"))

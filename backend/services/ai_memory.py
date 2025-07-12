@@ -3,6 +3,7 @@ load_dotenv(override=True)
 import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from my_agents.config import config
 import logging
 from services.redis_manager import get_redis_client
 

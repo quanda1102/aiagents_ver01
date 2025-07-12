@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Any, Optional, Union
 from enum import Enum
 import uuid
@@ -21,18 +21,17 @@ class QuizQuestion(BaseModel):
     explanation: Optional[str] = Field(default=None, max_length=500)
     
     @field_validator('options')
-    @classmethod
     def validate_options(cls, v, info):
-        if info.data.get('question_type') == QuestionType.MULTIPLE_CHOICE:
+        question_type = info.data.get('question_type')
+        if question_type == QuestionType.MULTIPLE_CHOICE:
             if not v or len(v) < 2:
                 raise ValueError("Multiple choice questions must have at least 2 options")
-        elif info.data.get('question_type') == QuestionType.TRUE_FALSE:
+        elif question_type == QuestionType.TRUE_FALSE:
             if v is not None:
                 raise ValueError("True/false questions should not have options")
         return v
     
     @field_validator('correct_answer')
-    @classmethod
     def validate_correct_answer(cls, v, info):
         question_type = info.data.get('question_type')
         if question_type == QuestionType.TRUE_FALSE:
@@ -55,7 +54,6 @@ class CreateQuizRequest(BaseModel):
     shuffle_questions: bool = Field(default=False)
     
     @field_validator('questions')
-    @classmethod
     def validate_questions(cls, v):
         if len(v) == 0:
             raise ValueError("Quiz must have at least one question")
@@ -91,7 +89,6 @@ class QuizAnswer(BaseModel):
     answer: Union[str, bool, int, List[str]]
     
     @field_validator('answer')
-    @classmethod
     def validate_answer(cls, v):
         if isinstance(v, str) and len(v.strip()) == 0:
             raise ValueError("Text answers cannot be empty")
@@ -104,7 +101,6 @@ class SubmitQuizRequest(BaseModel):
     answers: List[QuizAnswer] = Field(..., min_items=1)
     
     @field_validator('answers')
-    @classmethod
     def validate_answers(cls, v):
         question_ids = [answer.question_id for answer in v]
         if len(question_ids) != len(set(question_ids)):
@@ -157,7 +153,6 @@ class GenerateQuizRequest(BaseModel):
     created_by: str = Field(..., min_length=1, max_length=100)
     
     @field_validator('question_types')
-    @classmethod
     def validate_question_types(cls, v):
         if len(v) == 0:
             raise ValueError("At least one question type must be specified")
