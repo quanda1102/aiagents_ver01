@@ -1,8 +1,7 @@
 from sqlalchemy import Column, Integer, String, Enum as SqlEnum
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
-
-Base = declarative_base()
+from models import Base  # sửa lại dòng này
 
 class Role(PyEnum):
     ADMIN = 8686
@@ -16,7 +15,6 @@ class Gender(PyEnum):
 
 class User(Base):
     __tablename__ = "users"
-    
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, index=True)
     hashed_password = Column(String(255), nullable=False)
@@ -25,3 +23,4 @@ class User(Base):
     age = Column(Integer, nullable=True)
     class_name = Column(String(100), nullable=True)
     gender = Column(SqlEnum(Gender, values_callable=lambda x: [e.value for e in x]), default=Gender.OTHER.value)
+    lectures = relationship("Lecture", back_populates="teacher")
