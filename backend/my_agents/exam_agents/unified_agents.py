@@ -174,52 +174,55 @@ async def extract_exam_requirements(
         message_lower = user_message.lower()
         extracted_info = []
         
-        # Extract number of questions
+        # Extract number of questions (English and Vietnamese)
         import re
-        num_questions_match = re.search(r'(\d+)\s*questions?', message_lower)
+        num_questions_match = re.search(r'(\d+)\s*(?:questions?|câu hỏi|câu)', message_lower)
         if num_questions_match:
             context.context.num_questions = int(num_questions_match.group(1))
             extracted_info.append(f"Number of questions: {context.context.num_questions}")
         
-        # Extract time limit
-        time_match = re.search(r'(\d+)\s*minutes?', message_lower)
+        # Extract time limit (English and Vietnamese)
+        time_match = re.search(r'(\d+)\s*(?:minutes?|phút|phút)', message_lower)
         if time_match:
             context.context.time_limit = int(time_match.group(1))
             extracted_info.append(f"Time limit: {context.context.time_limit} minutes")
         
-        # Extract difficulty level
-        if 'mixed' in message_lower or ('easy' in message_lower and 'medium' in message_lower and 'hard' in message_lower):
+        # Extract difficulty level (English and Vietnamese)
+        if any(word in message_lower for word in ['mixed', 'hỗn hợp', 'trộn lẫn']) or \
+           (any(word in message_lower for word in ['easy', 'dễ']) and 
+            any(word in message_lower for word in ['medium', 'trung bình', 'vừa']) and 
+            any(word in message_lower for word in ['hard', 'khó', 'difficult'])):
             context.context.difficulty_level = "mixed"
             extracted_info.append("Difficulty level: mixed")
-        elif 'easy' in message_lower:
+        elif any(word in message_lower for word in ['easy', 'dễ']):
             context.context.difficulty_level = "easy"
             extracted_info.append("Difficulty level: easy")
-        elif 'medium' in message_lower:
+        elif any(word in message_lower for word in ['medium', 'trung bình', 'vừa']):
             context.context.difficulty_level = "medium"
             extracted_info.append("Difficulty level: medium")
-        elif 'hard' in message_lower:
+        elif any(word in message_lower for word in ['hard', 'khó', 'difficult']):
             context.context.difficulty_level = "hard"
             extracted_info.append("Difficulty level: hard")
         
-        # Extract question types
+        # Extract question types (English and Vietnamese)
         question_types = []
-        if 'multiple choice' in message_lower:
+        if any(phrase in message_lower for phrase in ['multiple choice', 'trắc nghiệm', 'nhiều lựa chọn']):
             question_types.append("multiple choice")
-        if 'true/false' in message_lower or 'true false' in message_lower:
+        if any(phrase in message_lower for phrase in ['true/false', 'true false', 'đúng/sai', 'đúng sai']):
             question_types.append("true/false")
-        if 'short answer' in message_lower:
+        if any(phrase in message_lower for phrase in ['short answer', 'câu trả lời ngắn', 'trả lời ngắn']):
             question_types.append("short answer")
-        if 'essay' in message_lower:
+        if any(phrase in message_lower for phrase in ['essay', 'tự luận', 'viết luận']):
             question_types.append("essay")
-        if 'fill in the blank' in message_lower or 'fill-in-the-blank' in message_lower:
+        if any(phrase in message_lower for phrase in ['fill in the blank', 'fill-in-the-blank', 'điền vào chỗ trống', 'điền khuyết']):
             question_types.append("fill in the blank")
         
         if question_types:
             context.context.question_types = question_types
             extracted_info.append(f"Question types: {', '.join(question_types)}")
         
-        # Extract grading criteria
-        grading_match = re.search(r'(\d+)%.*(?:pass|passing)', message_lower)
+        # Extract grading criteria (English and Vietnamese)
+        grading_match = re.search(r'(\d+)%.*(?:pass|passing|qua|đậu|điểm qua)', message_lower)
         if grading_match:
             passing_grade = grading_match.group(1)
             grading_criteria = f"Passing grade: {passing_grade}%"
@@ -266,6 +269,9 @@ def format_agent_instructions(
         f"{RECOMMENDED_PROMPT_PREFIX}\n"
         f"You are the Format Agent, specialist in creating exam formats and structures.\n"
         f"Current status: {progress}\n\n"
+        "LANGUAGE SUPPORT:\n"
+        "- Always respond in the same language as the user (Vietnamese or English)\n"
+        "- Support both Vietnamese and English exam creation\n\n"
         "YOUR ROLE:\n"
         "1. Use extract_exam_requirements tool to extract information from user messages\n"
         "2. Use save_exam_format tool when you have sufficient information\n"
@@ -307,6 +313,9 @@ def questions_agent_instructions(
         f"{RECOMMENDED_PROMPT_PREFIX}\n"
         f"You are the Question Generator Agent, specialist in creating high-quality exam questions.\n"
         f"Current context: {format_info}\n\n"
+        "LANGUAGE SUPPORT:\n"
+        "- Always respond in the same language as the user (Vietnamese or English)\n"
+        "- Generate questions in the same language as the user\n\n"
         "YOUR ROLE:\n"
         "1. Generate questions based on format specifications\n"
         "2. Work iteratively with user to refine questions\n"
@@ -339,6 +348,9 @@ def editor_agent_instructions(
         f"{RECOMMENDED_PROMPT_PREFIX}\n"
         f"You are the Editor Agent, specialist in quality review and exam improvement.\n"
         f"Current context: {progress}\n\n"
+        "LANGUAGE SUPPORT:\n"
+        "- Always respond in the same language as the user (Vietnamese or English)\n"
+        "- Review and improve exams in the same language as the user\n\n"
         "YOUR ROLE:\n"
         "1. Review completed exam (format + questions) for quality\n"
         "2. Suggest improvements and work with user to implement them\n"
@@ -375,6 +387,9 @@ def triage_agent_instructions(
         f"{RECOMMENDED_PROMPT_PREFIX}\n"
         f"You are the Triage Agent. You are a ROUTER that delegates to appropriate specialists.\n"
         f"Current progress: Format {status['format']} | Questions {status['questions']} | Editing {status['editing']}\n\n"
+        "LANGUAGE SUPPORT:\n"
+        "- Always respond in the same language as the user (Vietnamese or English)\n"
+        "- Support both Vietnamese and English exam creation\n\n"
         "CRITICAL BEHAVIOR:\n"
         "- You NEVER create exams yourself\n"
         "- You NEVER provide exam content directly\n"
