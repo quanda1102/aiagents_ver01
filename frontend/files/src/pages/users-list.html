@@ -474,6 +474,7 @@
 <script src="../../assets/js/fonts/custom-font.js"></script>
 <script src="../../assets/js/pcoded.js"></script>
 <script src="../../assets/js/plugins/feather.min.js"></script>
+<script src="../../assets/js/customer.js"></script>
 
 
 
@@ -507,14 +508,24 @@
     async function loadUsers() {
       try {
         const res = await fetch('https://api.aagents.vn/api/v1/users/', {
-            method: 'GET',
-            headers
-         });
+          method: 'GET',
+          headers
+        });
+    
+        if (res.status === 403) {
+          alert('Bạn không có quyền xem danh sách người dùng.');
+          return;
+        }
+    
+        if (!res.ok) {
+          alert(`Lỗi: ${res.status} - ${res.statusText}`);
+          return;
+        }
+    
         const data = await res.json();
-
         const tableBody = document.getElementById('userTableBody');
         tableBody.innerHTML = '';
-
+    
         data.forEach((user, i) => {
           tableBody.innerHTML += `
             <tr>
@@ -527,11 +538,13 @@
               <td>${user.role}</td>
             </tr>`;
         });
+    
       } catch (err) {
         alert('Lỗi khi tải danh sách người dùng.');
         console.error(err);
       }
     }
+
 
     // 2. Xử lý tạo người dùng mới
     document.getElementById('createUserForm').addEventListener('submit', async (e) => {
@@ -541,7 +554,7 @@
       const payload = Object.fromEntries(formData.entries());
 
       try {
-        const res = await fetch('https://api.aagents.vn/api/v1/users', {
+        const res = await fetch('https://api.aagents.vn/api/v1/users/', {
           method: 'POST',
           headers,
           body: JSON.stringify(payload)
