@@ -11,10 +11,10 @@ from routes.quiz_routes import router as quiz_router
 from routes.auth_routes import router as auth_router
 from routes.user_routes import router as user_router
 from routes.chat_routes import router as chat_router
+from my_agents.exam_agents.unified_routes import unified_router
 from utils.pydantic_helper import format_validation_errors
 from utils.serialization import ensure_serializable
 from schemas.chat import ChatRequest, ChatResponse
-agents_list = ["router_agent", "google_drive_agent", "chatting_agent"]
 
 app = FastAPI(
     title="AI Agent Backend API",
@@ -34,6 +34,7 @@ app.include_router(auth_router)
 app.include_router(quiz_router)
 app.include_router(chat_router)
 app.include_router(user_router)
+app.include_router(unified_router)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):

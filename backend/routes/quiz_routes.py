@@ -10,7 +10,7 @@ from schemas.quiz_models import (
     GenerateQuizResponse
 )
 from services.quiz_service import QuizService
-from my_agents.quiz_generation_agent import QuizGenerationAgent
+from my_agents.quiz_generator import QuizGenerationAgent
 from utils.auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/quiz", tags=["quiz"])
@@ -410,5 +410,7 @@ async def generate_quiz_from_document(
     except Exception as e:
         logger.error(f"Error generating quiz: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
 
 

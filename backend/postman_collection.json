@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Quiz Test Module API",
-    "description": "Comprehensive API collection for testing the Quiz Test Module with manual quiz creation and AI-powered quiz generation. IMPORTANT: For Submit Quiz requests, you must use actual question IDs from the quiz, not hardcoded values like 'q1', 'q2', etc. Use the 'Get Quiz for Taking' endpoint to retrieve the actual question IDs first.",
+    "description": "Comprehensive API collection for testing the Quiz Test Module with manual quiz creation, AI-powered quiz generation, Multi-Agent Examination Generation, and Unified Exam Agents with OpenAI Agents SDK. IMPORTANT: For Submit Quiz requests, you must use actual question IDs from the quiz, not hardcoded values like 'q1', 'q2', etc. Use the 'Get Quiz for Taking' endpoint to retrieve the actual question IDs first. For Multi-Agent workflows, use the authToken variable for authentication.",
     "version": "1.0.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -9,6 +9,10 @@
     {
       "key": "baseUrl",
       "value": "https://api.aagents.vn/api/v1"
+    },
+    {
+      "key": "localUrl",
+      "value": "http://localhost:8000/api/v1"
     },
     {
       "key": "quizId",
@@ -21,9 +25,40 @@
     {
       "key": "attemptId",
       "value": ""
+    },
+    {
+      "key": "examSessionId",
+      "value": ""
+    },
+    {
+      "key": "unifiedSessionId",
+      "value": ""
+    },
+    {
+      "key": "authToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZSI6InVzZXIiLCJleHAiOjE3NTI0Njg2OTJ9.9R3r4QKCMYwCAzmchdFSwTeMgVmwIyUt05RFJD2gzcw"
     }
   ],
   "item": [
+    {
+      "name": "Authentication & Setup",
+      "item": [
+        {
+          "name": "Get Test Auth Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{localUrl}}/auth/test-token",
+              "host": ["{{localUrl}}"],
+              "path": ["auth", "test-token"]
+            },
+            "description": "Get a test JWT token for authentication. Copy the token and paste it into the authToken collection variable."
+          },
+          "response": []
+        }
+      ]
+    },
     {
       "name": "Quiz Management",
       "item": [
@@ -65,6 +100,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
               }
             ],
             "body": {
@@ -306,7 +345,800 @@
             }
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Unified Exam Agents (OpenAI SDK)",
+      "item": [
+        {
+          "name": "Health Check - Unified Agents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{localUrl}}/exam/health",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "health"]
+            },
+            "description": "Health check for the unified exam agents system with OpenAI Agents SDK"
+          },
+          "response": []
         },
+        {
+          "name": "Get Workflow Info",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{localUrl}}/exam/workflow/info",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "workflow", "info"]
+            },
+            "description": "Get detailed information about the unified workflow system with OpenAI Agents SDK"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Agents Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{localUrl}}/exam/agents/status",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "agents", "status"]
+            },
+            "description": "Get detailed status of all available agents including tools, handoffs, and guardrails"
+          },
+          "response": []
+        },
+        {
+          "name": "Start with Triage Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.session_id) {",
+                  "        pm.collectionVariables.set('unifiedSessionId', response.session_id);",
+                  "        console.log('Unified Session ID: ' + response.session_id);",
+                  "        console.log('Agent: ' + response.agent_name);",
+                  "        console.log('Message: ' + response.message.substring(0, 200) + '...');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"I want to create a comprehensive exam for my Data Structures and Algorithms course. It should be for university students and cover arrays, linked lists, trees, and sorting algorithms.\",\n  \"session_id\": \"{{unifiedSessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{localUrl}}/exam/chat?agent_name=triage",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "chat"],
+              "query": [
+                {
+                  "key": "agent_name",
+                  "value": "triage"
+                }
+              ]
+            },
+            "description": "Start conversation with triage agent - the intelligent router that delegates to specialists"
+          },
+          "response": []
+        },
+        {
+          "name": "Continue with Format Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('Agent: ' + response.agent_name);",
+                  "    console.log('Message: ' + response.message.substring(0, 200) + '...');",
+                  "    console.log('Format Completed: ' + response.context_data.format_completed);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"I want the exam to have 10 questions, 90 minutes time limit, mixed difficulty (easy, medium, hard), and include multiple choice, true/false, and short answer questions. The grading should be 70% for passing.\",\n  \"session_id\": \"{{unifiedSessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{localUrl}}/exam/chat?agent_name=format",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "chat"],
+              "query": [
+                {
+                  "key": "agent_name",
+                  "value": "format"
+                }
+              ]
+            },
+            "description": "Continue with format agent to define exam structure and specifications"
+          },
+          "response": []
+        },
+        {
+          "name": "Continue with Questions Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('Agent: ' + response.agent_name);",
+                  "    console.log('Message: ' + response.message.substring(0, 200) + '...');",
+                  "    console.log('Questions Completed: ' + response.context_data.questions_completed);",
+                  "    console.log('Questions Count: ' + response.context_data.questions.length);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Please generate the questions now. Make sure to include practical examples and cover all the topics I mentioned: arrays, linked lists, trees, and sorting algorithms.\",\n  \"session_id\": \"{{unifiedSessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{localUrl}}/exam/chat?agent_name=questions",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "chat"],
+              "query": [
+                {
+                  "key": "agent_name",
+                  "value": "questions"
+                }
+              ]
+            },
+            "description": "Continue with questions agent to generate exam questions based on format specifications"
+          },
+          "response": []
+        },
+        {
+          "name": "Continue with Editor Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('Agent: ' + response.agent_name);",
+                  "    console.log('Message: ' + response.message.substring(0, 200) + '...');",
+                  "    console.log('Editing Completed: ' + response.context_data.editing_completed);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Please review the exam for quality, clarity, and academic rigor. Check for any bias, unclear questions, or improvements that could be made.\",\n  \"session_id\": \"{{unifiedSessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{localUrl}}/exam/chat?agent_name=editor",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "chat"],
+              "query": [
+                {
+                  "key": "agent_name",
+                  "value": "editor"
+                }
+              ]
+            },
+            "description": "Continue with editor agent for quality review and exam improvement"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Session Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{localUrl}}/exam/session/{{unifiedSessionId}}/status",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "session", "{{unifiedSessionId}}", "status"]
+            },
+            "description": "Get current session status and progress overview"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Session Context",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{localUrl}}/exam/session/{{unifiedSessionId}}/context",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "session", "{{unifiedSessionId}}", "context"]
+            },
+            "description": "Get complete session context including conversation history and all data"
+          },
+          "response": []
+        },
+        {
+          "name": "Export Exam (JSON)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{localUrl}}/exam/session/{{unifiedSessionId}}/export?format=json",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "session", "{{unifiedSessionId}}", "export"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "json"
+                }
+              ]
+            },
+            "description": "Export completed exam in JSON format"
+          },
+          "response": []
+        },
+        {
+          "name": "Export Exam (Markdown)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{localUrl}}/exam/session/{{unifiedSessionId}}/export?format=markdown",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "session", "{{unifiedSessionId}}", "export"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "markdown"
+                }
+              ]
+            },
+            "description": "Export completed exam in Markdown format"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Session",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{localUrl}}/exam/session/{{unifiedSessionId}}",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "session", "{{unifiedSessionId}}"]
+            },
+            "description": "Delete session and all associated data"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Standalone Exam Agents (Conversational)",
+      "item": [
+        {
+          "name": "Get Agents Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{localUrl}}/exam-agents/agents/info",
+              "host": ["{{localUrl}}"],
+              "path": ["exam-agents", "agents", "info"]
+            },
+            "description": "Get information about all available exam agents and their capabilities"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check Exam Agents",
+          "request": {
+            "method": "GET", 
+            "header": [],
+            "url": {
+              "raw": "{{localUrl}}/exam-agents/health",
+              "host": ["{{localUrl}}"],
+              "path": ["exam-agents", "health"]
+            },
+            "description": "Health check for the exam agents system"
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Format Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.session_id) {",
+                  "        pm.collectionVariables.set('examSessionId', response.session_id);",
+                  "        console.log('Format Agent Session ID: ' + response.session_id);",
+                  "        console.log('Context Fulfilled: ' + response.context_fulfilled);",
+                  "        console.log('Agent Message: ' + response.message.substring(0, 200) + '...');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization", 
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"I want to create an exam format for a Data Structures course for university students.\",\n  \"session_id\": \"{{examSessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{localUrl}}/exam-agents/format/chat",
+              "host": ["{{localUrl}}"],
+              "path": ["exam-agents", "format", "chat"]
+            },
+            "description": "Start or continue a conversation with the Exam Format Agent"
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Question Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.session_id) {",
+                  "        pm.collectionVariables.set('examSessionId', response.session_id);",
+                  "        console.log('Question Agent Session ID: ' + response.session_id);",
+                  "        console.log('Context Fulfilled: ' + response.context_fulfilled);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"I need to generate 5 multiple choice questions about arrays and linked lists for university students.\",\n  \"session_id\": \"{{examSessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{localUrl}}/exam-agents/questions/chat",
+              "host": ["{{localUrl}}"],
+              "path": ["exam-agents", "questions", "chat"]
+            },
+            "description": "Start or continue a conversation with the Question Generator Agent"
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Editor Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.session_id) {",
+                  "        pm.collectionVariables.set('examSessionId', response.session_id);",
+                  "        console.log('Editor Agent Session ID: ' + response.session_id);",
+                  "        console.log('Context Fulfilled: ' + response.context_fulfilled);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Please review this exam for quality and suggest improvements.\",\n  \"session_id\": \"{{examSessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{localUrl}}/exam-agents/editor/chat",
+              "host": ["{{localUrl}}"],
+              "path": ["exam-agents", "editor", "chat"]
+            },
+            "description": "Start or continue a conversation with the Exam Editor Agent"
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Manager Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.session_id) {",
+                  "        pm.collectionVariables.set('examSessionId', response.session_id);",
+                  "        console.log('Manager Agent Session ID: ' + response.session_id);",
+                  "        console.log('Context Fulfilled: ' + response.context_fulfilled);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"I need help creating a comprehensive examination. Can you guide me through the process?\",\n  \"session_id\": \"{{examSessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{localUrl}}/exam-agents/manager/chat",
+              "host": ["{{localUrl}}"],
+              "path": ["exam-agents", "manager", "chat"]
+            },
+            "description": "Start or continue a conversation with the Exam Manager Agent"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Session Context",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{localUrl}}/exam-agents/session/{{examSessionId}}/context",
+              "host": ["{{localUrl}}"],
+              "path": ["exam-agents", "session", "{{examSessionId}}", "context"]
+            },
+            "description": "Get the current context and conversation history for a session"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Session",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{localUrl}}/exam-agents/session/{{examSessionId}}",
+              "host": ["{{localUrl}}"],
+              "path": ["exam-agents", "session", "{{examSessionId}}"]
+            },
+            "description": "Delete a conversation session and all associated data"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Multi-Agent Exam Generation (Workflow)",
+      "item": [
+        {
+          "name": "Generate Multi-Agent Examination (Start Workflow)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success) {",
+                  "        if (response.data.quiz_id) {",
+                  "            pm.collectionVariables.set('quizId', response.data.quiz_id);",
+                  "            console.log('Multi-Agent Exam Completed - Quiz ID: ' + response.data.quiz_id);",
+                  "            console.log('Generation Method: ' + response.data.exam_metadata.generation_method);",
+                  "            console.log('Quality Score: ' + response.data.exam_metadata.quality_score);",
+                  "        } else if (response.data.session_id) {",
+                  "            pm.collectionVariables.set('examSessionId', response.data.session_id);",
+                  "            console.log('Workflow started - Session ID: ' + response.data.session_id);",
+                  "            console.log('Current Agent: ' + response.data.current_agent);",
+                  "            console.log('Status: ' + response.data.workflow_status);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Artificial Intelligence and Machine Learning\",\n  \"description\": \"Comprehensive examination covering AI fundamentals, machine learning algorithms, neural networks, and practical applications\",\n  \"number_of_questions\": 8,\n  \"difficulty_level\": \"medium\",\n  \"exam_format\": \"academic\",\n  \"question_types\": [\"multiple_choice\", \"true_false\", \"text\", \"essay\"],\n  \"time_limit\": 3600,\n  \"learning_objectives\": [\n    \"Understand fundamental AI concepts and terminology\",\n    \"Analyze different machine learning algorithms and their applications\",\n    \"Evaluate the ethical implications of AI systems\",\n    \"Apply AI principles to real-world problem solving\"\n  ],\n  \"context_material\": \"This examination covers topics from Introduction to Artificial Intelligence course including supervised learning, unsupervised learning, neural networks, deep learning, natural language processing, computer vision, and AI ethics.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quiz/exam/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "exam", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Continue Exam Generation Workflow",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success) {",
+                  "        if (response.data.quiz_id) {",
+                  "            pm.collectionVariables.set('quizId', response.data.quiz_id);",
+                  "            console.log('Multi-Agent Exam Completed - Quiz ID: ' + response.data.quiz_id);",
+                  "            console.log('Quality Score: ' + response.data.exam_metadata.quality_score);",
+                  "        } else {",
+                  "            console.log('Current Agent: ' + response.data.current_agent);",
+                  "            console.log('Status: ' + response.data.workflow_status);",
+                  "            console.log('Message: ' + response.message);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/exam/continue/{{examSessionId}}?agent_name=ExamManagerAgent",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "exam", "continue", "{{examSessionId}}"],
+              "query": [
+                {
+                  "key": "agent_name",
+                  "value": "ExamManagerAgent",
+                  "description": "Optional: specify which agent to continue with"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Exam Generation Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/exam/status/{{examSessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "exam", "status", "{{examSessionId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Quick Exam Generation (Small Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.session_id) {",
+                  "        pm.collectionVariables.set('examSessionId', response.data.session_id);",
+                  "        console.log('Quick Exam Session ID: ' + response.data.session_id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"JavaScript Fundamentals\",\n  \"description\": \"Basic JavaScript concepts for beginners\",\n  \"number_of_questions\": 3,\n  \"difficulty_level\": \"easy\",\n  \"exam_format\": \"practice\",\n  \"question_types\": [\"multiple_choice\", \"true_false\"],\n  \"time_limit\": 900,\n  \"learning_objectives\": [\n    \"Variables and data types\",\n    \"Functions and scope\",\n    \"Basic control structures\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quiz/exam/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["quiz", "exam", "generate"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "AI Quiz Generation (Advanced)",
+      "item": [
         {
           "name": "Generate Advanced Quiz",
           "request": {
@@ -410,6 +1242,58 @@
               "host": ["{{baseUrl}}"],
               "path": ["quiz", "generate"]
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Unified Agents - Invalid Agent Name",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Test message\",\n  \"session_id\": \"test-session\"\n}"
+            },
+            "url": {
+              "raw": "{{localUrl}}/exam/chat?agent_name=invalid_agent",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "chat"],
+              "query": [
+                {
+                  "key": "agent_name",
+                  "value": "invalid_agent"
+                }
+              ]
+            },
+            "description": "Test error handling for invalid agent name"
+          },
+          "response": []
+        },
+        {
+          "name": "Export Non-existent Session",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{localUrl}}/exam/session/non-existent-session/export",
+              "host": ["{{localUrl}}"],
+              "path": ["exam", "session", "non-existent-session", "export"]
+            },
+            "description": "Test error handling for non-existent session export"
           },
           "response": []
         }
