@@ -24,7 +24,7 @@ class UserOut(BaseModel):
     gender: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
     @staticmethod
     def from_orm_with_role_name(user):
