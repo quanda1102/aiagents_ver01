@@ -3,7 +3,7 @@
 <!-- [Head] start -->
 
 <head>
-  <title>Kết quả bài làm của người dùng</title>
+  <title>Danh sách người dùng</title>
   <!-- [Meta] -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
@@ -56,7 +56,15 @@
             <span class="pc-mtext">Dashboard</span>
           </a>
         </li>
-
+        <li class="pc-item pc-caption">
+          <label>Người dùng</label>
+        </li>
+        <li class="pc-item">
+          <a href="../pages/users-list.html" class="pc-link">
+            <span class="pc-micon"><i class="ti ti-users"></i></span>
+            <span class="pc-mtext">Danh sách người dùng</span>
+          </a>
+        </li>
         <li class="pc-item pc-caption">
           <label>Pages</label>
           <i class="ti ti-news"></i>
@@ -356,16 +364,82 @@
         <div class="col-sm-12">
           <div class="card">
             <div class="card-header">
-              <h5>Kết quả bài làm của người dùng</h5>
+              <h5>Danh sách người dùng</h5>
             </div>
             <div class="card-body">
-                <div class="mb-4">
-                  <label for="userIdInput" class="form-label">Nhập User ID:</label>
-                  <input type="text" id="userIdInput" class="form-control" placeholder="Ví dụ: test_user_456">
-                  <button id="loadAttemptsBtn" class="btn btn-primary mt-2">Tải kết quả</button>
-                </div>
-            
-                <div id="attemptResults"></div>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createUserModal">+ Thêm người dùng</button>
+                <table class="table table-bordered table-hover">
+                  <thead class="table-secondary">
+                    <tr>
+                      <th>#</th>
+                      <th>Email</th>
+                      <th>Họ tên</th>
+                      <th>Tuổi</th>
+                      <th>Giới tính</th>
+                      <th>Lớp</th>
+                      <th>Vai trò</th>
+                    </tr>
+                  </thead>
+                  <tbody id="userTableBody">
+                    <!-- Dữ liệu người dùng render tại đây -->
+                  </tbody>
+                </table>
+                <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <form class="modal-content" id="createUserForm">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Tạo người dùng mới</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="mb-2">
+                            <label>Email</label>
+                            <input type="email" name="email" class="form-control" required />
+                          </div>
+                          <div class="mb-2">
+                            <label>Mật khẩu</label>
+                            <div class="input-group">
+                              <input type="text" name="password" class="form-control" required id="passwordInput" />
+                              <button type="button" class="btn btn-outline-secondary" onclick="copyPassword()"><i class="ti ti-copy"></i></button>
+                            </div>
+                          </div>
+                          <div class="mb-2">
+                                <button type="button" class="btn btn-outline-secondary" onclick="generatePassword()">Mật khẩu ngẫu nhiên</button>
+                          </div>
+                          <div class="mb-2">
+                            <label>Họ tên</label>
+                            <input type="text" name="full_name" class="form-control" required />
+                          </div>
+                          <div class="mb-2">
+                            <label>Tuổi</label>
+                            <input type="number" name="age" class="form-control" required />
+                          </div>
+                          <div class="mb-2">
+                            <label>Giới tính</label>
+                            <select name="gender" class="form-select">
+                              <option value="male">Nam</option>
+                              <option value="female">Nữ</option>
+                            </select>
+                          </div>
+                          <div class="mb-2">
+                            <label>Lớp</label>
+                            <input type="text" name="class_name" class="form-control" />
+                          </div>
+                          <div class="mb-2">
+                            <label>Vai trò</label>
+                            <select name="role" class="form-select">
+                              <option value="STUDENT">Học sinh</option>
+                              <option value="TEACHER">Giáo viên</option>
+                              <option value="ADMIN">Quản trị</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="submit" class="btn btn-primary">Tạo</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
             </div>
           </div>
         </div>
@@ -423,70 +497,91 @@
 <script>font_change("Public-Sans");</script>
 
 <script>
-    document.getElementById('loadAttemptsBtn').addEventListener('click', async () => {
-      const userId = document.getElementById('userIdInput').value.trim();
-      const resultContainer = document.getElementById('attemptResults');
-      if (!userId) return alert('Vui lòng nhập User ID');
+    const token = localStorage.getItem('access_token');
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    };
 
-      resultContainer.innerHTML = '<div class="text-muted">Đang tải dữ liệu...</div>';
+    // 1. Load danh sách người dùng
+    async function loadUsers() {
+      try {
+        const res = await fetch('https://api.aagents.vn/api/v1/users/', {
+            method: 'GET',
+            headers
+         });
+        const data = await res.json();
+
+        const tableBody = document.getElementById('userTableBody');
+        tableBody.innerHTML = '';
+
+        data.forEach((user, i) => {
+          tableBody.innerHTML += `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${user.email}</td>
+              <td>${user.full_name}</td>
+              <td>${user.age}</td>
+              <td>${user.gender}</td>
+              <td>${user.class_name || '-'}</td>
+              <td>${user.role}</td>
+            </tr>`;
+        });
+      } catch (err) {
+        alert('Lỗi khi tải danh sách người dùng.');
+        console.error(err);
+      }
+    }
+
+    // 2. Xử lý tạo người dùng mới
+    document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
 
       try {
-        const res = await fetch(`https://api.aagents.vn/api/v1/quiz/user/${userId}/attempts?limit=5`, {
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('access_token')
-          }
+        const res = await fetch('https://api.aagents.vn/api/v1/users', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
         });
+
         const json = await res.json();
-
-        if (!json.success) {
-          resultContainer.innerHTML = '<div class="alert alert-danger">Không thể tải kết quả.</div>';
-          return;
-        }
-
-        const data = json.data;
-        let html = `
-          <div class="mb-4">
-            <h4>📌 Thống kê</h4>
-            <ul class="list-group">
-              <li class="list-group-item"><strong>Tổng lượt làm:</strong> ${data.total_attempts}</li>
-              <li class="list-group-item"><strong>Điểm trung bình:</strong> ${data.average_score.toFixed(2)}%</li>
-              <li class="list-group-item"><strong>Điểm cao nhất:</strong> ${data.best_score}%</li>
-              <li class="list-group-item"><strong>Số bài đã làm:</strong> ${data.quizzes_taken}</li>
-            </ul>
-          </div>
-        `;
-
-        if (!data.recent_attempts || data.recent_attempts.length === 0) {
-          html += `<div class="alert alert-info">Chưa có bài nào được làm.</div>`;
+        if (json && json.id) {
+          alert('Tạo người dùng thành công!');
+          form.reset();
+          document.querySelector('#createUserModal .btn-close').click();
+          loadUsers();
         } else {
-          data.recent_attempts.forEach((attempt, i) => {
-            html += `
-              <div class="card mb-4">
-                <div class="card-header">📝 Bài ${i + 1} - ${new Date(attempt.submitted_at).toLocaleString()}</div>
-                <div class="card-body">
-                  <p><strong>Quiz ID:</strong> ${attempt.quiz_id}</p>
-                  <p><strong>Điểm:</strong> ${attempt.earned_points} / ${attempt.total_points} (${attempt.score_percentage}%)</p>
-                  <hr>
-                  <h6>Câu hỏi & Kết quả:</h6>
-                  ${attempt.results.map((r, idx) => `
-                    <div class="mb-3">
-                      <strong>Câu ${idx + 1}:</strong><br>
-                      Trả lời: <span class="${r.is_correct ? 'text-success' : 'text-danger'}">${r.user_answer}</span><br>
-                      Đáp án đúng: ${r.correct_answer}
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            `;
-          });
+          alert('Tạo thất bại!');
         }
-
-        resultContainer.innerHTML = html;
       } catch (err) {
         console.error(err);
-        resultContainer.innerHTML = '<div class="alert alert-danger">Lỗi khi tải dữ liệu.</div>';
+        alert('Lỗi tạo người dùng.');
       }
     });
+
+    // 3. Hàm tạo mật khẩu ngẫu nhiên
+    function generatePassword() {
+      const random = Math.random().toString(36).slice(-10) + Math.floor(Math.random() * 100);
+      document.getElementById('passwordInput').value = random;
+    }
+    // 4. Kiểm tra login
+    if (token) {
+      loadUsers();
+    }
+    function copyPassword() {
+      const password = document.getElementById('passwordInput').value;
+      if (!password) {
+        alert('Chưa có mật khẩu để sao chép!');
+        return;
+      }
+    
+      navigator.clipboard.writeText(password)
+        .then(() => alert('Đã sao chép mật khẩu!'))
+        .catch(err => alert('Không thể sao chép: ' + err));
+    }
   </script>
   
 </body>
