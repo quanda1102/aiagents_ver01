@@ -3,7 +3,7 @@
 <!-- [Head] start -->
 
 <head>
-  <title>Sample Page | Mantis Bootstrap 5 Admin Template</title>
+  <title>Kết quả bài làm của người dùng</title>
   <!-- [Meta] -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
@@ -13,19 +13,19 @@
   <meta name="author" content="CodedThemes">
 
   <!-- [Favicon] icon -->
-  <link rel="icon" href="../assets/images/favicon.svg" type="image/x-icon"> <!-- [Google Font] Family -->
+  <link rel="icon" href="../../assets/images/favicon.svg" type="image/x-icon"> <!-- [Google Font] Family -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" id="main-font-link">
 <!-- [Tabler Icons] https://tablericons.com -->
-<link rel="stylesheet" href="../assets/fonts/tabler-icons.min.css" >
+<link rel="stylesheet" href="../../assets/fonts/tabler-icons.min.css" >
 <!-- [Feather Icons] https://feathericons.com -->
-<link rel="stylesheet" href="../assets/fonts/feather.css" >
+<link rel="stylesheet" href="../../assets/fonts/feather.css" >
 <!-- [Font Awesome Icons] https://fontawesome.com/icons -->
-<link rel="stylesheet" href="../assets/fonts/fontawesome.css" >
+<link rel="stylesheet" href="../../assets/fonts/fontawesome.css" >
 <!-- [Material Icons] https://fonts.google.com/icons -->
-<link rel="stylesheet" href="../assets/fonts/material.css" >
+<link rel="stylesheet" href="../../assets/fonts/material.css" >
 <!-- [Template CSS Files] -->
-<link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" >
-<link rel="stylesheet" href="../assets/css/style-preset.css" >
+<link rel="stylesheet" href="../../assets/css/style.css" id="main-style-link" >
+<link rel="stylesheet" href="../../assets/css/style-preset.css" >
 
 </head>
 <!-- [Head] end -->
@@ -43,40 +43,17 @@
 <nav class="pc-sidebar">
   <div class="navbar-wrapper">
     <div class="m-header">
-      <a href="../dashboard/index.html" class="b-brand text-primary">
+      <a href="../../dashboard/index.html" class="b-brand text-primary">
         <!-- ========   Change your logo from here   ============ -->
-        <img src="../assets/images/logo-dark.svg" class="img-fluid logo-lg" alt="logo">
+        <img src="../../assets/images/logo-dark.svg" class="img-fluid logo-lg" alt="logo">
       </a>
     </div>
     <div class="navbar-content">
       <ul class="pc-navbar">
         <li class="pc-item">
-          <a href="../dashboard/index.html" class="pc-link">
+          <a href="../../dashboard/index.html" class="pc-link">
             <span class="pc-micon"><i class="ti ti-dashboard"></i></span>
             <span class="pc-mtext">Dashboard</span>
-          </a>
-        </li>
-
-        <li class="pc-item pc-caption">
-          <label>UI Components</label>
-          <i class="ti ti-dashboard"></i>
-        </li>
-        <li class="pc-item">
-          <a href="../elements/bc_typography.html" class="pc-link">
-            <span class="pc-micon"><i class="ti ti-typography"></i></span>
-            <span class="pc-mtext">Typography</span>
-          </a>
-        </li>
-        <li class="pc-item">
-          <a href="../elements/bc_color.html" class="pc-link">
-            <span class="pc-micon"><i class="ti ti-color-swatch"></i></span>
-            <span class="pc-mtext">Color</span>
-          </a>
-        </li>
-        <li class="pc-item">
-          <a href="../elements/icon-tabler.html" class="pc-link">
-            <span class="pc-micon"><i class="ti ti-plant-2"></i></span>
-            <span class="pc-mtext">Icons</span>
           </a>
         </li>
 
@@ -84,14 +61,22 @@
           <label>Pages</label>
           <i class="ti ti-news"></i>
         </li>
+        <li class="pc-item pc-hasmenu">
+          <a href="#!" class="pc-link"><span class="pc-micon"><i class="ti ti-menu"></i></span><span class="pc-mtext">Bài tập</span><span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+          <ul class="pc-submenu">
+            <li class="pc-item"><a class="pc-link" href="../../pages/exercises/create-quizz.html">Tạo bài tập</a></li>
+            <li class="pc-item"><a class="pc-link" href="../../pages/exercises/list-quizz.html">Danh sách bài tập</a></li>
+            <li class="pc-item"><a class="pc-link" href="../../pages/exercises/user-attempts.html">Kết quả bài làm</a></li>
+          </ul>
+        </li>
         <li class="pc-item">
-          <a href="../pages/login.html" class="pc-link">
+          <a href="../../pages/login.html" class="pc-link">
             <span class="pc-micon"><i class="ti ti-lock"></i></span>
             <span class="pc-mtext">Login</span>
           </a>
         </li>
         <li class="pc-item">
-          <a href="../pages/register.html" class="pc-link">
+          <a href="../../pages/register.html" class="pc-link">
             <span class="pc-micon"><i class="ti ti-user-plus"></i></span>
             <span class="pc-mtext">Register</span>
           </a>
@@ -101,57 +86,13 @@
           <label>Other</label>
           <i class="ti ti-brand-chrome"></i>
         </li>
-        <li class="pc-item pc-hasmenu">
-          <a href="#!" class="pc-link"><span class="pc-micon"><i class="ti ti-menu"></i></span><span class="pc-mtext">Menu
-              levels</span><span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-          <ul class="pc-submenu">
-            <li class="pc-item"><a class="pc-link" href="#!">Level 2.1</a></li>
-            <li class="pc-item pc-hasmenu">
-              <a href="#!" class="pc-link">Level 2.2<span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-              <ul class="pc-submenu">
-                <li class="pc-item"><a class="pc-link" href="#!">Level 3.1</a></li>
-                <li class="pc-item"><a class="pc-link" href="#!">Level 3.2</a></li>
-                <li class="pc-item pc-hasmenu">
-                  <a href="#!" class="pc-link">Level 3.3<span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                  <ul class="pc-submenu">
-                    <li class="pc-item"><a class="pc-link" href="#!">Level 4.1</a></li>
-                    <li class="pc-item"><a class="pc-link" href="#!">Level 4.2</a></li>
-                  </ul>
-                </li>
-              </ul>
-            </li>
-            <li class="pc-item pc-hasmenu">
-              <a href="#!" class="pc-link">Level 2.3<span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-              <ul class="pc-submenu">
-                <li class="pc-item"><a class="pc-link" href="#!">Level 3.1</a></li>
-                <li class="pc-item"><a class="pc-link" href="#!">Level 3.2</a></li>
-                <li class="pc-item pc-hasmenu">
-                  <a href="#!" class="pc-link">Level 3.3<span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-                  <ul class="pc-submenu">
-                    <li class="pc-item"><a class="pc-link" href="#!">Level 4.1</a></li>
-                    <li class="pc-item"><a class="pc-link" href="#!">Level 4.2</a></li>
-                  </ul>
-                </li>
-              </ul>
-            </li>
-          </ul>
-        </li>
         <li class="pc-item">
-          <a href="../other/sample-page.html" class="pc-link">
+          <a href="../../other/sample-page.html" class="pc-link">
             <span class="pc-micon"><i class="ti ti-brand-chrome"></i></span>
             <span class="pc-mtext">Sample page</span>
           </a>
         </li>
       </ul>
-      <div class="card text-center">
-        <div class="card-body">
-          <img src="../assets/images/img-navbar-card.png" alt="images" class="img-fluid mb-2">
-          <h5>Upgrade To Pro</h5>
-          <p>To get more features and components</p>
-          <a href="https://codedthemes.com/item/berry-bootstrap-5-admin-template/" target="_blank"
-          class="btn btn-success">Buy Now</a>
-        </div>
-      </div>
     </div>
   </div>
 </nav>
@@ -224,7 +165,7 @@
             <a class="list-group-item list-group-item-action">
               <div class="d-flex">
                 <div class="flex-shrink-0">
-                  <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
+                  <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
                 </div>
                 <div class="flex-grow-1 ms-1">
                   <span class="float-end text-muted">3:00 AM</span>
@@ -236,7 +177,7 @@
             <a class="list-group-item list-group-item-action">
               <div class="d-flex">
                 <div class="flex-shrink-0">
-                  <img src="../assets/images/user/avatar-1.jpg" alt="user-image" class="user-avtar">
+                  <img src="../../assets/images/user/avatar-1.jpg" alt="user-image" class="user-avtar">
                 </div>
                 <div class="flex-grow-1 ms-1">
                   <span class="float-end text-muted">6:00 PM</span>
@@ -248,7 +189,7 @@
             <a class="list-group-item list-group-item-action">
               <div class="d-flex">
                 <div class="flex-shrink-0">
-                  <img src="../assets/images/user/avatar-3.jpg" alt="user-image" class="user-avtar">
+                  <img src="../../assets/images/user/avatar-3.jpg" alt="user-image" class="user-avtar">
                 </div>
                 <div class="flex-grow-1 ms-1">
                   <span class="float-end text-muted">2:45 PM</span>
@@ -260,7 +201,7 @@
             <a class="list-group-item list-group-item-action">
               <div class="d-flex">
                 <div class="flex-shrink-0">
-                  <img src="../assets/images/user/avatar-4.jpg" alt="user-image" class="user-avtar">
+                  <img src="../../assets/images/user/avatar-4.jpg" alt="user-image" class="user-avtar">
                 </div>
                 <div class="flex-grow-1 ms-1">
                   <span class="float-end text-muted">9:10 PM</span>
@@ -287,20 +228,20 @@
         data-bs-auto-close="outside"
         aria-expanded="false"
       >
-        <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
+        <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
         <span>Stebin Ben</span>
       </a>
       <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
         <div class="dropdown-header">
           <div class="d-flex mb-1">
             <div class="flex-shrink-0">
-              <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar wid-35">
+              <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar wid-35">
             </div>
             <div class="flex-grow-1 ms-3">
               <h6 class="mb-1">Stebin Ben</h6>
               <span>UI/UX Designer</span>
             </div>
-            <a href="#!" class="pc-head-link bg-transparent"><i class="ti ti-power text-danger"></i></a>
+            <button type="button" id="logoutBtn" class="pc-head-link bg-transparent" style="border: unset;"><i class="ti ti-power text-danger"></i></button>
           </div>
         </div>
         <ul class="nav drp-tabs nav-fill nav-tabs" id="mydrpTab" role="tablist">
@@ -399,9 +340,9 @@
                 <h5 class="m-b-10">Sample Page</h5>
               </div>
               <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="../dashboard/index.html">Home</a></li>
-                <li class="breadcrumb-item"><a href="javascript: void(0)">Other</a></li>
-                <li class="breadcrumb-item" aria-current="page">Sample Page</li>
+                <li class="breadcrumb-item"><a href="../../dashboard/index.html">Home</a></li>
+                <li class="breadcrumb-item"><a href="javascript: void(0)">Exercises</a></li>
+                <li class="breadcrumb-item" aria-current="page">Kết quả bài làm của người dùng</li>
               </ul>
             </div>
           </div>
@@ -415,16 +356,16 @@
         <div class="col-sm-12">
           <div class="card">
             <div class="card-header">
-              <h5>Làm bài tập</h5>
+              <h5>Kết quả bài làm của người dùng</h5>
             </div>
             <div class="card-body">
-                <div id="quizContainer"></div>
-
-                <div class="mt-4">
-                  <button id="submitBtn" class="btn btn-primary">Nộp bài</button>
+                <div class="mb-4">
+                  <label for="userIdInput" class="form-label">Nhập User ID:</label>
+                  <input type="text" id="userIdInput" class="form-control" placeholder="Ví dụ: test_user_456">
+                  <button id="loadAttemptsBtn" class="btn btn-primary mt-2">Tải kết quả</button>
                 </div>
             
-                <div id="resultContainer" class="mt-5"></div>
+                <div id="attemptResults"></div>
             </div>
           </div>
         </div>
@@ -438,24 +379,27 @@
     <div class="footer-wrapper container-fluid">
       <div class="row">
         <div class="col-sm my-1">
-          <p class="m-0"
-            >Mantis &#9829; crafted by Team <a href="https://themeforest.net/user/codedthemes" target="_blank">Codedthemes</a> Distributed by <a href="https://themewagon.com/">ThemeWagon</a>.</p
-          >
+            <p class="m-0">Website được tạo bởi TMA.</p>
         </div>
         <div class="col-auto my-1">
           <ul class="list-inline footer-link mb-0">
-            <li class="list-inline-item"><a href="../index.html">Home</a></li>
+            <li class="list-inline-item"><a href="../../index.html">Trang chủ</a></li>
           </ul>
         </div>
       </div>
     </div>
   </footer> <!-- Required Js -->
-<script src="../assets/js/plugins/popper.min.js"></script>
-<script src="../assets/js/plugins/simplebar.min.js"></script>
-<script src="../assets/js/plugins/bootstrap.min.js"></script>
-<script src="../assets/js/fonts/custom-font.js"></script>
-<script src="../assets/js/pcoded.js"></script>
-<script src="../assets/js/plugins/feather.min.js"></script>
+      <!--Hàm check login-->
+  <script src="../../assets/js/auth.js"></script>
+    <script>
+      requireAuth();
+    </script>
+<script src="../../assets/js/plugins/popper.min.js"></script>
+<script src="../../assets/js/plugins/simplebar.min.js"></script>
+<script src="../../assets/js/plugins/bootstrap.min.js"></script>
+<script src="../../assets/js/fonts/custom-font.js"></script>
+<script src="../../assets/js/pcoded.js"></script>
+<script src="../../assets/js/plugins/feather.min.js"></script>
 
 
 
@@ -479,117 +423,70 @@
 <script>font_change("Public-Sans");</script>
 
 <script>
-    const quizId = new URLSearchParams(window.location.search).get('id');
-    const userId = 'test_user_456'; // Sửa theo tài khoản thật nếu cần
-    let quizData = null;
+    document.getElementById('loadAttemptsBtn').addEventListener('click', async () => {
+      const userId = document.getElementById('userIdInput').value.trim();
+      const resultContainer = document.getElementById('attemptResults');
+      if (!userId) return alert('Vui lòng nhập User ID');
 
-    async function fetchQuiz() {
-      try {
-        const res = await fetch(`https://api.aagents.vn/api/v1/quiz/${quizId}`);
-        const json = await res.json();
-        quizData = json.data;
-        renderQuiz(quizData);
-      } catch (err) {
-        console.error(err);
-        document.getElementById('quizContainer').innerHTML = '<div class="alert alert-danger">Không thể tải bài tập.</div>';
-      }
-    }
-
-    function renderQuiz(quiz) {
-      let html = `<h2>${quiz.title}</h2><p>${quiz.description}</p><form id="quizForm">`;
-
-      quiz.questions.forEach((q, index) => {
-        html += `<div class="card my-3">
-          <div class="card-body">
-            <h5 class="card-title">Câu ${index + 1}: ${q.question_text}</h5>`;
-
-        if (q.question_type === 'multiple_choice' && Array.isArray(q.options)) {
-          q.options.forEach(option => {
-            html += `
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="${q.question_id}" value="${option}" required>
-                <label class="form-check-label">${option}</label>
-              </div>`;
-          });
-        } else if (q.question_type === 'true_false') {
-          ['True', 'False'].forEach(val => {
-            html += `
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="${q.question_id}" value="${val}" required>
-                <label class="form-check-label">${val}</label>
-              </div>`;
-          });
-        } else if (q.question_type === 'text') {
-          html += `
-            <div class="mb-3">
-              <input class="form-control" type="text" name="${q.question_id}" required>
-            </div>`;
-        }
-
-        html += `</div></div>`;
-      });
-
-      html += '</form>';
-      document.getElementById('quizContainer').innerHTML = html;
-    }
-
-    document.getElementById('submitBtn').addEventListener('click', async () => {
-      const form = document.getElementById('quizForm');
-      if (!form.reportValidity()) return;
-
-      const answers = quizData.questions.map(q => {
-        let answerValue = '';
-        if (q.question_type === 'multiple_choice' || q.question_type === 'true_false') {
-          const selected = form.querySelector(`input[name="${q.question_id}"]:checked`);
-          answerValue = selected ? selected.value : '';
-        } else if (q.question_type === 'text') {
-          const input = form.querySelector(`input[name="${q.question_id}"]`);
-          answerValue = input ? input.value : '';
-        }
-        return {
-          question_id: q.question_id,
-          answer: answerValue
-        };
-      });
-
-      const payload = {
-        quiz_id: quizId,
-        user_id: userId,
-        answers: answers
-      };
+      resultContainer.innerHTML = '<div class="text-muted">Đang tải dữ liệu...</div>';
 
       try {
-        const res = await fetch('https://api.aagents.vn/api/v1/quiz/submit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+        const res = await fetch(`https://api.aagents.vn/api/v1/quiz/user/${userId}/attempts?limit=5`, {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+          }
         });
-        const result = await res.json();
-        renderResult(result.data);
+        const json = await res.json();
+
+        if (!json.success) {
+          resultContainer.innerHTML = '<div class="alert alert-danger">Không thể tải kết quả.</div>';
+          return;
+        }
+
+        const data = json.data;
+        let html = `
+          <div class="mb-4">
+            <h4>📌 Thống kê</h4>
+            <ul class="list-group">
+              <li class="list-group-item"><strong>Tổng lượt làm:</strong> ${data.total_attempts}</li>
+              <li class="list-group-item"><strong>Điểm trung bình:</strong> ${data.average_score.toFixed(2)}%</li>
+              <li class="list-group-item"><strong>Điểm cao nhất:</strong> ${data.best_score}%</li>
+              <li class="list-group-item"><strong>Số bài đã làm:</strong> ${data.quizzes_taken}</li>
+            </ul>
+          </div>
+        `;
+
+        if (!data.recent_attempts || data.recent_attempts.length === 0) {
+          html += `<div class="alert alert-info">Chưa có bài nào được làm.</div>`;
+        } else {
+          data.recent_attempts.forEach((attempt, i) => {
+            html += `
+              <div class="card mb-4">
+                <div class="card-header">📝 Bài ${i + 1} - ${new Date(attempt.submitted_at).toLocaleString()}</div>
+                <div class="card-body">
+                  <p><strong>Quiz ID:</strong> ${attempt.quiz_id}</p>
+                  <p><strong>Điểm:</strong> ${attempt.earned_points} / ${attempt.total_points} (${attempt.score_percentage}%)</p>
+                  <hr>
+                  <h6>Câu hỏi & Kết quả:</h6>
+                  ${attempt.results.map((r, idx) => `
+                    <div class="mb-3">
+                      <strong>Câu ${idx + 1}:</strong><br>
+                      Trả lời: <span class="${r.is_correct ? 'text-success' : 'text-danger'}">${r.user_answer}</span><br>
+                      Đáp án đúng: ${r.correct_answer}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        resultContainer.innerHTML = html;
       } catch (err) {
         console.error(err);
-        alert('Lỗi khi nộp bài');
+        resultContainer.innerHTML = '<div class="alert alert-danger">Lỗi khi tải dữ liệu.</div>';
       }
     });
-
-    function renderResult(data) {
-      let html = `<h4>Kết quả</h4>
-        <p>Điểm: ${data.earned_points} / ${data.total_points}</p>
-        <p>Tỷ lệ đúng: ${data.score_percentage}%</p>
-        <hr>`;
-
-      data.results.forEach((r, index) => {
-        html += `<div class="mb-3">
-          <strong>Câu ${index + 1}:</strong><br>
-          Trả lời của bạn: <span class="${r.is_correct ? 'text-success' : 'text-danger'}">${r.user_answer}</span><br>
-          Đáp án đúng: ${r.correct_answer ?? 'Không có'}
-        </div>`;
-      });
-
-      document.getElementById('resultContainer').innerHTML = html;
-    }
-
-    fetchQuiz();
   </script>
   
 </body>

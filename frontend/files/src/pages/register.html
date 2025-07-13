@@ -3,7 +3,7 @@
 <!-- [Head] start -->
 
 <head>
-  <title>Sign up | Mantis Bootstrap 5 Admin Template</title>
+  <title>Đăng ký</title>
   <!-- [Meta] -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
@@ -49,72 +49,61 @@
         <div class="card my-5">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-end mb-4">
-              <h3 class="mb-0"><b>Sign up</b></h3>
-              <a href="#" class="link-primary">Already have an account?</a>
+              <h3 class="mb-0"><b>Đăng ký</b></h3>
+              <a href="login.html" class="link-primary">Bạn đã có tài khoản?</a>
             </div>
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group mb-3">
-                  <label class="form-label">First Name*</label>
-                  <input type="text" class="form-control" placeholder="First Name">
+            <form id="registerForm">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="form-group mb-3">
+                    <label class="form-label">Họ tên</label>
+                    <input type="text" class="form-control" name="full_name" placeholder="Họ và tên" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label class="form-label">Tuổi</label>
+                    <input type="number" class="form-control" name="age" placeholder="18" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label class="form-label">Giới tính</label>
+                    <select class="form-control" name="gender" required>
+                      <option value="">Chọn giới tính</option>
+                      <option value="male">Nam</option>
+                      <option value="female">Nữ</option>
+                      <option value="other">Khác</option>
+                    </select>
+                  </div>
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="form-group mb-3">
-                  <label class="form-label">Last Name</label>
-                  <input type="text" class="form-control" placeholder="Last Name">
-                </div>
-              </div>
-            </div>
-            <div class="form-group mb-3">
-              <label class="form-label">Company</label>
-              <input type="text" class="form-control" placeholder="Company">
-            </div>
-            <div class="form-group mb-3">
-              <label class="form-label">Email Address*</label>
-              <input type="email" class="form-control" placeholder="Email Address">
-            </div>
-            <div class="form-group mb-3">
-              <label class="form-label">Password</label>
-              <input type="password" class="form-control" placeholder="Password">
-            </div>
-            <p class="mt-4 text-sm text-muted">By Signing up, you agree to our <a href="#" class="text-primary"> Terms of Service </a> and <a href="#" class="text-primary"> Privacy Policy</a></p>
-            <div class="d-grid mt-3">
-              <button type="button" class="btn btn-primary">Create Account</button>
-            </div>
-            <div class="saprator mt-3">
-              <span>Sign up with</span>
-            </div>
-            <div class="row">
-              <div class="col-4">
-                <div class="d-grid">
-                  <button type="button" class="btn mt-2 btn-light-primary bg-light text-muted">
-                    <img src="../assets/images/authentication/google.svg" alt="img"> <span class="d-none d-sm-inline-block"> Google</span>
-                  </button>
-                </div>
-              </div>
-              <div class="col-4">
-                <div class="d-grid">
-                  <button type="button" class="btn mt-2 btn-light-primary bg-light text-muted">
-                    <img src="../assets/images/authentication/twitter.svg" alt="img"> <span class="d-none d-sm-inline-block"> Twitter</span>
-                  </button>
-                </div>
-              </div>
-              <div class="col-4">
-                <div class="d-grid">
-                  <button type="button" class="btn mt-2 btn-light-primary bg-light text-muted">
-                    <img src="../assets/images/authentication/facebook.svg" alt="img"> <span class="d-none d-sm-inline-block"> Facebook</span>
-                  </button>
-                </div>
-              </div>
-            </div>
             
+              <div class="form-group mb-3">
+                <label class="form-label">Email*</label>
+                <input type="email" class="form-control" name="email" placeholder="Email" required>
+              </div>
+              <div class="form-group mb-3">
+                <label class="form-label">Mật khẩu</label>
+                <input type="password" class="form-control" name="password" placeholder="Mật khẩu" required>
+              </div>
+            
+              <p class="mt-4 text-sm text-muted">
+                Bằng cách đăng ký, bạn đồng ý với
+                <a href="#" class="text-primary">Điều khoản dịch vụ</a> và
+                <a href="#" class="text-primary">Chính sách bảo mật</a>
+              </p>
+            
+              <div class="d-grid mt-3">
+                <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+              </div>
+            </form>
           </div>
         </div>
         <div class="auth-footer row">
           <!-- <div class=""> -->
             <div class="col my-1">
-              <p class="m-0">Copyright © <a href="#">Codedthemes</a></p>
+              <p class="m-0">Copyright © <a href="#">TMA</a></p>
             </div>
             <div class="col-auto my-1">
               <ul class="list-inline footer-link mb-0">
@@ -130,6 +119,10 @@
   </div>
   <!-- [ Main Content ] end -->
   <!-- Required Js -->
+    <script src="../assets/js/auth.js"></script>
+  <script>
+  redirectIfAuthenticated();
+  </script>
   <script src="../assets/js/plugins/popper.min.js"></script>
   <script src="../assets/js/plugins/simplebar.min.js"></script>
   <script src="../assets/js/plugins/bootstrap.min.js"></script>
@@ -336,6 +329,44 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const form = e.target;
+    const data = {
+      full_name: form.full_name.value,
+      age: form.age.value,
+      gender: form.gender.value,
+      email: form.email.value,
+      password: form.password.value,
+    };
+
+    try {
+      const res = await fetch('https://api.aagents.vn/api/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const json = await res.json();
+
+      if (res.ok && json.access_token) {
+        // Lưu token
+        localStorage.setItem('access_token', json.access_token);
+        alert('Đăng ký thành công!');
+        // form.reset();
+        window.location.href = '/dashboard/index.html'; // nếu có trang login
+      } else {
+        alert(json.message || 'Đăng ký thất bại');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Lỗi kết nối đến server');
+    }
+  });
+</script>
 </body>
 <!-- [Body] end -->
 
