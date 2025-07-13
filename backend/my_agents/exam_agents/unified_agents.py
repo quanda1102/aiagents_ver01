@@ -73,30 +73,38 @@ async def save_exam_format(
     time_limit: int,
     difficulty_level: str,
     question_types: str,
-    grading_criteria: str,
-    learning_objectives: str
+    grading_criteria: str = "Standard academic grading: 90-100% A, 80-89% B, 70-79% C, 60-69% D, below 60% F",
+    learning_objectives: str = "To be determined based on subject and requirements"
 ) -> str:
     """Save exam format specification to context."""
-    context.context.exam_title = title
-    context.context.subject = subject
-    context.context.num_questions = num_questions
-    context.context.time_limit = time_limit
-    context.context.difficulty_level = difficulty_level
-    context.context.question_types = question_types.split(',')
-    
-    context.context.format_spec = {
-        "title": title,
-        "subject": subject,
-        "num_questions": num_questions,
-        "time_limit": time_limit,
-        "difficulty_level": difficulty_level,
-        "question_types": question_types.split(','),
-        "grading_criteria": grading_criteria,
-        "learning_objectives": learning_objectives
-    }
-    context.context.format_completed = True
-    
-    return f"Exam format saved: {title} - {subject} with {num_questions} questions"
+    try:
+        # Parse question types
+        parsed_question_types = [qt.strip() for qt in question_types.split(',')]
+        
+        # Update context
+        context.context.exam_title = title
+        context.context.subject = subject
+        context.context.num_questions = num_questions
+        context.context.time_limit = time_limit
+        context.context.difficulty_level = difficulty_level
+        context.context.question_types = parsed_question_types
+        
+        context.context.format_spec = {
+            "title": title,
+            "subject": subject,
+            "num_questions": num_questions,
+            "time_limit": time_limit,
+            "difficulty_level": difficulty_level,
+            "question_types": parsed_question_types,
+            "grading_criteria": grading_criteria,
+            "learning_objectives": learning_objectives
+        }
+        context.context.format_completed = True
+        
+        return f"Exam format saved successfully: '{title}' in {subject} with {num_questions} questions, {time_limit} minutes, {difficulty_level} difficulty, question types: {', '.join(parsed_question_types)}"
+        
+    except Exception as e:
+        return f"Error saving exam format: {str(e)}"
 
 @function_tool(
     name_override="save_questions",
@@ -153,6 +161,80 @@ async def get_context_summary(
     }
     return json.dumps(summary, indent=2)
 
+@function_tool(
+    name_override="extract_exam_requirements",
+    description_override="Extract exam requirements from user message and update context."
+)
+async def extract_exam_requirements(
+    context: RunContextWrapper[ExamAgentContext],
+    user_message: str
+) -> str:
+    """Extract exam requirements from user message and update context."""
+    try:
+        message_lower = user_message.lower()
+        extracted_info = []
+        
+        # Extract number of questions
+        import re
+        num_questions_match = re.search(r'(\d+)\s*questions?', message_lower)
+        if num_questions_match:
+            context.context.num_questions = int(num_questions_match.group(1))
+            extracted_info.append(f"Number of questions: {context.context.num_questions}")
+        
+        # Extract time limit
+        time_match = re.search(r'(\d+)\s*minutes?', message_lower)
+        if time_match:
+            context.context.time_limit = int(time_match.group(1))
+            extracted_info.append(f"Time limit: {context.context.time_limit} minutes")
+        
+        # Extract difficulty level
+        if 'mixed' in message_lower or ('easy' in message_lower and 'medium' in message_lower and 'hard' in message_lower):
+            context.context.difficulty_level = "mixed"
+            extracted_info.append("Difficulty level: mixed")
+        elif 'easy' in message_lower:
+            context.context.difficulty_level = "easy"
+            extracted_info.append("Difficulty level: easy")
+        elif 'medium' in message_lower:
+            context.context.difficulty_level = "medium"
+            extracted_info.append("Difficulty level: medium")
+        elif 'hard' in message_lower:
+            context.context.difficulty_level = "hard"
+            extracted_info.append("Difficulty level: hard")
+        
+        # Extract question types
+        question_types = []
+        if 'multiple choice' in message_lower:
+            question_types.append("multiple choice")
+        if 'true/false' in message_lower or 'true false' in message_lower:
+            question_types.append("true/false")
+        if 'short answer' in message_lower:
+            question_types.append("short answer")
+        if 'essay' in message_lower:
+            question_types.append("essay")
+        if 'fill in the blank' in message_lower or 'fill-in-the-blank' in message_lower:
+            question_types.append("fill in the blank")
+        
+        if question_types:
+            context.context.question_types = question_types
+            extracted_info.append(f"Question types: {', '.join(question_types)}")
+        
+        # Extract grading criteria
+        grading_match = re.search(r'(\d+)%.*(?:pass|passing)', message_lower)
+        if grading_match:
+            passing_grade = grading_match.group(1)
+            grading_criteria = f"Passing grade: {passing_grade}%"
+            if not context.context.format_spec.get('grading_criteria'):
+                context.context.format_spec['grading_criteria'] = grading_criteria
+            extracted_info.append(f"Grading criteria: {grading_criteria}")
+        
+        if extracted_info:
+            return f"Extracted information: {'; '.join(extracted_info)}"
+        else:
+            return "No specific exam requirements found in the message."
+            
+    except Exception as e:
+        return f"Error extracting requirements: {str(e)}"
+
 # =========================
 # HANDOFF HOOKS
 # =========================
@@ -185,19 +267,25 @@ def format_agent_instructions(
         f"You are the Format Agent, specialist in creating exam formats and structures.\n"
         f"Current status: {progress}\n\n"
         "YOUR ROLE:\n"
-        "1. Work iteratively with the user to create a complete exam format\n"
-        "2. Ask focused questions to gather all required format information\n"
-        "3. Use save_exam_format tool when you have collected ALL necessary information\n"
+        "1. Use extract_exam_requirements tool to extract information from user messages\n"
+        "2. Use save_exam_format tool when you have sufficient information\n"
+        "3. Only ask for missing ESSENTIAL information (title, subject, learning objectives)\n"
         "4. After saving, transfer back to triage agent\n\n"
-        "REQUIRED INFORMATION:\n"
-        "- Exam title and subject\n"
-        "- Number of questions and time limit\n"
-        "- Question type distribution (multiple choice, essay, etc.)\n"
-        "- Difficulty levels\n"
-        "- Grading criteria\n"
-        "- Learning objectives\n"
-        "- Special instructions\n\n"
-        "Work iteratively until you have everything needed for a complete exam format."
+        "WORKFLOW:\n"
+        "1. Always start by using extract_exam_requirements tool on user messages\n"
+        "2. Check what information is still missing after extraction\n"
+        "3. Ask only for missing essential information\n"
+        "4. Use save_exam_format when you have enough information\n\n"
+        "REQUIRED INFORMATION FOR SAVE_EXAM_FORMAT:\n"
+        "- title: Ask user for exam title if not provided\n"
+        "- subject: Ask user for subject if not provided\n"
+        "- num_questions: Extract from user message or ask\n"
+        "- time_limit: Extract from user message or ask\n"
+        "- difficulty_level: Extract from user message or ask\n"
+        "- question_types: Extract from user message or ask\n"
+        "- grading_criteria: Extract from user message or use default\n"
+        "- learning_objectives: Ask user for learning objectives if not provided\n\n"
+        "EFFICIENCY: Use extract_exam_requirements first, then ask only for missing essentials."
     )
 
 format_agent = Agent[ExamAgentContext](
@@ -205,7 +293,7 @@ format_agent = Agent[ExamAgentContext](
     model="gpt-4o",
     handoff_description="Specialist agent for creating exam formats and structures",
     instructions=format_agent_instructions,
-    tools=[save_exam_format, get_context_summary],
+    tools=[save_exam_format, extract_exam_requirements, get_context_summary],
 )
 
 def questions_agent_instructions(
@@ -291,12 +379,16 @@ def triage_agent_instructions(
         "- You NEVER create exams yourself\n"
         "- You NEVER provide exam content directly\n"
         "- You ONLY analyze requests and hand off to specialists\n"
-        "- You ALWAYS use handoffs to delegate work\n\n"
+        "- You ALWAYS use handoffs to delegate work\n"
+        "- When users provide detailed requirements, immediately hand off to format agent\n\n"
         "HANDOFF LOGIC:\n"
-        "- Format not complete OR user mentions 'format/structure' → Hand off to format agent\n"
-        "- Format complete but questions not complete OR user mentions 'questions/generate' → Hand off to questions agent\n"
-        "- Questions complete but editing not complete OR user mentions 'review/edit/improve' → Hand off to editor agent\n"
+        "- Format not complete AND user provides exam requirements (questions, time, difficulty, etc.) → Hand off to format agent immediately\n"
+        "- Format not complete AND user only gives basic info → Hand off to format agent\n"
+        "- Format complete but questions not complete → Hand off to questions agent\n"
+        "- Questions complete but editing not complete → Hand off to editor agent\n"
         "- All complete → Congratulate user and offer to start new exam\n\n"
+        "IMPORTANT: If user mentions specific exam requirements (number of questions, time limit, difficulty, question types, grading criteria), "
+        "don't ask for more details - immediately hand off to format agent who will gather any missing information.\n\n"
         "You are a pure router. Immediately hand off to the right specialist."
     )
 
@@ -349,6 +441,27 @@ class UnifiedExamAgentSystem:
             "editor": editor_agent
         }
     
+    def _determine_next_agent(self, context: ExamAgentContext) -> str:
+        """Determine which agent should handle the next user message based on context state"""
+        # If nothing is complete, start with triage for routing
+        if not context.format_completed and not context.questions_completed and not context.editing_completed:
+            return "triage"
+        
+        # If format not complete, should continue with format agent
+        if not context.format_completed:
+            return "format"
+        
+        # If format complete but questions not complete, should go to questions agent
+        if context.format_completed and not context.questions_completed:
+            return "questions"
+        
+        # If format and questions complete but editing not complete, should go to editor agent
+        if context.format_completed and context.questions_completed and not context.editing_completed:
+            return "editor"
+        
+        # If everything is complete, back to triage for next steps or completion
+        return "triage"
+    
     async def chat(self, session_id: str, user_message: str, agent_name: str, user_id: str) -> UnifiedAgentResponse:
         """Handle chat with any agent through unified interface"""
         try:
@@ -378,7 +491,7 @@ class UnifiedExamAgentSystem:
             else:
                 message = str(result)
             
-            # Determine which agent handled the final response
+            # Determine which agent handled the final response (for conversation history)
             final_agent_name = agent_name
             if hasattr(result, 'agent') and hasattr(result.agent, 'name'):
                 final_agent_name = result.agent.name
@@ -398,13 +511,20 @@ class UnifiedExamAgentSystem:
             # Store updated context
             self._store_context(session_id, context)
             
+            # Determine which agent should handle the NEXT user message
+            next_agent_name = self._determine_next_agent(context)
+            
+            # Prepare context data without conversation history
+            context_data = context.model_dump()
+            context_data.pop('conversation_history', None)  # Remove conversation history from response
+            
             return UnifiedAgentResponse(
                 success=True,
                 session_id=session_id,
-                agent_name=final_agent_name,
+                agent_name=next_agent_name,  # Changed to next agent instead of current agent
                 message=message,
-                context_data=context.model_dump(),
-                conversation_history=context.conversation_history[-5:]  # Last 5 exchanges
+                context_data=context_data,
+                conversation_history=[]  # Cleared conversation history as requested
             )
             
         except Exception as e:
@@ -415,22 +535,55 @@ class UnifiedExamAgentSystem:
                 agent_name=agent_name,
                 message=f"Error occurred: {str(e)}",
                 context_data={},
-                conversation_history=[]
+                conversation_history=[]  # Also cleared for error response
             )
     
     def _get_or_create_context(self, session_id: str, user_id: str) -> ExamAgentContext:
         """Get existing context or create new one"""
-        session_data = self.context_manager.get_session_data(session_id)
-        if session_data:
-            # Convert stored data back to context
-            return ExamAgentContext(**session_data)
-        else:
-            # Create new context
+        try:
+            # Try to get existing context from Redis
+            redis_key = f"exam_context:{session_id}"
+            redis_client = self.context_manager.redis_client
+            
+            if redis_client:
+                stored_data = redis_client.get(redis_key)
+                if stored_data:
+                    context_dict = json.loads(stored_data)
+                    # Ensure all required fields are present
+                    context_dict.setdefault('session_id', session_id)
+                    context_dict.setdefault('user_id', user_id)
+                    context_dict.setdefault('question_types', [])
+                    context_dict.setdefault('format_spec', {})
+                    context_dict.setdefault('questions', [])
+                    context_dict.setdefault('quality_assessment', {})
+                    context_dict.setdefault('conversation_history', [])
+                    
+                    return ExamAgentContext(**context_dict)
+            
+            # Create new context if none exists
+            return create_initial_context(session_id, user_id)
+            
+        except Exception as e:
+            logger.error(f"Error getting context: {e}")
+            # Return fresh context on error
             return create_initial_context(session_id, user_id)
     
     def _store_context(self, session_id: str, context: ExamAgentContext) -> None:
-        """Store context data"""
-        self.context_manager._store_session_data(session_id, context.model_dump())
+        """Store context data in Redis"""
+        try:
+            redis_key = f"exam_context:{session_id}"
+            redis_client = self.context_manager.redis_client
+            
+            if redis_client:
+                # Convert context to dict and store
+                context_dict = context.model_dump()
+                redis_client.setex(redis_key, 3600, json.dumps(context_dict, default=str))
+                logger.info(f"Context stored for session {session_id}")
+            else:
+                logger.warning("Redis client not available, context not persisted")
+                
+        except Exception as e:
+            logger.error(f"Error storing context: {e}")
 
 
 # Create global instance
