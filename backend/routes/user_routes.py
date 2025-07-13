@@ -40,7 +40,8 @@ def create_user(
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_admin)
 ):
-    return AuthService.create_user(user, db)
+    new_user = AuthService.create_user(user, db)
+    return UserOut.from_orm_with_role_name(new_user)
 
 @router.put("/{user_id}", response_model=UserOut)
 def update_user(
@@ -49,7 +50,8 @@ def update_user(
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_admin)
 ):
-    return AuthService.update_user(user_id, user, db)
+    updated_user = AuthService.update_user(user_id, user, db)
+    return UserOut.from_orm_with_role_name(updated_user)
 
 @router.delete("/{user_id}")
 def delete_user(
