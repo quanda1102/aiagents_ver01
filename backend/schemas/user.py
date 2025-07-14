@@ -50,3 +50,6 @@ class UserUpdate(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class ClassUpdate(BaseModel):
+    class_name: str
