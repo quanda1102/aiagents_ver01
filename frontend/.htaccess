@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Rewrite URL không có .html
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.*)$ $1.html [L]
+
+# Optional: redirect từ URL có .html về không có .html để SEO tốt hơn
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+(.+)\.html\sHTTP/
+RewriteRule ^(.+)\.html$ /$1 [R=301,L]

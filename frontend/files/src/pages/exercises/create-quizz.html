@@ -13,20 +13,146 @@
   <meta name="author" content="CodedThemes">
 
   <!-- [Favicon] icon -->
-  <link rel="icon" href="../assets/images/favicon.svg" type="image/x-icon"> <!-- [Google Font] Family -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" id="main-font-link">
-<!-- [Tabler Icons] https://tablericons.com -->
-<link rel="stylesheet" href="../../assets/fonts/tabler-icons.min.css" >
-<!-- [Feather Icons] https://feathericons.com -->
-<link rel="stylesheet" href="../../assets/fonts/feather.css" >
-<!-- [Font Awesome Icons] https://fontawesome.com/icons -->
-<link rel="stylesheet" href="../../assets/fonts/fontawesome.css" >
-<!-- [Material Icons] https://fonts.google.com/icons -->
-<link rel="stylesheet" href="../../assets/fonts/material.css" >
-<!-- [Template CSS Files] -->
-<link rel="stylesheet" href="../../assets/css/style.css" id="main-style-link" >
-<link rel="stylesheet" href="../../assets/css/style-preset.css" >
+  <link rel="icon" href="../assets/images/favicon.svg" type="image/x-icon"> 
+  <!-- [Google Font] Family -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" id="main-font-link">
+  <!-- [Tabler Icons] https://tablericons.com -->
+  <link rel="stylesheet" href="../../assets/fonts/tabler-icons.min.css" >
+  <!-- [Feather Icons] https://feathericons.com -->
+  <link rel="stylesheet" href="../../assets/fonts/feather.css" >
+  <!-- [Font Awesome Icons] https://fontawesome.com/icons -->
+  <link rel="stylesheet" href="../../assets/fonts/fontawesome.css" >
+  <!-- [Material Icons] https://fonts.google.com/icons -->
+  <link rel="stylesheet" href="../../assets/fonts/material.css" >
+  <!-- [Template CSS Files] -->
+  <link rel="stylesheet" href="../../assets/css/style.css" id="main-style-link" >
+  <link rel="stylesheet" href="../../assets/css/style-preset.css" >
 
+  <!-- [Mammoth.js for DOCX processing] -->
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.2/mammoth.browser.min.js"></script>
+  
+  <!-- [TinyMCE Rich Text Editor] -->
+  <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
+
+  <style>
+    .file-upload-area {
+      border: 2px dashed #dee2e6;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      background: #f8f9fa;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .file-upload-area:hover {
+      border-color: #2196F3;
+      background: #e3f2fd;
+    }
+    .file-upload-area.dragover {
+      border-color: #2196F3;
+      background: #e3f2fd;
+    }
+    .uploaded-file {
+      background: #e8f5e8;
+      border: 1px solid #4caf50;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* URL input styling */
+    .url-input-area {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      border: 2px dashed #dee2e6;
+      transition: all 0.3s ease;
+    }
+    
+    .url-input-area:hover {
+      border-color: #007bff;
+      background: #f0f8ff;
+    }
+    
+    .url-loading {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #ffc107;
+    }
+    
+    .url-success .alert {
+      margin: 0;
+    }
+    
+    /* Tab styling */
+    .nav-pills .nav-link {
+      border-radius: 20px;
+      margin-right: 10px;
+    }
+    
+    .nav-pills .nav-link.active {
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    }
+    
+    /* Server Documents Styles */
+    .document-item {
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid #e9ecef !important;
+    }
+    
+    .document-item:hover {
+      background-color: #f8f9fa !important;
+      border-color: #007bff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+    }
+    
+    .documents-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .documents-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .documents-list::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+    
+    .documents-list::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+    }
+    
+    .documents-list::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    /* Content extraction card */
+    #extractedContentCard {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    #extractedContentCard .card-header {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+    }
+    
+    #extractedContentCard .card-header h6 {
+      color: white;
+      margin-bottom: 0;
+    }
+    
+    #extractedContentCard .card-header small {
+      color: rgba(255,255,255,0.8);
+    }
+  </style>
 </head>
 <!-- [Head] end -->
 <!-- [Body] Start -->
@@ -66,16 +192,38 @@
           </a>
         </li>
         <li class="pc-item pc-caption">
-          <label>Trang</label>
+          <label>AI Tools</label>
+          <i class="ti ti-robot"></i>
+        </li>
+        <li class="pc-item">
+          <a href="../../pages/ai-lesson-creator.html" class="pc-link">
+            <span class="pc-micon"><i class="ti ti-bulb"></i></span>
+            <span class="pc-mtext">Tạo bài giảng AI</span>
+          </a>
+        </li>
+        <li class="pc-item pc-caption">
+          <label>Pages</label>
           <i class="ti ti-news"></i>
         </li>
         <li class="pc-item pc-hasmenu">
-          <a href="#!" class="pc-link"><span class="pc-micon"><i class="ti ti-file-invoice"></i></span><span class="pc-mtext">Bài tập</span><span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+          <a href="#!" class="pc-link"><span class="pc-micon"><i class="ti ti-menu"></i></span><span class="pc-mtext">Bài tập</span><span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
           <ul class="pc-submenu">
             <li class="pc-item"><a class="pc-link" href="../../pages/exercises/create-quizz.html">Tạo bài tập</a></li>
             <li class="pc-item"><a class="pc-link" href="../../pages/exercises/list-quizz.html">Danh sách bài tập</a></li>
             <li class="pc-item"><a class="pc-link" href="../../pages/exercises/user-attempts.html">Kết quả bài làm</a></li>
           </ul>
+        </li>
+        <li class="pc-item">
+          <a href="../../pages/login.html" class="pc-link">
+            <span class="pc-micon"><i class="ti ti-lock"></i></span>
+            <span class="pc-mtext">Login</span>
+          </a>
+        </li>
+        <li class="pc-item">
+          <a href="../../pages/register.html" class="pc-link">
+            <span class="pc-micon"><i class="ti ti-user-plus"></i></span>
+            <span class="pc-mtext">Register</span>
+          </a>
         </li>
 
         <li class="pc-item pc-caption">
@@ -92,184 +240,83 @@
     </div>
   </div>
 </nav>
-<!-- [ Sidebar Menu ] end --> <!-- [ Header Topbar ] start -->
+<!-- [ Sidebar Menu ] end --> 
+
+<!-- [ Header Topbar ] start -->
 <header class="pc-header">
-  <div class="header-wrapper"> <!-- [Mobile Media Block] start -->
-<div class="me-auto pc-mob-drp">
-  <ul class="list-unstyled">
-    <!-- ======= Menu collapse Icon ===== -->
-    <li class="pc-h-item pc-sidebar-collapse">
-      <a href="#" class="pc-head-link ms-0" id="sidebar-hide">
-        <i class="ti ti-menu-2"></i>
-      </a>
-    </li>
-    <li class="pc-h-item pc-sidebar-popup">
-      <a href="#" class="pc-head-link ms-0" id="mobile-collapse">
-        <i class="ti ti-menu-2"></i>
-      </a>
-    </li>
-    <li class="dropdown pc-h-item d-inline-flex d-md-none">
-      <a
-        class="pc-head-link dropdown-toggle arrow-none m-0"
-        data-bs-toggle="dropdown"
-        href="#"
-        role="button"
-        aria-haspopup="false"
-        aria-expanded="false"
-      >
-        <i class="ti ti-search"></i>
-      </a>
-      <div class="dropdown-menu pc-h-dropdown drp-search">
-        <form class="px-3">
-          <div class="form-group mb-0 d-flex align-items-center">
-            <i data-feather="search"></i>
-            <input type="search" class="form-control border-0 shadow-none" placeholder="Search here. . .">
+  <div class="header-wrapper"> 
+    <!-- [Mobile Media Block] start -->
+    <div class="me-auto pc-mob-drp">
+      <ul class="list-unstyled">
+        <!-- ======= Menu collapse Icon ===== -->
+        <li class="pc-h-item pc-sidebar-collapse">
+          <a href="#" class="pc-head-link ms-0" id="sidebar-hide">
+            <i class="ti ti-menu-2"></i>
+          </a>
+        </li>
+        <li class="pc-h-item pc-sidebar-popup">
+          <a href="#" class="pc-head-link ms-0" id="mobile-collapse">
+            <i class="ti ti-menu-2"></i>
+          </a>
+        </li>
+        <li class="dropdown pc-h-item d-inline-flex d-md-none">
+          <a
+            class="pc-head-link dropdown-toggle arrow-none m-0"
+            data-bs-toggle="dropdown"
+            href="#"
+            role="button"
+            aria-haspopup="false"
+            aria-expanded="false"
+          >
+            <i class="ti ti-search"></i>
+          </a>
+          <div class="dropdown-menu pc-h-dropdown drp-search">
+            <form class="px-3">
+              <div class="form-group mb-0 d-flex align-items-center">
+                <i data-feather="search"></i>
+                <input type="search" class="form-control border-0 shadow-none" placeholder="Search here. . .">
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
-    </li>
-    <li class="pc-h-item d-none d-md-inline-flex">
-      <form class="header-search">
-        <i data-feather="search" class="icon-search"></i>
-        <input type="search" class="form-control" placeholder="Search here. . .">
-      </form>
-    </li>
-  </ul>
-</div>
-<!-- [Mobile Media Block end] -->
-<div class="ms-auto">
-  <ul class="list-unstyled">
-    <li class="dropdown pc-h-item">
-      <a
-        class="pc-head-link dropdown-toggle arrow-none me-0"
-        data-bs-toggle="dropdown"
-        href="#"
-        role="button"
-        aria-haspopup="false"
-        aria-expanded="false"
-      >
-        <i class="ti ti-mail"></i>
-      </a>
-      <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
-        <div class="dropdown-header d-flex align-items-center justify-content-between">
-          <h5 class="m-0">Message</h5>
-          <a href="#!" class="pc-head-link bg-transparent"><i class="ti ti-x text-danger"></i></a>
-        </div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-header px-0 text-wrap header-notification-scroll position-relative" style="max-height: calc(100vh - 215px)">
-          <div class="list-group list-group-flush w-100">
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
+        </li>
+        <li class="pc-h-item d-none d-md-inline-flex">
+          <form class="header-search">
+            <i data-feather="search" class="icon-search"></i>
+            <input type="search" class="form-control" placeholder="Search here. . .">
+          </form>
+        </li>
+      </ul>
+    </div>
+    <!-- [Mobile Media Block end] -->
+    <div class="ms-auto">
+      <ul class="list-unstyled">
+        <li class="dropdown pc-h-item header-user-profile">
+          <a
+            class="pc-head-link dropdown-toggle arrow-none me-0"
+            data-bs-toggle="dropdown"
+            href="#"
+            role="button"
+            aria-haspopup="false"
+            data-bs-auto-close="outside"
+            aria-expanded="false"
+          >
+            <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
+            <span>Stebin Ben</span>
+          </a>
+          <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
+            <div class="dropdown-header">
+              <div class="d-flex mb-1">
                 <div class="flex-shrink-0">
-                  <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
+                  <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar wid-35">
                 </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">3:00 AM</span>
-                  <p class="text-body mb-1">It's <b>Cristina danny's</b> birthday today.</p>
-                  <span class="text-muted">2 min ago</span>
+                <div class="flex-grow-1 ms-3">
+                  <h6 class="mb-1">Stebin Ben</h6>
+                  <span>UI/UX Designer</span>
                 </div>
+                <button type="button" id="logoutBtn" class="pc-head-link bg-transparent" style="border: unset;"><i class="ti ti-power text-danger"></i></button>
               </div>
-            </a>
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <img src="../../assets/images/user/avatar-1.jpg" alt="user-image" class="user-avtar">
-                </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">6:00 PM</span>
-                  <p class="text-body mb-1"><b>Aida Burg</b> commented your post.</p>
-                  <span class="text-muted">5 August</span>
-                </div>
-              </div>
-            </a>
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <img src="../../assets/images/user/avatar-3.jpg" alt="user-image" class="user-avtar">
-                </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">2:45 PM</span>
-                  <p class="text-body mb-1"><b>There was a failure to your setup.</b></p>
-                  <span class="text-muted">7 hours ago</span>
-                </div>
-              </div>
-            </a>
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <img src="../../assets/images/user/avatar-4.jpg" alt="user-image" class="user-avtar">
-                </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">9:10 PM</span>
-                  <p class="text-body mb-1"><b>Cristina Danny </b> invited to join <b> Meeting.</b></p>
-                  <span class="text-muted">Daily scrum meeting time</span>
-                </div>
-              </div>
-            </a>
-          </div>
-        </div>
-        <div class="dropdown-divider"></div>
-        <div class="text-center py-2">
-          <a href="#!" class="link-primary">View all</a>
-        </div>
-      </div>
-    </li>
-    <li class="dropdown pc-h-item header-user-profile">
-      <a
-        class="pc-head-link dropdown-toggle arrow-none me-0"
-        data-bs-toggle="dropdown"
-        href="#"
-        role="button"
-        aria-haspopup="false"
-        data-bs-auto-close="outside"
-        aria-expanded="false"
-      >
-        <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
-        <span class="user_email"></span>
-      </a>
-      <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
-        <div class="dropdown-header">
-          <div class="d-flex mb-1">
-            <div class="flex-shrink-0">
-              <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar wid-35">
             </div>
-            <div class="flex-grow-1 ms-3">
-              <h6 class="mb-1 user_email"></h6>
-              <span class="user_role"></span>
-            </div>
-            <button type="button" id="logoutBtn" class="pc-head-link bg-transparent" style="border: unset;" onclick="logoutBtn()"><i class="ti ti-power text-danger"></i></button>
-          </div>
-        </div>
-        <ul class="nav drp-tabs nav-fill nav-tabs" id="mydrpTab" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button
-              class="nav-link active"
-              id="drp-t1"
-              data-bs-toggle="tab"
-              data-bs-target="#drp-tab-1"
-              type="button"
-              role="tab"
-              aria-controls="drp-tab-1"
-              aria-selected="true"
-              ><i class="ti ti-user"></i> Profile</button
-            >
-          </li>
-          <li class="nav-item" role="presentation">
-            <button
-              class="nav-link"
-              id="drp-t2"
-              data-bs-toggle="tab"
-              data-bs-target="#drp-tab-2"
-              type="button"
-              role="tab"
-              aria-controls="drp-tab-2"
-              aria-selected="false"
-              ><i class="ti ti-settings"></i> Setting</button
-            >
-          </li>
-        </ul>
-        <div class="tab-content" id="mysrpTabContent">
-          <div class="tab-pane fade show active" id="drp-tab-1" role="tabpanel" aria-labelledby="drp-t1" tabindex="0">
+            <div class="dropdown-divider"></div>
             <a href="#!" class="dropdown-item">
               <i class="ti ti-edit-circle"></i>
               <span>Edit Profile</span>
@@ -279,61 +326,27 @@
               <span>View Profile</span>
             </a>
             <a href="#!" class="dropdown-item">
-              <i class="ti ti-clipboard-list"></i>
-              <span>Social Profile</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-wallet"></i>
-              <span>Billing</span>
-            </a>
-            <a href="#!" class="dropdown-item">
               <i class="ti ti-power"></i>
-              <span onclick="logoutBtn()">Logout</span>
+              <span>Logout</span>
             </a>
           </div>
-          <div class="tab-pane fade" id="drp-tab-2" role="tabpanel" aria-labelledby="drp-t2" tabindex="0">
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-help"></i>
-              <span>Support</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-user"></i>
-              <span>Account Settings</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-lock"></i>
-              <span>Privacy Center</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-messages"></i>
-              <span>Feedback</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-list"></i>
-              <span>History</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </li>
-  </ul>
-</div>
- </div>
+        </li>
+      </ul>
+    </div>
+   </div>
 </header>
 <!-- [ Header ] end -->
-
-
 
   <!-- [ Main Content ] start -->
   <div class="pc-container">
     <div class="pc-content">
       <!-- [ breadcrumb ] start -->
-      <div class="page-header" style="display: none">
+      <div class="page-header">
         <div class="page-block">
           <div class="row align-items-center">
             <div class="col-md-12">
               <div class="page-header-title">
-                <h5 class="m-b-10">Sample Page</h5>
+                <h5 class="m-b-10">Tạo bài tập</h5>
               </div>
               <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="../../dashboard/index.html">Home</a></li>
@@ -348,60 +361,337 @@
 
       <!-- [ Main Content ] start -->
       <div class="row">
-        <!-- [ sample-page ] start -->
-        <div class="col-sm-12">
+        <!-- [ Content Import ] start -->
+        <div class="col-md-6">
           <div class="card">
             <div class="card-header">
-              <h5>Tạo bài tập</h5>
+              <h5><i class="ti ti-file-import me-2"></i>Tải nội dung tham khảo</h5>
+              <small class="text-muted">Tải nội dung để tự động điền vào phần mô tả</small>
             </div>
             <div class="card-body">
-                <form id="quizForm">
-                  <div class="mb-3">
-                    <label class="form-label">Tiêu đề</label>
-                    <input type="text" name="title" class="form-control" required>
+              <!-- Tab Navigation -->
+              <ul class="nav nav-pills mb-3" id="contentSourceTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="file-tab" data-bs-toggle="pill" data-bs-target="#file-content" type="button" role="tab">
+                    <i class="ti ti-file-upload me-1"></i>Tải file
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="url-tab" data-bs-toggle="pill" data-bs-target="#url-content" type="button" role="tab">
+                    <i class="ti ti-world me-1"></i>Từ URL
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="server-docs-tab" data-bs-toggle="pill" data-bs-target="#server-docs" type="button" role="tab" onclick="loadServerDocuments()">
+                    <i class="ti ti-server me-1"></i>Từ server
+                  </button>
+                </li>
+              </ul>
+              
+              <!-- Tab Content -->
+              <div class="tab-content" id="contentSourceContent">
+                <!-- File Upload Tab -->
+                <div class="tab-pane fade show active" id="file-content" role="tabpanel">
+                  <div class="file-upload-area" id="fileUploadArea">
+                    <i class="ti ti-upload" style="font-size: 2rem; color: #6c757d;"></i>
+                    <p class="mb-2 mt-2">Kéo thả file hoặc click để chọn</p>
+                    <p class="text-muted small">Hỗ trợ: .txt, .doc, .docx (tối đa 10MB)</p>
+                    <input type="file" id="documentFile" accept=".txt,.doc,.docx" style="display: none;">
                   </div>
-            
-                  <div class="mb-3">
-                    <label class="form-label">Mô tả</label>
-                    <textarea name="description" class="form-control" rows="3" required></textarea>
+                  <div class="uploaded-file" id="uploadedFile">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span id="fileName"></span>
+                      <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
+                        <i class="ti ti-x"></i>
+                      </button>
+                    </div>
                   </div>
-            
-                  <!--<div class="mb-3">-->
-                  <!--  <label class="form-label">Người tạo</label>-->
-                  <!--  <input type="text" name="created_by" class="form-control" required>-->
-                  <!--</div>-->
-            
-                  <div class="mb-3">
-                    <label class="form-label">Thời gian (giây)</label>
-                    <input type="number" name="time_limit" class="form-control" required>
+                </div>
+                
+                <!-- URL Input Tab -->
+                <div class="tab-pane fade" id="url-content" role="tabpanel">
+                  <div class="url-input-area">
+                    <div class="input-group mb-2">
+                      <span class="input-group-text"><i class="ti ti-world"></i></span>
+                      <input type="url" id="documentUrl" class="form-control" placeholder="Nhập URL (VD: Google Docs, Wikipedia, trang tin tức)" />
+                      <button class="btn btn-primary" type="button" onclick="loadFromUrl()">
+                        <i class="ti ti-download me-1"></i>Tải nội dung
+                      </button>
+                    </div>
+                    <div class="url-help mb-2">
+                      <small class="text-muted">
+                        <i class="ti ti-info-circle me-1"></i>
+                        <strong>Hỗ trợ:</strong> Google Docs (public), Wikipedia, tin tức, blog. Nhấn Enter để tải nhanh.
+                      </small>
+                    </div>
+                    <div class="url-loading" id="urlLoading" style="display: none;">
+                      <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                        <span>Đang tải nội dung từ URL...</span>
+                      </div>
+                    </div>
+                    <div class="url-success" id="urlSuccess" style="display: none;">
+                      <div class="alert alert-success d-flex justify-content-between align-items-center mb-0">
+                        <div>
+                          <i class="ti ti-check me-2"></i>
+                          <span id="urlSourceName">Đã tải thành công từ URL</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeUrl()">
+                          <i class="ti ti-x"></i>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-            
-                  <div class="form-check form-switch mb-2">
-                    <input class="form-check-input" type="checkbox" name="allow_multiple_attempts" id="multipleAttempts">
-                    <label class="form-check-label" for="multipleAttempts">Cho phép làm lại nhiều lần</label>
+                </div>
+                
+                <!-- Server Documents Tab -->
+                <div class="tab-pane fade" id="server-docs" role="tabpanel">
+                  <div class="server-docs-area">
+                    <!-- Loading State -->
+                    <div id="serverDocsLoading" class="text-center py-4" style="display: none;">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                      <p class="mt-2 text-muted">Đang tải danh sách tài liệu từ server...</p>
+                    </div>
+                    
+                    <!-- Error State -->
+                    <div id="serverDocsError" class="alert alert-danger" style="display: none;">
+                      <i class="ti ti-alert-circle me-2"></i>
+                      <span id="serverDocsErrorMessage">Lỗi khi tải danh sách tài liệu</span>
+                      <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="loadServerDocuments()">
+                        <i class="ti ti-refresh me-1"></i>Thử lại
+                      </button>
+                    </div>
+                    
+                    <!-- Documents List -->
+                    <div id="serverDocsList" style="display: none;">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0"><i class="ti ti-files me-1"></i>Tài liệu có sẵn trên server</h6>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="loadServerDocuments()">
+                          <i class="ti ti-refresh me-1"></i>Làm mới
+                        </button>
+                      </div>
+                      <div id="documentsContainer" class="documents-list">
+                        <!-- Documents will be loaded here -->
+                      </div>
+                    </div>
+                    
+                    <!-- Success State -->
+                    <div id="serverDocSuccess" class="alert alert-success" style="display: none;">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <i class="ti ti-check me-2"></i>
+                          <span id="serverDocSourceName">Đã tải thành công từ server</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearServerDocSelection()">
+                          <i class="ti ti-x"></i>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-            
-                  <div class="form-check form-switch mb-4">
-                    <input class="form-check-input" type="checkbox" name="shuffle_questions" id="shuffleQuestions">
-                    <label class="form-check-label" for="shuffleQuestions">Xáo trộn câu hỏi</label>
-                  </div>
-            
-                  <h4 class="mb-3">Danh sách câu hỏi</h4>
-                  <div id="questionsContainer"></div>
-                  <button type="button" class="btn btn-secondary my-3" onclick="addQuestion()">Thêm câu hỏi</button>
-            
-                  <hr>
-                  <button type="submit" class="btn btn-primary">Tạo bài tập</button>
-                </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Extracted Content Preview -->
+          <div class="card mt-3" id="extractedContentCard" style="display: none;">
+            <div class="card-header">
+              <h6><i class="ti ti-file-edit me-2"></i>Nội dung đã trích xuất</h6>
+              <small>Nội dung sẽ được tự động điền vào phần mô tả bên dưới</small>
+            </div>
+            <div class="card-body">
+              <div id="extractedContentPreview" class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+                <!-- Extracted content preview -->
+              </div>
+                                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-primary" onclick="fillDescription()">
+                          <i class="ti ti-arrow-down me-1"></i>Điền vào mô tả
+                        </button>
+                        <button type="button" class="btn btn-sm btn-success" onclick="useExtractedContent()">
+                          <i class="ti ti-robot me-1"></i>Sử dụng cho AI
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearExtractedContent()">
+                          <i class="ti ti-x me-1"></i>Xóa
+                        </button>
+                      </div>
             </div>
           </div>
         </div>
-        <!-- [ sample-page ] end -->
+        <!-- [ Content Import ] end -->
+
+        <!-- [ Quiz Form ] start -->
+        <div class="col-md-6">
+          <!-- Creation Method Tabs -->
+          <div class="card">
+            <div class="card-header">
+              <h5>Phương thức tạo bài tập</h5>
+            </div>
+            <div class="card-body">
+              <!-- Tab Navigation -->
+              <ul class="nav nav-pills mb-4" id="creationMethodTabs" role="tablist">
+                <li class="nav-item flex-fill" role="presentation">
+                  <button class="nav-link active w-100" id="manual-tab" data-bs-toggle="pill" data-bs-target="#manual-creation" type="button" role="tab">
+                    <i class="ti ti-edit me-1"></i>Tạo thủ công
+                  </button>
+                </li>
+                <li class="nav-item flex-fill" role="presentation">
+                  <button class="nav-link w-100" id="ai-tab" data-bs-toggle="pill" data-bs-target="#ai-creation" type="button" role="tab">
+                    <i class="ti ti-robot me-1"></i>Tạo bằng AI
+                  </button>
+                </li>
+              </ul>
+
+              <!-- Tab Content -->
+              <div class="tab-content" id="creationMethodContent">
+                <!-- Manual Creation Tab -->
+                <div class="tab-pane fade show active" id="manual-creation" role="tabpanel">
+                  <form id="quizForm">
+                    <div class="mb-3">
+                      <label class="form-label">Tiêu đề</label>
+                      <input type="text" name="title" class="form-control" required>
+                    </div>
+              
+                    <div class="mb-3">
+                      <label class="form-label">Mô tả</label>
+                      <textarea id="descriptionEditor" name="description" class="form-control" rows="6" required></textarea>
+                    </div>
+              
+                    <div class="mb-3">
+                      <label class="form-label">Thời gian (giây)</label>
+                      <input type="number" name="time_limit" class="form-control" required>
+                    </div>
+              
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" name="allow_multiple_attempts" id="multipleAttempts">
+                      <label class="form-check-label" for="multipleAttempts">Cho phép làm lại nhiều lần</label>
+                    </div>
+              
+                    <div class="form-check form-switch mb-4">
+                      <input class="form-check-input" type="checkbox" name="shuffle_questions" id="shuffleQuestions">
+                      <label class="form-check-label" for="shuffleQuestions">Xáo trộn câu hỏi</label>
+                    </div>
+              
+                    <h5 class="mb-3">Danh sách câu hỏi</h5>
+                    <div id="questionsContainer"></div>
+                    <button type="button" class="btn btn-secondary my-3" onclick="addQuestion()">
+                      <i class="ti ti-plus me-1"></i>Thêm câu hỏi
+                    </button>
+              
+                    <hr>
+                    <button type="submit" class="btn btn-primary">
+                      <i class="ti ti-check me-1"></i>Tạo bài tập
+                    </button>
+                  </form>
+                </div>
+
+                <!-- AI Creation Tab -->
+                <div class="tab-pane fade" id="ai-creation" role="tabpanel">
+                  <form id="aiQuizForm">
+                    <div class="alert alert-info">
+                      <i class="ti ti-info-circle me-2"></i>
+                      <strong>Hướng dẫn:</strong> Tải nội dung từ bên trái hoặc nhập văn bản bên dưới để AI tạo bài tập tự động.
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label">Nội dung văn bản</label>
+                      <textarea id="aiDocumentText" name="document_text" class="form-control" rows="6" required placeholder="Nhập nội dung hoặc sử dụng chức năng tải nội dung ở bên trái..."></textarea>
+                      <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="useExtractedContent()">
+                          <i class="ti ti-arrow-down me-1"></i>Sử dụng nội dung đã trích xuất
+                        </button>
+                        <small class="text-muted ms-2">Sử dụng nội dung từ file/URL đã tải</small>
+                      </div>
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label">Tiêu đề bài tập</label>
+                      <input type="text" name="quiz_title" class="form-control" required placeholder="VD: Bài tập về Trí tuệ nhân tạo">
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label class="form-label">Số lượng câu hỏi</label>
+                          <input type="number" name="number_of_questions" class="form-control" min="1" max="20" value="5" required>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label class="form-label">Độ khó</label>
+                          <select class="form-select" name="difficulty_level" required>
+                            <option value="easy">Dễ</option>
+                            <option value="medium" selected>Trung bình</option>
+                            <option value="hard">Khó</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label">Loại câu hỏi</label>
+                      <div class="row">
+                        <div class="col-md-4">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="question_types" value="multiple_choice" id="mcq" checked>
+                            <label class="form-check-label" for="mcq">Trắc nghiệm</label>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="question_types" value="true_false" id="tf">
+                            <label class="form-check-label" for="tf">Đúng/Sai</label>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="question_types" value="text" id="text">
+                            <label class="form-check-label" for="text">Tự luận</label>
+                          </div>
+                        </div>
+                      </div>
+                      <small class="text-muted">Chọn ít nhất một loại câu hỏi</small>
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label">Thời gian làm bài (giây)</label>
+                      <input type="number" name="time_limit" class="form-control" min="60" value="300" required>
+                      <small class="text-muted">Thời gian tối thiểu: 60 giây</small>
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label">Người tạo</label>
+                      <input type="text" name="created_by" class="form-control" value="AI Assistant" required>
+                    </div>
+
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" name="ai_allow_multiple_attempts" id="aiMultipleAttempts">
+                      <label class="form-check-label" for="aiMultipleAttempts">Cho phép làm lại nhiều lần</label>
+                    </div>
+
+                    <div class="form-check form-switch mb-4">
+                      <input class="form-check-input" type="checkbox" name="ai_shuffle_questions" id="aiShuffleQuestions" checked>
+                      <label class="form-check-label" for="aiShuffleQuestions">Xáo trộn câu hỏi</label>
+                    </div>
+
+                    <hr>
+                    <button type="submit" class="btn btn-success">
+                      <i class="ti ti-robot me-1"></i>Tạo bài tập với AI
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ Quiz Form ] end -->
       </div>
       <!-- [ Main Content ] end -->
     </div>
   </div>
   <!-- [ Main Content ] end -->
+  
   <footer class="pc-footer">
     <div class="footer-wrapper container-fluid">
       <div class="row">
@@ -415,172 +705,789 @@
         </div>
       </div>
     </div>
-  </footer> <!-- Required Js -->
-    <!--Hàm check login-->
+  </footer> 
+
+  <!-- Required Js -->
+  <!--Hàm check login-->
   <script src="../../assets/js/auth.js"></script>
-    <script>
-      requireAuth();
-    </script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="../../assets/js/plugins/popper.min.js"></script>
-<script src="../../assets/js/plugins/simplebar.min.js"></script>
-<script src="../../assets/js/plugins/bootstrap.min.js"></script>
-<script src="../../assets/js/fonts/custom-font.js"></script>
-<script src="../../assets/js/pcoded.js"></script>
-<script src="../../assets/js/plugins/feather.min.js"></script>
-<script src="../../assets/js/customer.js"></script>
+  <script>
+    requireAuth();
+  </script>
+  <script src="../../assets/js/plugins/popper.min.js"></script>
+  <script src="../../assets/js/plugins/simplebar.min.js"></script>
+  <script src="../../assets/js/plugins/bootstrap.min.js"></script>
+  <script src="../../assets/js/fonts/custom-font.js"></script>
+  <script src="../../assets/js/pcoded.js"></script>
+  <script src="../../assets/js/plugins/feather.min.js"></script>
+  <script src="../../assets/js/customer.js"></script>
 
+  <script>layout_change('light');</script>
+  <script>change_box_container('false');</script>
+  <script>layout_rtl_change('false');</script>
+  <script>preset_change("preset-1");</script>
+  <script>font_change("Public-Sans");</script>
 
+  <script>
+    let questionCount = 0;
+    const token = localStorage.getItem('access_token');
+    let extractedDocumentText = '';
+    let extractedFileName = '';
 
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      setupFileUpload();
+      initializeTinyMCE();
+      
+      // Add Enter key support for URL input
+      document.getElementById('documentUrl').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          loadFromUrl();
+        }
+      });
+    });
 
-<script>layout_change('light');</script>
+    function initializeTinyMCE() {
+      // Initialize description editor
+      tinymce.init({
+        selector: '#descriptionEditor',
+        height: 300,
+        menubar: false,
+        plugins: [
+          'advlist', 'autolink', 'lists', 'link', 'charmap',
+          'searchreplace', 'visualblocks', 'code', 'fullscreen',
+          'insertdatetime', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | ' +
+          'bold italic forecolor | alignleft aligncenter ' +
+          'alignright alignjustify | bullist numlist outdent indent | ' +
+          'removeformat | fullscreen',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; line-height: 1.6; padding: 10px; }',
+        language: 'vi',
+        branding: false,
+        statusbar: true,
+        placeholder: 'Nhập mô tả bài tập hoặc tải nội dung từ file/URL ở bên trái...'
+      });
+    }
 
+    function setupFileUpload() {
+      const fileUploadArea = document.getElementById('fileUploadArea');
+      const documentFile = document.getElementById('documentFile');
 
+      // Click to upload
+      fileUploadArea.addEventListener('click', () => {
+        documentFile.click();
+      });
 
+      // File selection
+      documentFile.addEventListener('change', handleFileSelect);
 
-<script>change_box_container('false');</script>
+      // Drag and drop
+      fileUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.add('dragover');
+      });
 
+      fileUploadArea.addEventListener('dragleave', () => {
+        fileUploadArea.classList.remove('dragover');
+      });
 
+      fileUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFile(files[0]);
+        }
+      });
+    }
 
-<script>layout_rtl_change('false');</script>
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        handleFile(file);
+      }
+    }
 
+    async function handleFile(file) {
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File quá lớn. Vui lòng chọn file nhỏ hơn 10MB.');
+        return;
+      }
 
-<script>preset_change("preset-1");</script>
+      // Validate file type
+      const allowedTypes = ['.txt', '.doc', '.docx'];
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+      if (!allowedTypes.includes(fileExtension)) {
+        alert('Định dạng file không được hỗ trợ. Vui lòng chọn file .txt, .doc hoặc .docx');
+        return;
+      }
 
+      // Store filename globally for later use
+      extractedFileName = file.name;
+      
+      // Show uploaded file info
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('uploadedFile').style.display = 'block';
+      document.getElementById('fileUploadArea').style.display = 'none';
 
-<script>font_change("Public-Sans");</script>
+      // Extract text based on file type
+      try {
+        let text = '';
+        if (fileExtension === '.txt') {
+          text = await extractTextFromTxt(file);
+        } else if (fileExtension === '.docx') {
+          text = await extractTextFromDocx(file);
+        } else if (fileExtension === '.doc') {
+          alert('File .doc không được hỗ trợ đầy đủ. Vui lòng chuyển đổi sang .docx để có kết quả tốt nhất.');
+          text = 'File .doc được tải lên nhưng không thể trích xuất text tự động. Vui lòng nhập nội dung thủ công.';
+        }
 
-<script>
-      document.addEventListener('DOMContentLoaded', async () => {
-        const ok = await checkRole(['ADMIN', 'TEACHER']);
-          if (!ok) return;
+        extractedDocumentText = text;
+        showExtractedContent(text, `Từ file: ${file.name}`);
+
+      } catch (error) {
+        console.error('Error extracting text:', error);
+        alert('Lỗi khi trích xuất nội dung từ file. Vui lòng thử lại.');
+      }
+    }
+
+    function extractTextFromTxt(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsText(file, 'UTF-8');
+      });
+    }
+
+    function extractTextFromDocx(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          mammoth.extractRawText({ arrayBuffer: e.target.result })
+            .then((result) => resolve(result.value))
+            .catch(reject);
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function removeFile() {
+      document.getElementById('uploadedFile').style.display = 'none';
+      document.getElementById('fileUploadArea').style.display = 'block';
+      document.getElementById('documentFile').value = '';
+      clearExtractedContent();
+    }
+
+    function removeUrl() {
+      document.getElementById('urlSuccess').style.display = 'none';
+      document.getElementById('documentUrl').value = '';
+      clearExtractedContent();
+    }
+
+    // Convert special document URLs to accessible formats (same as ai-lesson-creator.html)
+    function convertToAccessibleUrl(url) {
+      try {
+        const urlObj = new URL(url);
+        
+        // Handle Google Docs
+        if (urlObj.hostname === 'docs.google.com' && url.includes('/document/d/')) {
+          const docIdMatch = url.match(/\/document\/d\/([a-zA-Z0-9-_]+)/);
+          if (docIdMatch) {
+            const docId = docIdMatch[1];
+            return `https://docs.google.com/document/d/${docId}/export?format=html`;
+          }
+        }
+        
+        // Handle Dropbox documents
+        if (urlObj.hostname === 'www.dropbox.com' && url.includes('dropbox.com/s/')) {
+          return url.replace('dropbox.com/s/', 'dl.dropboxusercontent.com/s/').replace('?dl=0', '');
+        }
+        
+        return url;
+        
+      } catch (e) {
+        console.warn('Error converting URL:', e);
+        return url;
+      }
+    }
+
+    async function loadFromUrl() {
+      const urlInput = document.getElementById('documentUrl');
+      let url = urlInput.value.trim();
+      
+      if (!url) {
+        alert('Vui lòng nhập URL');
+        return;
+      }
+      
+      // Validate URL format
+      try {
+        new URL(url);
+      } catch (e) {
+        alert('URL không hợp lệ. Vui lòng nhập URL đúng định dạng (VD: https://example.com)');
+        return;
+      }
+      
+      // Show loading
+      document.getElementById('urlLoading').style.display = 'block';
+      document.getElementById('urlSuccess').style.display = 'none';
+      
+      try {
+        url = convertToAccessibleUrl(url);
+        
+        let text = '';
+        let sourceName = '';
+        
+        try {
+          const response = await fetch(url, {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.1'
+            }
+          });
+          
+          if (response.ok) {
+            const contentType = response.headers.get('content-type');
+            const content = await response.text();
+            
+            if (contentType && contentType.includes('text/html')) {
+              text = extractTextFromHTML(content);
+            } else {
+              text = content;
+            }
+            
+            sourceName = new URL(url).hostname;
+          } else {
+            throw new Error('Không thể truy cập URL');
+          }
+        } catch (corsError) {
+          console.warn('Direct fetch failed, trying proxy method:', corsError);
+          
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+          const proxyResponse = await fetch(proxyUrl);
+          
+          if (proxyResponse.ok) {
+            const data = await proxyResponse.json();
+            text = extractTextFromHTML(data.contents);
+            sourceName = new URL(url).hostname;
+          } else {
+            throw new Error('Không thể tải nội dung từ URL. URL có thể bị chặn hoặc không khả dụng.');
+          }
+        }
+        
+        if (!text || text.trim().length < 10) {
+          throw new Error('Không thể trích xuất nội dung text từ URL này');
+        }
+        
+        extractedDocumentText = text;
+        extractedFileName = `content-from-${sourceName}`;
+        
+        // Show success state
+        document.getElementById('urlLoading').style.display = 'none';
+        document.getElementById('urlSuccess').style.display = 'block';
+        document.getElementById('urlSourceName').textContent = `Đã tải từ: ${sourceName}`;
+        
+        showExtractedContent(text, `Từ URL: ${sourceName}`);
+        
+      } catch (error) {
+        console.error('Error loading from URL:', error);
+        document.getElementById('urlLoading').style.display = 'none';
+        alert('❌ Lỗi khi tải nội dung từ URL:\n' + error.message);
+      }
+    }
+
+    function extractTextFromHTML(html) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      
+      const scripts = tempDiv.querySelectorAll('script, style, nav, header, footer, aside');
+      scripts.forEach(element => element.remove());
+      
+      let contentElement = tempDiv.querySelector('main') || 
+                          tempDiv.querySelector('article') || 
+                          tempDiv.querySelector('.content') || 
+                          tempDiv.querySelector('#content') || 
+                          tempDiv.querySelector('.post') || 
+                          tempDiv.querySelector('.entry') ||
+                          tempDiv.querySelector('body') ||
+                          tempDiv;
+      
+      let text = contentElement.textContent || contentElement.innerText || '';
+      
+      text = text
+        .replace(/\s+/g, ' ')
+        .replace(/\n\s*\n/g, '\n\n')
+        .trim();
+      
+      if (text.length < 100) {
+        text = tempDiv.textContent || tempDiv.innerText || '';
+        text = text.replace(/\s+/g, ' ').trim();
+      }
+      
+      return text;
+    }
+
+    // Server Documents Functions
+    async function loadServerDocuments() {
+      document.getElementById('serverDocsLoading').style.display = 'block';
+      document.getElementById('serverDocsError').style.display = 'none';
+      document.getElementById('serverDocsList').style.display = 'none';
+      document.getElementById('serverDocSuccess').style.display = 'none';
+      
+      try {
+        const response = await fetch('https://aimarketingvn.com/webhook/docs-list', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
         });
-</script>
-<script>
-                let questionCount = 0;
-          const token = localStorage.getItem('access_token');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const documents = await response.json();
+        
+        if (!Array.isArray(documents)) {
+          throw new Error('Invalid response format');
+        }
+        
+        document.getElementById('serverDocsLoading').style.display = 'none';
+        document.getElementById('serverDocsList').style.display = 'block';
+        
+        renderServerDocuments(documents);
+        
+      } catch (error) {
+        console.error('Error loading server documents:', error);
+        document.getElementById('serverDocsLoading').style.display = 'none';
+        document.getElementById('serverDocsError').style.display = 'block';
+        document.getElementById('serverDocsErrorMessage').textContent = 
+          'Lỗi khi tải danh sách tài liệu: ' + error.message;
+      }
+    }
     
-        function addQuestion() {
-          const id = `q${questionCount++}`;
-          const container = document.getElementById('questionsContainer');
+    function renderServerDocuments(documents) {
+      const container = document.getElementById('documentsContainer');
+      
+      if (documents.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-4 text-muted">
+            <i class="ti ti-folder-off" style="font-size: 2rem;"></i>
+            <p class="mt-2">Không có tài liệu nào trên server</p>
+          </div>
+        `;
+        return;
+      }
+      
+      const documentsHtml = documents.map(doc => {
+        const createdDate = new Date(doc.created_at).toLocaleDateString('vi-VN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
         
-          const html = `
-          <div class="card mb-4 question-block" data-id="${id}">
-            <div class="card-body">
-              <h5 class="card-title">Câu hỏi ${questionCount}</h5>
-        
-              <div class="mb-3">
-                <label class="form-label">Nội dung câu hỏi</label>
-                <input type="text" class="form-control" name="question_text_${id}" required>
+        return `
+          <div class="document-item border rounded p-3 mb-2 cursor-pointer hover-bg-light" 
+               onclick="selectServerDocument('${doc.id}', '${doc.doc_name}', '${doc.doc_url}')">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <h6 class="mb-1 text-primary">
+                  <i class="ti ti-file-text me-1"></i>${doc.doc_name}
+                </h6>
+                <small class="text-muted">
+                  <i class="ti ti-calendar me-1"></i>Tạo: ${createdDate}
+                </small>
               </div>
-        
-              <div class="mb-3">
-                <label class="form-label">Loại câu hỏi</label>
-                <select class="form-select" name="question_type_${id}" onchange="handleTypeChange('${id}', this.value)">
-                  <option value="multiple_choice">Trắc nghiệm</option>
-                  <option value="true_false">Đúng/Sai</option>
-                  <option value="text">Tự luận</option>
-                </select>
-              </div>
-        
-              <div id="options_${id}">
-                <div class="mb-2"><input type="text" class="form-control" name="option_0_${id}" placeholder="Đáp án A"></div>
-                <div class="mb-2"><input type="text" class="form-control" name="option_1_${id}" placeholder="Đáp án B"></div>
-                <div class="mb-2"><input type="text" class="form-control" name="option_2_${id}" placeholder="Đáp án C"></div>
-                <div class="mb-2"><input type="text" class="form-control" name="option_3_${id}" placeholder="Đáp án D"></div>
-              </div>
-        
-              <div class="mb-3">
-                <label class="form-label">Đáp án đúng</label>
-                <input type="text" class="form-control" name="correct_answer_${id}" required>
-              </div>
-        
-              <div class="mb-3">
-                <label class="form-label">Số điểm</label>
-                <input type="number" class="form-control" name="points_${id}" required>
-              </div>
-        
-              <div class="mb-3">
-                <label class="form-label">Giải thích (tuỳ chọn)</label>
-                <textarea class="form-control" name="explanation_${id}" rows="2"></textarea>
+              <div class="text-end">
+                <i class="ti ti-chevron-right text-muted"></i>
               </div>
             </div>
           </div>
-          `;
-          container.insertAdjacentHTML('beforeend', html);
-        }
+        `;
+      }).join('');
+      
+      container.innerHTML = documentsHtml;
+    }
+    
+    async function selectServerDocument(docId, docName, docUrl) {
+      try {
+        const loadingHtml = `
+          <div class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Đang tải nội dung "${docName}"...</p>
+          </div>
+        `;
+        document.getElementById('documentsContainer').innerHTML = loadingHtml;
         
-        function handleTypeChange(id, type) {
-          const optionsDiv = document.getElementById(`options_${id}`);
-          optionsDiv.style.display = type === 'multiple_choice' ? 'block' : 'none';
-        }
+        const convertedUrl = convertToAccessibleUrl(docUrl);
+        let text = '';
         
-        document.getElementById('quizForm').addEventListener('submit', function (e) {
-          e.preventDefault();
-        
-          const form = e.target;
-          const data = {
-            title: form.title.value,
-            description: form.description.value,
-            // created_by: form.created_by.value,
-            time_limit: Number(form.time_limit.value),
-            allow_multiple_attempts: form.allow_multiple_attempts.checked,
-            shuffle_questions: form.shuffle_questions.checked,
-            questions: []
-          };
-        
-          const questionBlocks = document.querySelectorAll('.question-block');
-          questionBlocks.forEach(block => {
-            const id = block.dataset.id;
-            const type = form[`question_type_${id}`].value;
-            const question = {
-              question_text: form[`question_text_${id}`].value,
-              question_type: type,
-              correct_answer: parseCorrectAnswer(form[`correct_answer_${id}`].value, type),
-              points: Number(form[`points_${id}`].value),
-              explanation: form[`explanation_${id}`].value
-            };
-            if (type === 'multiple_choice') {
-              question.options = [
-                form[`option_0_${id}`].value,
-                form[`option_1_${id}`].value,
-                form[`option_2_${id}`].value,
-                form[`option_3_${id}`].value
-              ];
+        try {
+          const response = await fetch(convertedUrl, {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.1'
             }
-            data.questions.push(question);
           });
-        
-          console.log('Sending data to backend:', data);
-        
-          // Gửi về API giả định (bạn đổi URL theo BE thật của bạn)
-          fetch('https://api.aagents.vn/api/v1/quiz/create', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(data)
-          }).then(res => {
-              if (res.ok) {
-                alert('Tạo bài thành công!');
-                window.location.href = '/pages/exercises/class-1/list-quizz.html'; // hoặc /quiz/list nếu dùng route SPA
-              } else {
-                alert('Lỗi khi tạo bài tập');
-              }
-            }).catch(err => {
-            console.error(err);
-            alert('Lỗi kết nối đến máy chủ');
-          });
-        });
-        
-        function parseCorrectAnswer(value, type) {
-          if (type === 'true_false') return value.toLowerCase() === 'true';
-          return value;
+          
+          if (response.ok) {
+            const content = await response.text();
+            text = extractTextFromHTML(content);
+          } else {
+            throw new Error('Direct fetch failed');
+          }
+        } catch (corsError) {
+          console.warn('Direct fetch failed, using proxy:', corsError);
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(convertedUrl)}`;
+          const proxyResponse = await fetch(proxyUrl);
+          
+          if (proxyResponse.ok) {
+            const data = await proxyResponse.json();
+            text = extractTextFromHTML(data.contents);
+          } else {
+            throw new Error('Không thể tải nội dung từ URL');
+          }
         }
-</script>
+        
+        if (!text || text.trim().length < 10) {
+          throw new Error('Không thể trích xuất nội dung text từ tài liệu này');
+        }
+        
+        extractedDocumentText = text;
+        extractedFileName = docName;
+        
+        document.getElementById('serverDocsList').style.display = 'none';
+        document.getElementById('serverDocSuccess').style.display = 'block';
+        document.getElementById('serverDocSourceName').textContent = `Đã tải: ${docName}`;
+        
+        showExtractedContent(text, `Từ server: ${docName}`);
+        
+      } catch (error) {
+        console.error('Error loading server document:', error);
+        alert('❌ Lỗi khi tải tài liệu:\n' + error.message);
+        loadServerDocuments();
+      }
+    }
+    
+    function clearServerDocSelection() {
+      document.getElementById('serverDocSuccess').style.display = 'none';
+      document.getElementById('serverDocsList').style.display = 'block';
+      clearExtractedContent();
+    }
+
+    function showExtractedContent(text, source) {
+      const card = document.getElementById('extractedContentCard');
+      const preview = document.getElementById('extractedContentPreview');
+      
+      // Show first 500 characters with ellipsis
+      const previewText = text.length > 500 ? text.substring(0, 500) + '...' : text;
+      
+      preview.innerHTML = `
+        <div class="mb-2">
+          <small class="text-muted"><strong>Nguồn:</strong> ${source}</small>
+        </div>
+        <div style="white-space: pre-wrap; font-family: inherit; line-height: 1.5;">
+          ${previewText.replace(/\n/g, '<br>')}
+        </div>
+        ${text.length > 500 ? `<small class="text-muted mt-2 d-block">...và ${text.length - 500} ký tự nữa</small>` : ''}
+      `;
+      
+      card.style.display = 'block';
+    }
+
+    function fillDescription() {
+      if (!extractedDocumentText) {
+        alert('Không có nội dung để điền');
+        return;
+      }
+
+      const editor = tinymce.get('descriptionEditor');
+      if (editor) {
+        // Convert plain text to HTML with basic formatting
+        const htmlContent = extractedDocumentText
+          .replace(/\n\n/g, '</p><p>')
+          .replace(/\n/g, '<br>');
+        
+        const formattedContent = `<p>${htmlContent}</p>`;
+        editor.setContent(formattedContent);
+        
+        alert('✅ Đã điền nội dung vào phần mô tả!');
+      } else {
+        // Fallback to textarea if TinyMCE is not ready
+        document.querySelector('textarea[name="description"]').value = extractedDocumentText;
+        alert('✅ Đã điền nội dung vào phần mô tả!');
+      }
+    }
+
+    function useExtractedContent() {
+      if (!extractedDocumentText) {
+        alert('Không có nội dung đã trích xuất. Vui lòng tải file, URL hoặc chọn tài liệu từ server trước.');
+        return;
+      }
+
+      const aiDocumentTextArea = document.getElementById('aiDocumentText');
+      aiDocumentTextArea.value = extractedDocumentText;
+      
+      // Auto-switch to AI tab if not already active
+      const aiTab = document.getElementById('ai-tab');
+      if (!aiTab.classList.contains('active')) {
+        aiTab.click();
+      }
+      
+      alert('✅ Đã điền nội dung vào phần tạo AI!');
+    }
+
+    function clearExtractedContent() {
+      extractedDocumentText = '';
+      extractedFileName = '';
+      document.getElementById('extractedContentCard').style.display = 'none';
+      
+      // Clear AI document text if it matches the extracted content
+      const aiDocumentTextArea = document.getElementById('aiDocumentText');
+      if (aiDocumentTextArea && aiDocumentTextArea.value === extractedDocumentText) {
+        aiDocumentTextArea.value = '';
+      }
+    }
+
+    // Original quiz functions
+    function addQuestion() {
+      const id = `q${questionCount++}`;
+      const container = document.getElementById('questionsContainer');
+    
+      const html = `
+      <div class="card mb-4 question-block" data-id="${id}">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Câu hỏi ${questionCount}</h5>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeQuestion('${id}')">
+              <i class="ti ti-trash"></i>
+            </button>
+          </div>
+    
+          <div class="mb-3">
+            <label class="form-label">Nội dung câu hỏi</label>
+            <input type="text" class="form-control" name="question_text_${id}" required>
+          </div>
+    
+          <div class="mb-3">
+            <label class="form-label">Loại câu hỏi</label>
+            <select class="form-select" name="question_type_${id}" onchange="handleTypeChange('${id}', this.value)">
+              <option value="multiple_choice">Trắc nghiệm</option>
+              <option value="true_false">Đúng/Sai</option>
+              <option value="text">Tự luận</option>
+            </select>
+          </div>
+    
+          <div id="options_${id}">
+            <div class="mb-2"><input type="text" class="form-control" name="option_0_${id}" placeholder="Đáp án A"></div>
+            <div class="mb-2"><input type="text" class="form-control" name="option_1_${id}" placeholder="Đáp án B"></div>
+            <div class="mb-2"><input type="text" class="form-control" name="option_2_${id}" placeholder="Đáp án C"></div>
+            <div class="mb-2"><input type="text" class="form-control" name="option_3_${id}" placeholder="Đáp án D"></div>
+          </div>
+    
+          <div class="mb-3">
+            <label class="form-label">Đáp án đúng</label>
+            <input type="text" class="form-control" name="correct_answer_${id}" required>
+          </div>
+    
+          <div class="mb-3">
+            <label class="form-label">Số điểm</label>
+            <input type="number" class="form-control" name="points_${id}" required value="1">
+          </div>
+    
+          <div class="mb-3">
+            <label class="form-label">Giải thích (tuỳ chọn)</label>
+            <textarea class="form-control" name="explanation_${id}" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function removeQuestion(id) {
+      const questionBlock = document.querySelector(`[data-id="${id}"]`);
+      if (questionBlock) {
+        questionBlock.remove();
+      }
+    }
+    
+    function handleTypeChange(id, type) {
+      const optionsDiv = document.getElementById(`options_${id}`);
+      optionsDiv.style.display = type === 'multiple_choice' ? 'block' : 'none';
+    }
+    
+    // Manual Quiz Form Handler
+    document.getElementById('quizForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+    
+      const form = e.target;
+      
+      // Get description from TinyMCE editor
+      let description = '';
+      const editor = tinymce.get('descriptionEditor');
+      if (editor) {
+        // Convert HTML to plain text for API
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = editor.getContent();
+        description = tempDiv.textContent || tempDiv.innerText || '';
+      } else {
+        description = form.description.value;
+      }
+      
+      const data = {
+        title: form.title.value,
+        description: description,
+        time_limit: Number(form.time_limit.value),
+        allow_multiple_attempts: form.allow_multiple_attempts.checked,
+        shuffle_questions: form.shuffle_questions.checked,
+        questions: []
+      };
+    
+      const questionBlocks = document.querySelectorAll('.question-block');
+      if (questionBlocks.length === 0) {
+        alert('Vui lòng thêm ít nhất một câu hỏi');
+        return;
+      }
+      
+      questionBlocks.forEach(block => {
+        const id = block.dataset.id;
+        const type = form[`question_type_${id}`].value;
+        const question = {
+          question_text: form[`question_text_${id}`].value,
+          question_type: type,
+          correct_answer: parseCorrectAnswer(form[`correct_answer_${id}`].value, type),
+          points: Number(form[`points_${id}`].value),
+          explanation: form[`explanation_${id}`].value
+        };
+        if (type === 'multiple_choice') {
+          question.options = [
+            form[`option_0_${id}`].value,
+            form[`option_1_${id}`].value,
+            form[`option_2_${id}`].value,
+            form[`option_3_${id}`].value
+          ];
+        }
+        data.questions.push(question);
+      });
+    
+      console.log('Sending manual quiz data to backend:', data);
+    
+      // Show loading state
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalBtnText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i>Đang tạo...';
+      submitBtn.disabled = true;
+    
+      fetch('https://api.aagents.vn/api/v1/quiz/create', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      }).then(res => {
+          if (res.ok) {
+            alert('✅ Tạo bài tập thành công!');
+            window.location.href = '../../pages/exercises/list-quizz.html';
+          } else {
+            throw new Error('Lỗi từ server');
+          }
+        }).catch(err => {
+        console.error(err);
+        alert('❌ Lỗi khi tạo bài tập: ' + err.message);
+      }).finally(() => {
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
+      });
+    });
+
+    // AI Quiz Form Handler
+    document.getElementById('aiQuizForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+      
+      // Validate question types selection
+      const selectedTypes = Array.from(formData.getAll('question_types'));
+      if (selectedTypes.length === 0) {
+        alert('Vui lòng chọn ít nhất một loại câu hỏi');
+        return;
+      }
+
+      // Validate document text
+      const documentText = formData.get('document_text').trim();
+      if (!documentText) {
+        alert('Vui lòng nhập nội dung văn bản hoặc tải nội dung từ file/URL');
+        return;
+      }
+
+      const payload = {
+        document_text: documentText,
+        quiz_title: formData.get('quiz_title'),
+        number_of_questions: parseInt(formData.get('number_of_questions')),
+        difficulty_level: formData.get('difficulty_level'),
+        question_types: selectedTypes,
+        created_by: formData.get('created_by'),
+        time_limit: parseInt(formData.get('time_limit')),
+        allow_multiple_attempts: formData.has('ai_allow_multiple_attempts'),
+        shuffle_questions: formData.has('ai_shuffle_questions')
+      };
+
+      console.log('Sending AI quiz data to backend:', payload);
+
+      // Show loading state
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalBtnText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i>Đang tạo với AI...';
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('https://api.aagents.vn/api/v1/quiz/generate', {
+          method: 'POST',
+          headers: { 
+              'Content-Type': 'application/json', 
+              'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (result.message === "Quiz generated successfully from document") {
+          alert('✅ Tạo bài tập với AI thành công!');
+          window.location.href = '../../pages/exercises/list-quizz.html';
+        } else {
+          throw new Error(result.message || 'Không thể tạo bài tập với AI');
+        }
+      } catch (err) {
+        console.error('AI Quiz Generation Error:', err);
+        alert('❌ Lỗi khi tạo bài tập với AI: ' + err.message);
+      } finally {
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
+      }
+    });
+    
+    function parseCorrectAnswer(value, type) {
+      if (type === 'true_false') return value.toLowerCase() === 'true';
+      return value;
+    }
+
+    // Add initial question
+    addQuestion();
+  </script>
   
 </body>
 <!-- [Body] end -->
-
 </html>

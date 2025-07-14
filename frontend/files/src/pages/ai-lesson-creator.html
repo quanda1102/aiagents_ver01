@@ -278,6 +278,29 @@
     .documents-list::-webkit-scrollbar-thumb:hover {
       background: #a8a8a8;
     }
+    
+    /* Loading and error states for lessons */
+    .loading-lesson {
+      opacity: 0.7;
+      background: linear-gradient(90deg, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%);
+      background-size: 200% 100%;
+      animation: loading-shimmer 1.5s infinite;
+    }
+    
+    .error-lesson {
+      background: #fff5f5;
+      border-color: #f5c6cb;
+      color: #721c24;
+    }
+    
+    @keyframes loading-shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
   </style>
 </head>
 <!-- [Head] end -->
@@ -816,37 +839,81 @@
     // Sample document structure data
     const documentStructure = {
       "Trí tuệ nhân tạo": {
-        // Tiểu học (Elementary School)
-        "Lớp 1": ["Bài 1: Robot và máy tính xung quanh ta", "Bài 2: Máy tính có thể làm gì?", "Bài 3: Trò chơi với robot đơn giản"],
-        "Lớp 2": ["Bài 1: Thuật toán đơn giản trong cuộc sống", "Bài 2: Hướng dẫn robot di chuyển", "Bài 3: Nhận dạng hình dạng và màu sắc"],
-        "Lớp 3": ["Bài 1: Máy tính học như thế nào?", "Bài 2: Trò chơi đoán số với máy tính", "Bài 3: Tạo ra câu chuyện với AI"],
-        "Lớp 4": ["Bài 1: Giọng nói và máy tính", "Bài 2: Chatbot đơn giản", "Bài 3: AI trong trò chơi"],
-        "Lớp 5": ["Bài 1: Nhận dạng hình ảnh", "Bài 2: Dự đoán thời tiết với AI", "Bài 3: Tạo ra nghệ thuật với máy tính"],
-        
-        // Trung học cơ sở (Middle School)
-        "Lớp 6": ["Bài 1: Giới thiệu về trí tuệ nhân tạo", "Bài 2: Thuật toán và tư duy logic", "Bài 3: Machine Learning cơ bản"],
-        "Lớp 7": ["Bài 1: Xử lý ngôn ngữ tự nhiên", "Bài 2: Computer Vision", "Bài 3: Chatbot và trợ lý ảo"],
-        "Lớp 8": ["Bài 1: Neural Networks đơn giản", "Bài 2: Big Data và AI", "Bài 3: AI trong cuộc sống hàng ngày"],
-        "Lớp 9": ["Bài 1: Deep Learning cơ bản", "Bài 2: AI Ethics và đạo đức", "Bài 3: Tương lai của AI"],
-        
-        // Trung học phổ thông (High School)
-        "Lớp 10": ["Bài 1: Lịch sử và phát triển AI", "Bài 2: Các loại thuật toán ML", "Bài 3: Python cho AI"],
-        "Lớp 11": ["Bài 1: Supervised Learning", "Bài 2: Unsupervised Learning", "Bài 3: Reinforcement Learning"],
-        "Lớp 12": ["Bài 1: AI trong nghiên cứu khoa học", "Bài 2: Startup và AI", "Bài 3: Dự án AI thực tế"]
+        "Lớp 1": ["Robot và máy tính xung quanh ta", "Máy tính có thể làm gì?", "Trò chơi với robot đơn giản"],
+        "Lớp 2": ["Thuật toán đơn giản trong cuộc sống", "Hướng dẫn robot di chuyển", "Nhận dạng hình dạng và màu sắc"],
+        "Lớp 3": ["Máy tính học như thế nào?", "Trò chơi đoán số với máy tính", "Tạo ra câu chuyện với AI"],
+        "Lớp 4": ["Giọng nói và máy tính", "Chatbot đơn giản", "AI trong trò chơi"],
+        "Lớp 5": ["Nhận dạng hình ảnh", "Dự đoán thời tiết với AI", "Tạo ra nghệ thuật với máy tính"],
+        "Lớp 6": [
+          {
+            "url": "https://docs.google.com/document/d/1U3GiUzKEAgYTs8NzTOJpZZgrqUW3AzXf/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
+            "title": "Lớp 1"
+          },
+          {
+            "url": "https://docs.google.com/document/d/1I1O0ZC8Z_kt3dzaeUjOG7kQh0dXa3qoo/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
+            "title": "Lớp 2"
+          },
+          {
+            "url": "https://docs.google.com/document/d/1Q9GspYikgV_H8tsYzwSaV56VoG0RQwF6/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
+            "title": "Lớp 3"
+          },
+          {
+            "url": "",
+            "title": "Lớp 4"
+          },
+          {
+            "url": "https://docs.google.com/document/d/1L28xtteSCWZ146KmDFDjzDE0i3ne7XO_/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
+            "title": "Lớp 5"
+          },
+          {
+            "url": "https://docs.google.com/document/d/1N5r1tR-c3F5OVsp4856pZF7AxvcBdj8t/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
+            "title": "Lớp 6"
+          },
+          {
+            "url": "https://docs.google.com/document/d/1uEEoGIdMaQmYc04OVkEDQh5kRJUjZyWQ/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
+            "title": "Lớp 7"
+          },
+          {
+            "url": "https://docs.google.com/document/d/1fnSS2Hr7pguT1GlUH9hMmmlzcEyyMH8g/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
+            "title": "Lớp 8"
+          },
+          {
+            "url": "https://docs.google.com/document/d/1e_92X0ZF56dUbcBGoM5eUkaWOrYzFETI/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
+            "title": "Lớp 9"
+          },
+          {
+            "url": "",
+            "title": "Lớp 10"
+          },
+          {
+            "url": "https://docs.google.com/document/d/1OizdNd13GSGv1D7soa4WnbkqjEnLI70J/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
+            "title": "Lớp 11"
+          },
+          {
+            "url": "https://docs.google.com/document/d/1fyikXNlnEJeh2iESLVlHdC9sGSnUbXGa/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
+            "title": "Lớp 12"
+          }
+        ],
+        "Lớp 7": ["Xử lý ngôn ngữ tự nhiên", "Computer Vision", "Chatbot và trợ lý ảo"],
+        "Lớp 8": ["Neural Networks đơn giản", "Big Data và AI", "AI trong cuộc sống hàng ngày"],
+        "Lớp 9": ["Deep Learning cơ bản", "AI Ethics và đạo đức", "Tương lai của AI"],
+        "Lớp 10": ["Lịch sử và phát triển AI", "Các loại thuật toán ML", "Python cho AI"],
+        "Lớp 11": ["Supervised Learning", "Unsupervised Learning", "Reinforcement Learning"],
+        "Lớp 12": ["AI trong nghiên cứu khoa học", "Startup và AI", "Dự án AI thực tế"]
       },
       "Toán học": {
-        "Lớp 6": ["Bài 1: Tập hợp số tự nhiên", "Bài 2: Phép cộng và phép trừ", "Bài 3: Phép nhân và phép chia"],
-        "Lớp 7": ["Bài 1: Số hữu tỉ", "Bài 2: Số thực", "Bài 3: Đại lượng tỉ lệ"],
-        "Lớp 8": ["Bài 1: Phép nhân đa thức", "Bài 2: Phân thức đại số", "Bài 3: Phương trình bậc nhất"]
+        "Lớp 6": ["Tập hợp số tự nhiên", "Phép cộng và phép trừ", "Phép nhân và phép chia"],
+        "Lớp 7": ["Số hữu tỉ", "Số thực", "Đại lượng tỉ lệ"],
+        "Lớp 8": ["Phép nhân đa thức", "Phân thức đại số", "Phương trình bậc nhất"]
       },
       "Vật lý": {
-        "Lớp 6": ["Bài 1: Chuyển động cơ học", "Bài 2: Lực và áp suất", "Bài 3: Nhiệt học"],
-        "Lớp 7": ["Bài 1: Quang học", "Bài 2: Âm học", "Bài 3: Điện học cơ bản"],
-        "Lớp 8": ["Bài 1: Cơ học", "Bài 2: Nhiệt học nâng cao", "Bài 3: Điện học"]
+        "Lớp 6": ["Chuyển động cơ học", "Lực và áp suất", "Nhiệt học"],
+        "Lớp 7": ["Quang học", "Âm học", "Điện học cơ bản"],
+        "Lớp 8": ["Cơ học", "Nhiệt học nâng cao", "Điện học"]
       },
       "Hóa học": {
-        "Lớp 8": ["Bài 1: Chất và sự biến đổi chất", "Bài 2: Nguyên tử và phân tử", "Bài 3: Phản ứng hóa học"],
-        "Lớp 9": ["Bài 1: Dung dịch", "Bài 2: Axit - Bazơ - Muối", "Bài 3: Kim loại"]
+        "Lớp 8": ["Chất và sự biến đổi chất", "Nguyên tử và phân tử", "Phản ứng hóa học"],
+        "Lớp 9": ["Dung dịch", "Axit - Bazơ - Muối", "Kim loại"]
       },
       "Sinh học": {
         "Lớp 6": ["Bài 1: Cơ thể sống", "Bài 2: Cơ quan và hệ cơ quan", "Bài 3: Dinh dưỡng"],
@@ -1291,6 +1358,229 @@
       }
     }
 
+    // Extract document title from Google Docs (using EXACT same method as working "Từ URL")
+    async function loadGoogleDocsTitle(lessonObj, lessonDiv, subject, grade, index) {
+      try {
+        // Use EXACT same URL handling as working loadFromUrl function
+        let url = lessonObj.url;
+        url = convertToAccessibleUrl(url);
+        let htmlContent = '';
+        
+        try {
+          // Method 1: Try direct fetch (EXACT same as loadFromUrl)
+          const response = await fetch(url, {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.1'
+            }
+          });
+          
+          if (response.ok) {
+            htmlContent = await response.text();
+          } else {
+            throw new Error('Không thể truy cập URL');
+          }
+        } catch (corsError) {
+          // Method 2: Use a CORS proxy (EXACT same as loadFromUrl)
+          console.warn('Direct fetch failed, trying proxy method:', corsError);
+          
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+          const proxyResponse = await fetch(proxyUrl);
+          
+          if (proxyResponse.ok) {
+            const data = await proxyResponse.json();
+            htmlContent = data.contents;
+          } else {
+            throw new Error('Không thể tải nội dung từ URL. URL có thể bị chặn hoặc không khả dụng.');
+          }
+        }
+        
+        // Extract title from HTML (enhanced title extraction)
+        let title = 'Đang cập nhật';
+        
+        // Try multiple methods to extract title
+        const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
+        if (titleMatch && titleMatch[1]) {
+          title = titleMatch[1].trim();
+          // Remove common Google Docs suffixes
+          title = title.replace(/\s*-\s*Google\s*Docs$/i, '');
+          title = title.replace(/\s*-\s*Tài liệu Google$/i, '');
+          title = title.replace(/\s*-\s*Google\s*Drive$/i, '');
+        }
+        
+        // If title is still generic, try to extract from content
+        if (title === 'Đang cập nhật' || title.includes('Google Docs') || title.length < 3) {
+          // Try to extract from first heading in content
+          const headingMatch = htmlContent.match(/<h[1-6][^>]*>([^<]+)<\/h[1-6]>/i);
+          if (headingMatch && headingMatch[1] && headingMatch[1].trim().length > 3) {
+            title = headingMatch[1].trim();
+          }
+        }
+        
+        // Update the lesson object in documentStructure
+        documentStructure[subject][grade][index].title = title;
+        
+        // Update the visual element
+        lessonDiv.innerHTML = `<i class="ti ti-file-text me-2"></i>${title}`;
+        lessonDiv.classList.remove('loading-lesson');
+        
+        console.log(`✅ Đã tải tiêu đề: ${title}`);
+        
+      } catch (error) {
+        console.warn('Error loading Google Docs title:', error);
+        
+        // Update with fallback title
+        const fallbackTitle = 'Đang cập nhật';
+        documentStructure[subject][grade][index].title = fallbackTitle;
+        lessonDiv.innerHTML = `<i class="ti ti-alert-circle me-2"></i>${fallbackTitle}`;
+        lessonDiv.classList.remove('loading-lesson');
+        lessonDiv.classList.add('error-lesson');
+        
+        console.warn(`⚠️ Lỗi tải tiêu đề: ${error.message}`);
+      }
+    }
+
+    // Google Docs Content Loading Function (using EXACT same method as working "Từ URL")
+    async function loadGoogleDocsContent(lessonObj) {
+      try {
+        // Show loading state in the extracted text card
+        document.getElementById('extractedTextCard').style.display = 'block';
+        
+        // Show loading message in TinyMCE editor
+        const setLoadingContent = () => {
+          const editor = tinymce.get('extractedTextEditor');
+          if (editor) {
+            editor.setContent(`
+              <div style="text-align: center; padding: 20px; color: #6c757d;">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Đang tải nội dung từ "${lessonObj.title}"...</p>
+              </div>
+            `);
+          } else {
+            setTimeout(setLoadingContent, 100);
+          }
+        };
+        setLoadingContent();
+        
+        // Use EXACT same implementation as working loadFromUrl function
+        let url = lessonObj.url;
+        url = convertToAccessibleUrl(url);
+        
+        let text = '';
+        let sourceName = '';
+        
+        try {
+          // Method 1: Try direct fetch (EXACT same as loadFromUrl)
+          const response = await fetch(url, {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.1'
+            }
+          });
+          
+          if (response.ok) {
+            const contentType = response.headers.get('content-type');
+            const content = await response.text();
+            
+            if (contentType && contentType.includes('text/html')) {
+              // Extract text from HTML
+              text = extractTextFromHTML(content);
+            } else {
+              // Plain text content
+              text = content;
+            }
+            
+            sourceName = new URL(url).hostname;
+          } else {
+            throw new Error('Không thể truy cập URL');
+          }
+        } catch (corsError) {
+          // Method 2: Use a CORS proxy (EXACT same as loadFromUrl)
+          console.warn('Direct fetch failed, trying proxy method:', corsError);
+          
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+          const proxyResponse = await fetch(proxyUrl);
+          
+          if (proxyResponse.ok) {
+            const data = await proxyResponse.json();
+            text = extractTextFromHTML(data.contents);
+            sourceName = new URL(url).hostname;
+          } else {
+            throw new Error('Không thể tải nội dung từ URL. URL có thể bị chặn hoặc không khả dụng.');
+          }
+        }
+        
+        if (!text || text.trim().length < 10) {
+          throw new Error('Không thể trích xuất nội dung text từ URL này');
+        }
+        
+        // Store the extracted content (EXACT same as loadFromUrl)
+        extractedDocumentText = text;
+        extractedFileName = `content-from-${sourceName}`;
+        
+        // Display in TinyMCE editor (EXACT same as loadFromUrl)
+        const setExtractedContent = () => {
+          const editor = tinymce.get('extractedTextEditor');
+          if (editor) {
+            const htmlContent = text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+            editor.setContent(`<p>${htmlContent}</p>`);
+          } else {
+            setTimeout(setExtractedContent, 100);
+          }
+        };
+        setExtractedContent();
+        
+        // Show success state (same as loadFromUrl)
+        document.getElementById('extractedTextCard').style.display = 'block';
+        
+        // Enable generate button (same as loadFromUrl)
+        if (selectedDocument && selectedDocument.lesson) {
+          document.getElementById('generateBtn').disabled = false;
+        }
+        
+        console.log(`✅ Đã tải thành công nội dung: ${lessonObj.title} từ ${sourceName}`);
+        
+      } catch (error) {
+        console.error('Error loading Google Docs content:', error);
+        
+        // Show "đang cập nhật" message (only if all methods fail)
+        const setUpdateContent = () => {
+          const editor = tinymce.get('extractedTextEditor');
+          if (editor) {
+            editor.setContent(`
+              <div style="text-align: center; padding: 40px; color: #dc3545; border: 2px dashed #dc3545; border-radius: 8px; background: #fff5f5;">
+                <h5 style="color: #dc3545; margin-bottom: 15px;">
+                  <i class="ti ti-alert-circle" style="font-size: 1.5rem;"></i><br>
+                  Đang cập nhật
+                </h5>
+                <p style="color: #6c757d; margin: 0;">
+                  Nội dung "${lessonObj.title}" đang được cập nhật.<br>
+                  Vui lòng thử lại sau hoặc sử dụng tài liệu khác.<br><br>
+                  <small>Lỗi: ${error.message}</small>
+                </p>
+              </div>
+            `);
+            
+            // Store update message
+            extractedDocumentText = `Nội dung "${lessonObj.title}" đang được cập nhật. Vui lòng thử lại sau.`;
+            extractedFileName = `${lessonObj.title}-updating`;
+          } else {
+            setTimeout(setUpdateContent, 100);
+          }
+        };
+        setUpdateContent();
+        
+        // Enable generate button with update message
+        document.getElementById('generateBtn').disabled = false;
+        
+        console.warn(`⚠️ Nội dung "${lessonObj.title}" đang cập nhật - Lỗi: ${error.message}`);
+      }
+    }
+
     // Server Documents Functions
     async function loadServerDocuments() {
       // Show loading state
@@ -1548,8 +1838,18 @@
           gradeLevel.className = 'tree-level';
           gradeLevel.style.display = 'none';
 
-          documentStructure[subject][grade].forEach(lesson => {
-            const lessonDiv = createTreeItem(lesson, 'lesson', subject, grade, lesson);
+          documentStructure[subject][grade].forEach((lesson, index) => {
+            // Handle both string lessons and object lessons (with Google Docs links)
+            const lessonTitle = typeof lesson === 'object' ? lesson.title : lesson;
+            const lessonDiv = createTreeItem(lessonTitle, 'lesson', subject, grade, lesson);
+            
+            // Add loading indicator for Google Docs lessons
+            if (typeof lesson === 'object' && lesson.url && lesson.title === 'Đang tải...') {
+              lessonDiv.classList.add('loading-lesson');
+              // Load actual file name asynchronously
+              loadGoogleDocsTitle(lesson, lessonDiv, subject, grade, index);
+            }
+            
             gradeLevel.appendChild(lessonDiv);
           });
 
@@ -1587,8 +1887,13 @@
           selectedDocument.grade = grade;
           selectedDocument.lesson = lesson;
           
-          // Enable generate button only if we have both lesson selected and document uploaded
-          document.getElementById('generateBtn').disabled = !extractedDocumentText;
+          // Check if this is a Google Docs lesson (object with URL)
+          if (typeof lesson === 'object' && lesson.url) {
+            loadGoogleDocsContent(lesson);
+          } else {
+            // For regular lessons, enable generate button only if we have document uploaded
+            document.getElementById('generateBtn').disabled = !extractedDocumentText;
+          }
         }
       });
 
