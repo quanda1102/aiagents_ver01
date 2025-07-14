@@ -1,11 +1,23 @@
-import re
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from openai import OpenAI
 from config import config
 from schemas.lecture import LectureStructure
+import re
 
 client = OpenAI(api_key=config.OPENAI_API_KEY)
+
+def clean_json_markdown(text: str) -> str:
+    match = re.search(r"```(?:json)?\s*([\s\S]+?)\s*```", text)
+    if match:
+        return match.group(1).strip()
+    return text
+
+def flatten_activities(activities: dict) -> dict:
+    return {
+        key: (value.get("description") if isinstance(value, dict) else value)
+        for key, value in activities.items()
+    }
 
 class WriterAgent:
     async def process(self, input: dict, history: dict, db: Session) -> dict:
@@ -31,11 +43,11 @@ Trả về định dạng JSON với nội dung đầy đủ.
             )
 
             content = response.choices[0].message.content.strip()
+            clean = clean_json_markdown(content)
+            parsed = LectureStructure.parse_raw(clean)
+            parsed.activities = flatten_activities(parsed.activities)
 
-            # ✅ Xử lý nếu LLM trả về trong block markdown ```json ... ```
-            content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())
-
-            return LectureStructure.parse_raw(content).dict()
+            return parsed.dict()
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error in WriterAgent: {str(e)}")
