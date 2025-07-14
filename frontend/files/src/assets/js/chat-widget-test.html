@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget Test</title>
+    
+    <!-- Bootstrap (for testing) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/bootstrap.min.css" rel="stylesheet">
+    <!-- Tabler Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/icons-sprite.svg">
+    <style>
+        /* Include tabler icons as CSS */
+        .ti { 
+            font-family: 'tabler-icons'; 
+            speak: none;
+            font-style: normal;
+            font-weight: normal;
+            font-variant: normal;
+            text-transform: none;
+            line-height: 1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Basic tabler icons */
+        .ti-message-circle::before { content: "💬"; }
+        .ti-x::before { content: "✕"; }
+        .ti-headset::before { content: "🎧"; }
+        .ti-user::before { content: "👤"; }
+        .ti-robot::before { content: "🤖"; }
+        .ti-send::before { content: "➤"; }
+        
+        body {
+            padding: 50px;
+            font-family: 'Public Sans', sans-serif;
+        }
+    </style>
+    
+    <!-- Chat Widget CSS -->
+    <link rel="stylesheet" href="chat-widget.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Chat Widget Test Page</h1>
+        <p>This is a test page to verify the chat widget functionality.</p>
+        <p>The chat widget should appear in the bottom-right corner.</p>
+        
+        <div class="alert alert-info">
+            <strong>Expected behavior:</strong>
+            <ul>
+                <li>Blue floating button in bottom-right corner</li>
+                <li>Notification badge appears after 2 seconds</li>
+                <li>Click button to open/close chat window</li>
+                <li>Chat window should be responsive and styled properly</li>
+            </ul>
+        </div>
+        
+        <button class="btn btn-primary" onclick="testWidget()">Test Widget Functions</button>
+        <button class="btn btn-success" onclick="showBadge()">Show Badge</button>
+        <button class="btn btn-warning" onclick="addTestMessage()">Add Test Message</button>
+    </div>
+
+    <!-- Chat Widget JS -->
+    <script src="chat-widget.js"></script>
+    
+    <script>
+        // Force initialize for testing (bypass auth page check)
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 Test Page - Force initializing chat widget...');
+            
+            window.chatWidget = new ChatWidget({
+                apiUrl: 'https://httpbin.org/post', // Test endpoint
+                title: 'Test Support',
+                subtitle: 'This is a test chat'
+            });
+            
+            console.log('🧪 Test Page - Widget instance:', window.chatWidget);
+        });
+        
+        function testWidget() {
+            if (window.chatWidget) {
+                window.chatWidget.open();
+                console.log('🧪 Opening widget');
+            } else {
+                console.error('🧪 Widget not found!');
+                alert('Widget not initialized!');
+            }
+        }
+        
+        function showBadge() {
+            if (window.chatWidget) {
+                window.chatWidget.showBadge('5');
+                console.log('🧪 Showing badge');
+            }
+        }
+        
+        function addTestMessage() {
+            if (window.chatWidget) {
+                window.chatWidget.addCustomMessage('This is a test message from the system!');
+                console.log('🧪 Added test message');
+            }
+        }
+    </script>
+</body>
+</html> 

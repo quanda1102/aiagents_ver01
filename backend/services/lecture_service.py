@@ -1,4 +1,6 @@
 import os
+import json
+import re
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from openai import OpenAI
@@ -29,6 +31,20 @@ class LectureService:
             raise HTTPException(status_code=500, detail=f"Error extracting file: {str(e)}")
 
     @staticmethod
+    def clean_json_markdown(content: str) -> str:
+        match = re.search(r"```(?:json)?\s*([\s\S]+?)\s*```", content)
+        if match:
+            return match.group(1).strip()
+        return content.strip()
+
+    @staticmethod
+    def flatten_activities(activities: dict) -> dict:
+        return {
+            key: (value.get("description") if isinstance(value, dict) else value)
+            for key, value in activities.items()
+        }
+
+    @staticmethod
     async def collect_context(input: LectureInput, db: Session) -> LectureContext:
         try:
             raw_content = input.raw_content
@@ -57,20 +73,14 @@ Trả về định dạng JSON:
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=1000,
-                temperature=0.5
+                max_tokens=2000,
+                temperature=0.7
             )
 
-            context = response.choices[0].message.content.strip()
-
-            if context.startswith("```json"):
-                context = context[len("```json"):].strip()
-            if context.startswith("```"):
-                context = context[len("```"):].strip()
-            if context.endswith("```"):
-                context = context[:-3].strip()
-
-            return LectureContext.parse_raw(context)
+            content = response.choices[0].message.content.strip()
+            clean = LectureService.clean_json_markdown(content)
+            data = json.loads(clean)
+            return LectureContext.parse_obj(data)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error in collect_context: {str(e)}")
 
@@ -86,6 +96,7 @@ Dựa trên context sau, tạo khung bài giảng theo chuẩn Bộ GD Việt Na
 - Thiết bị dạy học
 - Đánh giá
 Context: {context.dict()}
+Tiêu đề: {input.title}
 Khối lớp: {input.grade_level}
 Môn học: {input.subject}
 Trả về định dạng JSON:
@@ -112,15 +123,11 @@ Trả về định dạng JSON:
             )
 
             structure = response.choices[0].message.content.strip()
+            clean = LectureService.clean_json_markdown(structure)
+            parsed = LectureStructure.parse_raw(clean)
+            parsed.activities = LectureService.flatten_activities(parsed.activities)
+            return parsed
 
-            if structure.startswith("```json"):
-                structure = structure[len("```json"):].strip()
-            if structure.startswith("```"):
-                structure = structure[len("```"):].strip()
-            if structure.endswith("```"):
-                structure = structure[:-3].strip()
-
-            return LectureStructure.parse_raw(structure)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error in structure_lecture: {str(e)}")
 
@@ -148,15 +155,17 @@ Trả về định dạng JSON với nội dung đầy đủ.
             )
 
             content = response.choices[0].message.content.strip()
+            clean = LectureService.clean_json_markdown(content)
+            data = json.loads(clean)
+            if isinstance(data.get("activities"), dict):
+                for key in ["warm_up", "knowledge_formation", "practice", "application"]:
+                    value = data["activities"].get(key)
+                if isinstance(value, dict):
+                    data["activities"][key] = value.get("description", "")
+                elif not isinstance(value, str):
+                    data["activities"][key] = str(value)
+                    return LectureStructure.parse_obj(data)
 
-            if content.startswith("```json"):
-                content = content[len("```json"):].strip()
-            if content.startswith("```"):
-                content = content[len("```"):].strip()
-            if content.endswith("```"):
-                content = content[:-3].strip()
-
-            return LectureStructure.parse_raw(content)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error in write_content: {str(e)}")
 
@@ -176,15 +185,11 @@ Trả về định dạng JSON với bài giảng đã chỉnh sửa.
             )
 
             edited = response.choices[0].message.content.strip()
+            clean = LectureService.clean_json_markdown(edited)
+            parsed = LectureStructure.parse_raw(clean)
+            parsed.activities = LectureService.flatten_activities(parsed.activities)
+            return parsed
 
-            if edited.startswith("```json"):
-                edited = edited[len("```json"):].strip()
-            if edited.startswith("```"):
-                edited = edited[len("```"):].strip()
-            if edited.endswith("```"):
-                edited = edited[:-3].strip()
-
-            return LectureStructure.parse_raw(edited)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error in edit_lecture: {str(e)}")
 
