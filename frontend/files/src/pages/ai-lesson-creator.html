@@ -819,7 +819,13 @@
   <!--Hàm check login-->
   <script src="../assets/js/auth.js"></script>
   <script>
-    // requireAuth();
+    requireAuth();
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const ok = await checkRole(['TEACHER', 'ADMIN']);
+      if (!ok) return;
+    });
   </script>
   <script src="../assets/js/plugins/popper.min.js"></script>
   <script src="../assets/js/plugins/simplebar.min.js"></script>

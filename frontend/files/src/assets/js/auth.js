@@ -13,70 +13,55 @@ function redirectIfAuthenticated() {
     window.location.href = '/dashboard/index.html';
   }
 }
-async function checkRole(allowedRoles = []) {
+
+async function getCurrentUser() {
   const token = localStorage.getItem('access_token');
+  if (!token) {
+    return null;
+  }
 
   try {
-    const res = await fetch('https://api.aagents.vn/api/v1/auth/me', {
+    const response = await fetch('https://api.aagents.vn/api/v1/auth/me', {
+      method: 'GET',
       headers: {
         'Authorization': 'Bearer ' + token
       }
     });
 
-    // if (!res.ok) {
-    //   alert('Lỗi xác thực. Vui lòng đăng nhập lại.');
-    //   window.location.href = '/pages/auth/login.html';
-    //   return false;
-    // }
-
-    const user = await res.json();
-    const userRole = user.role;
-
-    if (!allowedRoles.includes(userRole)) {
-      alert('Bạn không có quyền truy cập trang này.');
-      window.history.back(); // quay lại trang trước
-      return false;
+    if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('access_token');
+        alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        window.location.href = '/';
+      }
+      return null;
     }
 
-    return true;
-
+    return await response.json();
   } catch (error) {
-    console.error(error);
-    alert('Đã xảy ra lỗi khi kiểm tra quyền truy cập.');
-    window.history.back();
+    console.error('Error fetching user info:', error);
+    return null;
+  }
+}
+
+async function checkRole(allowedRoles) {
+  const user = await getCurrentUser();
+  if (!user) {
+    alert('Không thể xác thực người dùng. Vui lòng đăng nhập lại.');
+    window.location.href = '/';
     return false;
   }
-}
 
-function removeUnauthorizedElements(userRole) {
-  const elements = document.querySelectorAll('[data-role-allowed]');
-
-  elements.forEach((el) => {
-    const allowedRoles = el.dataset.roleAllowed
-      .split(',')
-      .map(role => role.trim().toUpperCase());
-
-    if (!allowedRoles.includes(userRole.toUpperCase())) {
-      el.remove(); // ❌ Gỡ khỏi DOM luôn
-    }
-  });
-}
-async function initAuthRoleCheck() {
-  const token = localStorage.getItem('access_token');
-  if (!token) return;
-
-  try {
-    const res = await fetch('https://api.aagents.vn/api/v1/auth/me', {
-      headers: { Authorization: 'Bearer ' + token }
-    });
-
-    const user = await res.json();
-    removeUnauthorizedElements(user.role);
-  } catch (err) {
-    console.error('Không thể kiểm tra quyền:', err);
+  if (!allowedRoles.includes(user.role)) {
+    alert('Bạn không có quyền truy cập trang này.');
+    window.location.href = '/dashboard/index.html';
+    return false;
   }
+
+  return true;
 }
 
-document.addEventListener('DOMContentLoaded', initAuthRoleCheck);
-
-
+async function isAdmin() {
+  const user = await getCurrentUser();
+  return user && user.role === 'ADMIN';
+}
