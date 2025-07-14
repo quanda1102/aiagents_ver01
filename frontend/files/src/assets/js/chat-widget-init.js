@@ -49,15 +49,32 @@
     return scriptPath.substring(0, scriptPath.lastIndexOf('/'));
   }
   
+  // Calculate correct relative path to assets based on current page location
+  function getAssetsPath() {
+    const currentPath = window.location.pathname;
+    const depth = (currentPath.match(/\//g) || []).length - 1;
+    
+    // Calculate how many "../" we need to get back to root
+    if (currentPath.includes('/pages/exercises/')) {
+      return '../../assets/';
+    } else if (currentPath.includes('/pages/')) {
+      return '../assets/';
+    } else if (currentPath.includes('/dashboard/')) {
+      return '../assets/';
+    } else {
+      return 'assets/';
+    }
+  }
+
   // Initialize chat widget
   async function initChatWidget() {
     try {
-      const basePath = getCurrentScriptPath();
+      const assetsPath = getAssetsPath();
       
       // Load CSS and JS files
       await Promise.all([
-        loadCSS(`assets/css/chat-widget.css`),
-        loadJS(`assets/js/chat-widget.js`)
+        loadCSS(`${assetsPath}css/chat-widget.css`),
+        loadJS(`${assetsPath}js/chat-widget.js`)
       ]);
       
       console.log('✅ Chat widget loaded successfully');
