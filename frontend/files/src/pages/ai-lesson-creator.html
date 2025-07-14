@@ -102,6 +102,25 @@
       border: 1px solid rgba(255,255,255,0.3);
       color: white;
     }
+    
+    /* Extracted content editor styling */
+    #extractedTextCard {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    #extractedTextCard .card-header {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+    }
+    
+    #extractedTextCard .card-header h5 {
+      color: white;
+      margin-bottom: 0;
+    }
+    
+    #extractedTextCard .card-header small {
+      color: rgba(255,255,255,0.8);
+    }
     .btn-export:hover {
       background: rgba(255,255,255,0.3);
       color: white;
@@ -131,16 +150,7 @@
       margin-top: 10px;
       display: none;
     }
-    .extracted-text-preview {
-      background: #f0f0f0;
-      border-radius: 6px;
-      padding: 15px;
-      margin-top: 10px;
-      max-height: 150px;
-      overflow-y: auto;
-      font-size: 0.9em;
-      display: none;
-    }
+
     .api-response-wrapper {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border-radius: 12px;
@@ -469,12 +479,6 @@
                     </button>
                   </div>
                 </div>
-                <div class="extracted-text-preview" id="extractedTextPreview">
-                  <strong>Nội dung đã trích xuất:</strong>
-                  <div class="mt-2">
-                    <textarea id="extractedTextEditor" class="form-control"></textarea>
-                  </div>
-                </div>
               </div>
               
               <div class="mb-3">
@@ -490,8 +494,20 @@
         </div>
         <!-- [ Document Selection ] end -->
         
-        <!-- [ AI Response ] start -->
+        <!-- [ Extracted Content Editor ] start -->
         <div class="col-md-6">
+          <!-- Extracted Text Editor -->
+          <div class="card mb-3" id="extractedTextCard" style="display: none;">
+            <div class="card-header">
+              <h5><i class="ti ti-file-edit me-2"></i>Nội dung đã trích xuất</h5>
+              <small class="text-muted">Chỉnh sửa nội dung tài liệu trước khi tạo bài giảng</small>
+            </div>
+            <div class="card-body">
+              <textarea id="extractedTextEditor" class="form-control"></textarea>
+            </div>
+          </div>
+          
+          <!-- AI Generated Content -->
           <div class="card">
             <div class="card-header">
               <h5><i class="ti ti-file-text me-2"></i>Nội dung được tạo</h5>
@@ -683,7 +699,7 @@
       // Initialize extracted text editor
       tinymce.init({
         selector: '#extractedTextEditor',
-        height: 300,
+        height: 400,
         menubar: false,
         plugins: [
           'advlist', 'autolink', 'lists', 'link', 'charmap',
@@ -691,14 +707,14 @@
           'insertdatetime', 'table', 'help', 'wordcount'
         ],
         toolbar: 'undo redo | blocks | ' +
-          'bold italic | alignleft aligncenter ' +
-          'alignright alignjustify | bullist numlist | ' +
-          'removeformat',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; line-height: 1.6; }',
+          'bold italic forecolor | alignleft aligncenter ' +
+          'alignright alignjustify | bullist numlist outdent indent | ' +
+          'removeformat | fullscreen',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 16px; line-height: 1.6; padding: 15px; }',
         language: 'vi',
         branding: false,
-        statusbar: false,
-        placeholder: 'Nội dung được trích xuất từ file sẽ hiển thị ở đây...'
+        statusbar: true,
+        placeholder: 'Nội dung được trích xuất từ file sẽ hiển thị ở đây. Bạn có thể chỉnh sửa trước khi tạo bài giảng...'
       });
 
       // Initialize document editing editor
@@ -813,7 +829,7 @@
         };
         setExtractedContent();
         
-        document.getElementById('extractedTextPreview').style.display = 'block';
+        document.getElementById('extractedTextCard').style.display = 'block';
 
         // Enable generate button if document is selected
         if (selectedDocument.lesson) {
@@ -850,10 +866,17 @@
 
     function removeFile() {
       document.getElementById('uploadedFile').style.display = 'none';
-      document.getElementById('extractedTextPreview').style.display = 'none';
+      document.getElementById('extractedTextCard').style.display = 'none';
       document.getElementById('fileUploadArea').style.display = 'block';
       document.getElementById('documentFile').value = '';
       extractedDocumentText = '';
+      extractedFileName = '';
+      
+      // Clear TinyMCE editor content
+      const editor = tinymce.get('extractedTextEditor');
+      if (editor) {
+        editor.setContent('');
+      }
       
       // Disable generate button if no document text
       if (!extractedDocumentText) {
