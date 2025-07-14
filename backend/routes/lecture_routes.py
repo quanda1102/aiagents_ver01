@@ -44,7 +44,7 @@ async def create_lecture(lecture_input: LectureInput, db: Session = Depends(get_
     context = await LectureService.collect_context(lecture_input, db)
     structure = await LectureService.structure_lecture(context, lecture_input)
     content = await LectureService.write_content(structure)
-    return LectureService.save_lecture(content, lecture_input, current_user["id"], db)
+    return LectureService.save_lecture(content, lecture_input, current_user.id, db)
 
 @router.post("/edit", response_model=LectureStructure)
 async def edit_lecture(structure: LectureStructure, edit_request: str, db: Session = Depends(get_db), current_user: dict = Depends(require_teacher)):

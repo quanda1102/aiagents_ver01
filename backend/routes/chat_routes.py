@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from schemas.chat import ChatRequest, ChatResponse
 from utils.auth import get_current_user
 
-router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
+router = APIRouter(prefix="/api/v1", tags=["chat"])
 
 @router.post("/chat", response_model=ChatResponse, status_code=200)
 async def chat_response(
