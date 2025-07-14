@@ -21,7 +21,8 @@ async function getCurrentUser() {
   }
 
   try {
-    const response = await fetch('https://api.aagents.vn/api/v1/auth/me', {
+    const apiUrl = window.getApiUrl ? getApiUrl('ME') : 'https://api.aagents.vn/api/v1/auth/me';
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Authorization': 'Bearer ' + token

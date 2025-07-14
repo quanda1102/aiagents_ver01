@@ -56,8 +56,8 @@
       
       // Load CSS and JS files
       await Promise.all([
-        loadCSS(`${basePath}/../css/chat-widget.css`),
-        loadJS(`${basePath}/chat-widget.js`)
+        loadCSS(`assets/css/chat-widget.css`),
+        loadJS(`assets/js/chat-widget.js`)
       ]);
       
       console.log('✅ Chat widget loaded successfully');
