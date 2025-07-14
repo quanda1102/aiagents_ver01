@@ -194,6 +194,7 @@
     </div>
   </footer> <!-- Required Js -->
     <!--Hàm check login-->
+  <script src="../../assets/js/config.js"></script>
   <script src="../../assets/js/auth.js"></script>
     <script>
       requireAuth();
@@ -218,7 +219,8 @@
       const quizListContainer = document.getElementById('quizList');
 
       try {
-        const response = await fetch('https://api.aagents.vn/api/v1/quiz/list', {
+        const apiUrl = getApiUrl('QUIZ') + '/list';
+        const response = await fetch(apiUrl, {
               headers: {
                 'Authorization': `Bearer ${token}`
               }
