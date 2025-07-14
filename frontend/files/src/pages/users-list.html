@@ -400,6 +400,7 @@
     </div>
   </footer> <!-- Required Js -->
       <!--Hàm check login-->
+  <script src="../assets/js/config.js"></script>
   <script src="../assets/js/auth.js"></script>
     <script>
       requireAuth();
@@ -449,7 +450,8 @@
             // 1. Load danh sách người dùng
             async function loadUsers() {
               try {
-                const res = await fetch('https://api.aagents.vn/api/v1/users/', {
+                const apiUrl = getApiUrl('USERS') + '/';
+                const res = await fetch(apiUrl, {
                   method: 'GET',
                   headers
                 });
@@ -500,7 +502,8 @@
               const payload = Object.fromEntries(formData.entries());
         
               try {
-                const res = await fetch('https://api.aagents.vn/api/v1/users/', {
+                const apiUrl = getApiUrl('USERS') + '/';
+                const res = await fetch(apiUrl, {
                   method: 'POST',
                   headers,
                   body: JSON.stringify(payload)
