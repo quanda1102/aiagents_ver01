@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chat Exam Builder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    .left, .right {
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .left {
+      width: 50%;
+      background: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+    }
+
+    .right {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .message {
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      max-width: 80%;
+      border-radius: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .message.user {
+      background: #d0e8ff;
+      align-self: flex-end;
+      text-align: right;
+    }
+
+    .message.agent {
+      background: #e1ffe1;
+      align-self: flex-start;
+    }
+
+    form {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      background: #007bff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    h3 {
+      margin-top: 0;
+    }
+
+    .context-row {
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      background: #ffffff;
+      border-left: 4px solid #007bff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .context-key {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .context-value {
+      margin-left: 8px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Left: context_data -->
+    <div class="left">
+      <h3>Exam Context</h3>
+      <div id="contextDataContainer">Đang tải...</div>
+    </div>
+
+    <!-- Right: Chat -->
+    <div class="right">
+      <div class="messages" id="messageList"></div>
+      <form id="chatForm">
+        <input type="text" id="messageInput" placeholder="Enter your message..." required />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('access_token');
+    const messageList = document.getElementById('messageList');
+    const contextContainer = document.getElementById('contextDataContainer');
+    const sessionKey = 'chat_session_id';
+    const agentKey = 'agent_name';
+
+    function getCurrentAgent() {
+      return localStorage.getItem(agentKey) || 'triage';
+    }
+
+    function appendMessage(text, role) {
+      const msg = document.createElement('div');
+      msg.className = `message ${role}`;
+      msg.textContent = text;
+      messageList.appendChild(msg);
+      messageList.scrollTop = messageList.scrollHeight;
+    }
+
+    function updateContextData(data) {
+      const { conversation_history, ...context } = data;
+      contextContainer.innerHTML = '';
+      for (const [key, value] of Object.entries(context)) {
+        const row = document.createElement('div');
+        row.className = 'context-row';
+        row.innerHTML = `
+          <span class="context-key">${key}:</span>
+          <span class="context-value">${value ?? '-'}</span>
+        `;
+        contextContainer.appendChild(row);
+      }
+    }
+
+    async function sendMessage(message) {
+      const payload = { message };
+      const sessionId = localStorage.getItem(sessionKey);
+      if (sessionId) payload.session_id = sessionId;
+
+      const agent = getCurrentAgent();
+
+      try {
+        const res = await fetch(`https://api.aagents.vn/api/v1/exam/chat?agent_name=${agent}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+              
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const json = await res.json();
+
+        if (json.session_id) localStorage.setItem(sessionKey, json.session_id);
+        if (json.agent_name) localStorage.setItem(agentKey, json.agent_name);
+        if (json.message) appendMessage(json.message, 'agent');
+        if (json.context_data) updateContextData(json.context_data);
+
+      } catch (err) {
+        console.error(err);
+        appendMessage('Lỗi gửi tin nhắn.', 'agent');
+      }
+    }
+
+    // Gửi khi submit
+    document.getElementById('chatForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      if (!message) return;
+
+      appendMessage(message, 'user');
+      input.value = '';
+      sendMessage(message);
+    });
+
+    // Khi tải trang
+    window.addEventListener('DOMContentLoaded', () => {
+      const sessionId = localStorage.getItem(sessionKey);
+      if (sessionId) {
+        sendMessage('Resume session');
+      } else {
+        appendMessage('Chào bạn! Bạn muốn tôi tạo bài kiểm tra như thế nào?', 'agent');
+      }
+    });
+  </script>
+</body>
+</html>
