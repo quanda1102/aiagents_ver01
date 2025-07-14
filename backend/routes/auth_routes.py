@@ -43,9 +43,9 @@ def get_logged_in_user(current_user: User = Depends(get_current_user)):
 def update_class_name(
     class_update: ClassUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
-    user = db.query(User).filter(User.email == current_user["email"]).first()
+    user = db.query(User).filter(User.email == current_user.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
