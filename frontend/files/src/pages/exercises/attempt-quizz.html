@@ -455,6 +455,12 @@
 <script src="../../assets/js/pcoded.js"></script>
 <script src="../../assets/js/plugins/feather.min.js"></script>
 <script src="../../assets/js/customer.js"></script>
+<script src="../../assets/js/include-layout.js"></script>
+<script>layout_change('light');</script>
+<script>change_box_container('false');</script>
+<script>layout_rtl_change('false');</script>
+<script>preset_change("preset-1");</script>
+<script>font_change("Public-Sans");</script>
 
 
 
@@ -537,34 +543,102 @@
     }
 
     function renderQuiz(quiz) {
-      let html = `<h2>${quiz.title}</h2><p>${quiz.description}</p><form id="quizForm">`;
+        // Hide loading, show content
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('quizContent').style.display = 'block';
+        
+        // Update page title and breadcrumb
+        const pageTitle = document.getElementById('pageTitle');
+        const quizTitle = document.getElementById('quizTitle');
+        const quizInfoTitle = document.getElementById('quizInfoTitle');
+        const quizDescription = document.getElementById('quizDescription');
+        const questionCount = document.getElementById('questionCount');
+        const totalPoints = document.getElementById('totalPoints');
+        
+        if (pageTitle) pageTitle.textContent = quiz.title;
+        if (quizTitle) quizTitle.textContent = quiz.title;
+        if (quizInfoTitle) quizInfoTitle.textContent = quiz.title;
+        if (quizDescription) quizDescription.textContent = quiz.description || 'Không có mô tả';
+        if (questionCount) questionCount.textContent = quiz.questions.length;
+        if (totalPoints) totalPoints.textContent = quiz.total_points;
+        
+        // Handle time limit
+        const timeLimit = document.getElementById('timeLimit');
+        const timerDisplay = document.getElementById('timerDisplay');
+        
+        if (quiz.time_limit && quiz.time_limit > 0) {
+            timeRemaining = quiz.time_limit;
+            if (timeLimit) timeLimit.textContent = formatTime(quiz.time_limit);
+            if (timerDisplay) timerDisplay.style.display = 'block';
+            startTimer();
+        } else {
+            if (timeLimit) timeLimit.textContent = 'Không giới hạn';
+        }
+        
+        // Render questions
+        const container = document.getElementById('questionsContainer');
+        let questionsHtml = '';
+        
+        quiz.questions.forEach((question, index) => {
+            questionsHtml += `
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3">
+                            <span class="badge bg-primary me-2">${index + 1}</span>
+                            ${question.question_text}
+                            <span class="badge bg-secondary ms-2">${question.points || 1} điểm</span>
+                        </h6>
+                        <div class="question-options">
+                            ${renderQuestionOptions(question)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = questionsHtml;
+        
+        // Setup submit button
+        document.getElementById('submitBtn').addEventListener('click', handleSubmit);
+    }
 
-      quiz.questions.forEach((q, index) => {
-        html += `<div class="card my-3">
-          <div class="card-body">
-            <h5 class="card-title">Câu ${index + 1}: ${q.question_text}</h5>`;
-
-        if (q.question_type === 'multiple_choice' && Array.isArray(q.options)) {
-          q.options.forEach(option => {
-            html += `
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="${q.question_id}" value="${option}" required>
-                <label class="form-check-label">${option}</label>
-              </div>`;
-          });
-        } else if (q.question_type === 'true_false') {
-          ['True', 'False'].forEach(val => {
-            html += `
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="${q.question_id}" value="${val}" required>
-                <label class="form-check-label">${val}</label>
-              </div>`;
-          });
-        } else if (q.question_type === 'text') {
-          html += `
-            <div class="mb-3">
-              <textarea name="${q.question_id}" class="form-control" rows="3" required></textarea>
-            </div>`;
+    function renderQuestionOptions(question) {
+        let optionsHtml = '';
+        
+        if (question.question_type === 'multiple_choice' && Array.isArray(question.options)) {
+            question.options.forEach((option, optionIndex) => {
+                const optionLetter = String.fromCharCode(65 + optionIndex); // A, B, C, D
+                optionsHtml += `
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="${question.question_id}" 
+                               value="${option}" id="${question.question_id}_${optionIndex}" required>
+                        <label class="form-check-label" for="${question.question_id}_${optionIndex}">
+                            <strong>${optionLetter}.</strong> ${option}
+                        </label>
+                    </div>
+                `;
+            });
+        } else if (question.question_type === 'true_false') {
+            ['True', 'False'].forEach((value, index) => {
+                const label = value === 'True' ? 'Đúng' : 'Sai';
+                optionsHtml += `
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="${question.question_id}" 
+                               value="${value}" id="${question.question_id}_${index}" required>
+                        <label class="form-check-label" for="${question.question_id}_${index}">
+                            ${label}
+                        </label>
+                    </div>
+                `;
+            });
+        } else if (question.question_type === 'text') {
+            optionsHtml = `
+                <div class="mb-3">
+                    <textarea class="form-control" name="${question.question_id}" 
+                              id="${question.question_id}" rows="3" 
+                              placeholder="Nhập câu trả lời của bạn..." required></textarea>
+                </div>
+            `;
         }
         
         return optionsHtml;
@@ -589,14 +663,21 @@
         const minutes = Math.floor(timeRemaining / 60);
         const seconds = timeRemaining % 60;
         const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        document.getElementById('timeRemaining').textContent = timeString;
+        
+        const timeRemainingElement = document.getElementById('timeRemaining');
+        const timerBadge = document.getElementById('timerDisplay');
+        
+        if (timeRemainingElement) {
+            timeRemainingElement.textContent = timeString;
+        }
         
         // Change color based on remaining time
-        const timerBadge = document.getElementById('timerDisplay');
-        if (timeRemaining <= 60) {
-            timerBadge.className = 'badge bg-danger text-white';
-        } else if (timeRemaining <= 300) {
-            timerBadge.className = 'badge bg-warning text-dark';
+        if (timerBadge) {
+            if (timeRemaining <= 60) {
+                timerBadge.className = 'badge bg-danger text-white';
+            } else if (timeRemaining <= 300) {
+                timerBadge.className = 'badge bg-warning text-dark';
+            }
         }
     }
 
@@ -786,11 +867,11 @@
         document.getElementById('errorMessage').textContent = message;
     }
 
-    // Logout function
-    document.getElementById('logoutBtn').addEventListener('click', function() {
+    // Logout function (using the onclick attribute instead to avoid conflicts)
+    function logoutBtn() {
         localStorage.removeItem('access_token');
         window.location.href = '../../auth/login.html';
-    });
+    }
 
     // Prevent accidental navigation away during quiz
     window.addEventListener('beforeunload', function(e) {

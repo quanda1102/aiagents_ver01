@@ -330,12 +330,17 @@ class ChatWidget {
       localStorage.setItem('chat_widget_session_id', data.session_id);
     }
 
-    // Handle array response format: [{"output": "message"}]
+    // Handle array response format: [{"output": "message"}] from n8n API
     if (Array.isArray(data) && data.length > 0) {
       console.log('Array response detected, first item:', data[0]);
       if (data[0] && data[0].output) {
-        console.log('Returning output:', data[0].output);
+        console.log('Returning output field:', data[0].output);
         return data[0].output;
+      }
+      // Fallback for other array formats
+      if (data[0] && data[0].out) {
+        console.log('Returning out field:', data[0].out);
+        return data[0].out;
       }
     }
 
