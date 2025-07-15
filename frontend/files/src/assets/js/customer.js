@@ -36,6 +36,7 @@ function logoutBtn() {
       if (data?.email && data?.role) {
         document.querySelectorAll('.user_email').forEach(el => el.textContent = data.email);
         document.querySelectorAll('.user_role').forEach(el => el.textContent = data.role);
+        document.querySelectorAll('.user_name').forEach(el => el.textContent = data.full_name);
       }
     } catch (err) {
       console.error('Lỗi khi lấy thông tin người dùng:', err);
