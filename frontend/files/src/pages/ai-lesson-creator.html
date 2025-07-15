@@ -2132,11 +2132,14 @@
             const lessonTitle = typeof lesson === 'object' ? lesson.title : lesson;
             const lessonDiv = createTreeItem(lessonTitle, 'lesson', subject, grade, lesson);
             
-            // Add loading indicator for Google Docs lessons
-            if (typeof lesson === 'object' && lesson.url && lesson.title === 'Đang tải...') {
-              lessonDiv.classList.add('loading-lesson');
-              // Load actual file name asynchronously
-              loadGoogleDocsTitle(lesson, lessonDiv, subject, grade, index);
+            // Add loading indicator for Google Docs lessons that have URLs
+            if (typeof lesson === 'object' && lesson.url && lesson.url.trim() !== '') {
+              // Only add loading class if title suggests it needs to be loaded
+              if (lesson.title === 'Đang tải...' || lesson.title.startsWith('Bài ')) {
+                lessonDiv.classList.add('loading-lesson');
+                // Load actual file name asynchronously
+                loadGoogleDocsTitle(lesson, lessonDiv, subject, grade, index);
+              }
             }
             
             gradeLevel.appendChild(lessonDiv);
