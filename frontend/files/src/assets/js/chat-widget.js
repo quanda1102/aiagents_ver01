@@ -9,7 +9,7 @@ class ChatWidget {
       title: 'Trợ lý Quân',
       subtitle: 'Xin chào tớ có thể giúp gì được cậu không',
       placeholder: 'Nhập tin nhắn...',
-      apiUrl: options.apiUrl || 'https://api.aagents.vn/api/v1/chat',
+      apiUrl: options.apiUrl || 'https://aimarketingvn.com/webhook/chat',
       initialMessages: [
         {
           type: 'bot',
@@ -255,11 +255,11 @@ class ChatWidget {
   }
 
   async sendToAPI(message) {
-    // Get auth token if available (optional)
+    // Get auth token if available
     const token = localStorage.getItem('access_token');
 
-    // Build ChatRequest payload – most fields are placeholders for now
-    const chatRequest = {
+    // Get current user metadata from auth.js functions
+    let userData = {
       user_id: 0,
       user_name: 'Guest',
       user_email: 'guest@example.com',
@@ -269,9 +269,41 @@ class ChatWidget {
       user_state: '',
       user_zip: '',
       user_country: '',
-      user_role: 'GUEST',
+      user_role: 'GUEST'
+    };
+
+    // Try to get actual user data if authenticated
+    if (token && typeof getCurrentUser === 'function') {
+      try {
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+          userData = {
+            user_id: currentUser.id || 0,
+            user_name: currentUser.name || currentUser.username || 'User',
+            user_email: currentUser.email || '',
+            user_phone: currentUser.phone || '',
+            user_address: currentUser.address || '',
+            user_city: currentUser.city || '',
+            user_state: currentUser.state || '',
+            user_zip: currentUser.zip || '',
+            user_country: currentUser.country || '',
+            user_role: currentUser.role || 'USER'
+          };
+        }
+      } catch (error) {
+        console.warn('Failed to get user metadata:', error);
+        // Continue with guest data if user fetch fails
+      }
+    }
+
+    // Build ChatRequest payload with real user metadata
+    const chatRequest = {
+      ...userData,
       session_id: this.sessionId,
-      message: message // extra field, backend can ignore if not expected
+      message: message,
+      timestamp: new Date().toISOString(),
+      page_url: window.location.href,
+      page_title: document.title
     };
 
     const response = await fetch(this.options.apiUrl, {
@@ -295,7 +327,13 @@ class ChatWidget {
       localStorage.setItem('chat_widget_session_id', data.session_id);
     }
 
-    return data.response || 'Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.';
+    // Handle array response format: [{"output": "message"}]
+    if (Array.isArray(data) && data.length > 0 && data[0].output) {
+      return data[0].output;
+    }
+
+    // Handle direct response formats for backward compatibility
+    return data.response || data.message || 'Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.';
   }
 
   addMessage(message) {
@@ -444,7 +482,7 @@ function autoInitChatWidget() {
   if (!isAuthPage) {
     console.log('✅ Chat Widget - Initializing...');
     window.chatWidget = new ChatWidget({
-      apiUrl: 'https://api.aagents.vn/api/v1/chat/support'
+      apiUrl: 'https://aimarketingvn.com/webhook/chat'
     });
     console.log('✅ Chat Widget - Widget created:', window.chatWidget);
   } else {
