@@ -293,7 +293,7 @@
           <div class="class-header" id="classHeader">
             <div class="row align-items-center">
               <div class="col-md-8">
-                <h3 class="mb-2"><i class="ti ti-school me-2"></i>Lớp của bạn</h3>
+                <h3 class="mb-2" id="headerTitle"><i class="ti ti-school me-2"></i>Lớp của bạn</h3>
                 <p class="mb-0 opacity-75" id="classInfo">Đang tải thông tin lớp học...</p>
               </div>
               <div class="col-md-4 text-md-end">
@@ -310,10 +310,15 @@
         <div class="col-12">
           <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-              <h5 class="mb-0"><i class="ti ti-clipboard-list me-2"></i>Bài tập được giao cho lớp</h5>
-              <button class="btn btn-outline-primary btn-sm" onclick="loadMyQuizzes()">
-                <i class="ti ti-refresh me-1"></i>Làm mới
-              </button>
+              <h5 class="mb-0" id="cardTitle"><i class="ti ti-clipboard-list me-2"></i>Bài tập được giao cho lớp</h5>
+              <div>
+                <button class="btn btn-outline-info btn-sm me-2" onclick="debugUserInfo()">
+                  <i class="ti ti-bug me-1"></i>Debug
+                </button>
+                <button class="btn btn-outline-primary btn-sm" onclick="loadMyQuizzes()">
+                  <i class="ti ti-refresh me-1"></i>Làm mới
+                </button>
+              </div>
             </div>
             <div class="card-body">
               <!-- Loading State -->
@@ -375,6 +380,7 @@
 
   <!-- Required Js -->
   <!--Hàm check login-->
+  <script src="../../assets/js/config.js"></script>
   <script src="../../assets/js/auth.js"></script>
   <script>
     requireAuth();
@@ -399,10 +405,17 @@
   <script>
     let currentUser = null;
 
+    // Logout function
+    function logoutBtn() {
+      localStorage.removeItem('access_token');
+      window.location.href = '../../auth/login.html';
+    }
+
     // Load user data and initialize page
     document.addEventListener('DOMContentLoaded', async () => {
       try {
         currentUser = await getCurrentUser();
+        console.log('Current user loaded:', currentUser);
         updateClassInfo();
         loadMyQuizzes();
       } catch (error) {
@@ -413,16 +426,43 @@
 
     // Update class information in header
     function updateClassInfo() {
-      if (currentUser && currentUser.class_name) {
-        const classDisplayName = getClassDisplayName(currentUser.class_name);
-        document.getElementById('classInfo').textContent = `${classDisplayName} • ${currentUser.user_name}`;
+      console.log('Updating class info for user:', currentUser);
+      
+      if (!currentUser) {
+        document.getElementById('classInfo').textContent = 'Chưa có thông tin người dùng';
+        return;
+      }
+
+      const isStudent = currentUser.role === 3 || currentUser.role === 'STUDENT';
+      const isTeacher = currentUser.role === 2 || currentUser.role === 'TEACHER'; 
+      const isAdmin = currentUser.role === 8686 || currentUser.role === 'ADMIN';
+      
+      let roleText = '';
+      if (isAdmin) roleText = 'Quản trị viên';
+      else if (isTeacher) roleText = 'Giáo viên';
+      else if (isStudent) roleText = 'Học sinh';
+      else roleText = `Role: ${currentUser.role}`;
+
+      if (isStudent) {
+        // For students, show class info
+        document.getElementById('headerTitle').innerHTML = '<i class="ti ti-school me-2"></i>Lớp của bạn';
+        document.getElementById('cardTitle').innerHTML = '<i class="ti ti-clipboard-list me-2"></i>Bài tập được giao cho lớp';
+        if (currentUser.class_name) {
+          const classDisplayName = getClassDisplayName(currentUser.class_name);
+          document.getElementById('classInfo').textContent = `${classDisplayName} • ${currentUser.full_name || currentUser.email} • ${roleText}`;
+        } else {
+          document.getElementById('classInfo').innerHTML = `
+            <span class="text-warning">
+              <i class="ti ti-alert-triangle me-1"></i>
+              ${currentUser.full_name || currentUser.email} (${roleText}) - Chưa có lớp - <a href="../class-selection.html" class="text-white text-decoration-underline">Chọn lớp ngay</a>
+            </span>
+          `;
+        }
       } else {
-        document.getElementById('classInfo').innerHTML = `
-          <span class="text-warning">
-            <i class="ti ti-alert-triangle me-1"></i>
-            Chưa được phân lớp - <a href="../class-selection.html" class="text-white text-decoration-underline">Chọn lớp ngay</a>
-          </span>
-        `;
+        // For teachers/admins, show general info
+        document.getElementById('headerTitle').innerHTML = '<i class="ti ti-clipboard-list me-2"></i>Quản lý bài tập';
+        document.getElementById('cardTitle').innerHTML = '<i class="ti ti-clipboard-list me-2"></i>Tất cả bài tập trong hệ thống';
+        document.getElementById('classInfo').textContent = `${currentUser.full_name || currentUser.email} • ${roleText} • Xem tất cả bài tập`;
       }
     }
 
@@ -466,7 +506,33 @@
       showLoading();
       
       try {
-        const response = await fetch('https://api.aagents.vn/api/v1/quiz/my-quizzes?limit=50', {
+        console.log('Loading quizzes for user:', currentUser);
+        console.log('API URL:', `${getApiUrl('QUIZ')}/my-quizzes`);
+        console.log('Token:', localStorage.getItem('access_token') ? 'Present' : 'Missing');
+
+        // Validate user role - allow students, teachers, and admins
+        if (!currentUser) {
+          showError('Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.');
+          return;
+        }
+
+        // Check user role (STUDENT = 3, TEACHER = 2, ADMIN = 8686)
+        const isStudent = currentUser.role === 3 || currentUser.role === 'STUDENT';
+        const isTeacher = currentUser.role === 2 || currentUser.role === 'TEACHER'; 
+        const isAdmin = currentUser.role === 8686 || currentUser.role === 'ADMIN';
+
+        if (!isStudent && !isTeacher && !isAdmin) {
+          showError('Bạn không có quyền truy cập tính năng này. Vai trò hiện tại: ' + currentUser.role);
+          return;
+        }
+
+        // Check if student has class assignment (only for students)
+        if (isStudent && !currentUser.class_name) {
+          showError('Bạn chưa được phân lớp. Vui lòng liên hệ với giáo viên để được phân lớp.');
+          return;
+        }
+
+        const response = await fetch(`${getApiUrl('QUIZ')}/my-quizzes?limit=50`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
@@ -474,30 +540,48 @@
           }
         });
 
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+
+        // Handle different HTTP status codes properly
+        if (!response.ok) {
+          if (response.status === 401) {
+            showError('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
+            // Optionally redirect to login
+            setTimeout(() => {
+              window.location.href = '../../auth/login.html';
+            }, 3000);
+            return;
+          } else if (response.status === 403) {
+            showError('Bạn không có quyền truy cập tính năng này. Vui lòng kiểm tra vai trò của bạn.');
+            return;
+          } else if (response.status === 404) {
+            showError('Không tìm thấy API endpoint. Vui lòng liên hệ quản trị viên.');
+            return;
+          } else if (response.status >= 500) {
+            showError('Lỗi máy chủ. Vui lòng thử lại sau.');
+            return;
+          }
+        }
+
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.detail || `HTTP ${response.status}: Không thể tải danh sách bài tập`);
-        }
-
-        // Check if user has class_name
-        if (!currentUser || !currentUser.class_name) {
-          showError('Bạn chưa được phân lớp. Vui lòng chọn lớp học trước.');
-          return;
+          throw new Error(data.detail || data.message || `HTTP ${response.status}: Không thể tải danh sách bài tập`);
         }
 
         displayQuizzes(data.quizzes || []);
         document.getElementById('quizCount').textContent = (data.quizzes || []).length;
 
       } catch (error) {
-        if (error.message.includes('401') || error.message.includes('unauthorized')) {
-          showError('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
-        } else if (error.message.includes('403') || error.message.includes('forbidden')) {
-          showError('Bạn không có quyền truy cập tính năng này.');
-        } else if (error.message.includes('503') || error.message.includes('unavailable')) {
-          showError('Dịch vụ quiz hiện không khả dụng. Vui lòng thử lại sau.');
+        console.error('Error loading quizzes:', error);
+        // More specific error handling
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          showError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
+        } else if (error.message.includes('JSON')) {
+          showError('Lỗi định dạng dữ liệu từ máy chủ. Vui lòng thử lại.');
         } else {
-          showError(error.message);
+          showError(error.message || 'Có lỗi không xác định xảy ra.');
         }
       }
     }
@@ -571,7 +655,7 @@
 
     // Open quiz in new tab/window
     function openQuiz(quizId) {
-      window.open(`attempt-quizz.html?quiz_id=${quizId}`, '_blank');
+      window.open(`attempt-quizz.html?id=${quizId}`, '_blank');
     }
 
     // Show loading state
@@ -607,7 +691,54 @@
       document.getElementById('errorState').style.display = 'block';
     }
 
-
+    // Debug function to show user info and test API
+    function debugUserInfo() {
+      console.log('=== DEBUG INFO ===');
+      console.log('Current User:', currentUser);
+      console.log('Access Token:', localStorage.getItem('access_token'));
+      console.log('API Base URL:', getApiUrl('QUIZ'));
+      console.log('Expected Role:', 'STUDENT (3)');
+      console.log('Current Role Type:', typeof currentUser?.role);
+      console.log('=== END DEBUG ===');
+      
+      const isStudent = currentUser?.role === 3 || currentUser?.role === 'STUDENT';
+      const isTeacher = currentUser?.role === 2 || currentUser?.role === 'TEACHER'; 
+      const isAdmin = currentUser?.role === 8686 || currentUser?.role === 'ADMIN';
+      const roleCheck = isStudent || isTeacher || isAdmin;
+      const roleDisplay = currentUser?.role + (roleCheck ? ' ✅' : ' ❌');
+      
+      let roleText = '';
+      if (isAdmin) roleText = 'ADMIN (8686)';
+      else if (isTeacher) roleText = 'TEACHER (2)';
+      else if (isStudent) roleText = 'STUDENT (3)';
+      else roleText = `Unknown (${currentUser?.role})`;
+      
+      const debugInfo = `
+        <h6>Debug Information</h6>
+        <ul>
+          <li><strong>User Name:</strong> ${currentUser?.full_name || currentUser?.email || 'N/A'}</li>
+          <li><strong>User Email:</strong> ${currentUser?.email || 'N/A'}</li>
+          <li><strong>User Role:</strong> ${roleDisplay}</li>
+          <li><strong>Role Type:</strong> ${roleText}</li>
+          <li><strong>Role Check:</strong> ${roleCheck ? 'PASS' : 'FAIL (Expected STUDENT, TEACHER, or ADMIN)'}</li>
+          <li><strong>Class Name:</strong> ${currentUser?.class_name || 'N/A'}</li>
+          <li><strong>User ID:</strong> ${currentUser?.id || 'N/A'}</li>
+          <li><strong>Token Present:</strong> ${localStorage.getItem('access_token') ? 'Yes' : 'No'}</li>
+          <li><strong>API Endpoint:</strong> ${getApiUrl('QUIZ')}/my-quizzes</li>
+          <li><strong>Page Requirements:</strong> Role=STUDENT/TEACHER/ADMIN</li>
+        </ul>
+        <p>Check browser console for more detailed logs.</p>
+        <p><small>Students need class assignment, Teachers/Admins see all quizzes.</small></p>
+      `;
+      
+      Swal.fire({
+        title: 'Debug Information',
+        html: debugInfo,
+        icon: 'info',
+        width: '600px',
+        confirmButtonText: 'OK'
+      });
+    }
   </script>
 </body>
 <!-- [Body] end -->

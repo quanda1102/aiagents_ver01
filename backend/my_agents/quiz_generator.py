@@ -46,6 +46,7 @@ QUIZ_GENERATION_AGENT = Agent(
     instructions=(
         "You are an expert quiz generator. Your task is to create comprehensive, educational quizzes from provided documents.\n\n"
         "Guidelines:\n"
+        "Output should be in Vietnamese language.\n"
         "1. Read the document carefully and identify key concepts, facts, and learning objectives\n"
         "2. Create questions that test understanding at different levels (factual, conceptual, analytical)\n"
         "3. Ensure questions are clear, unambiguous, and have definitive correct answers\n"
