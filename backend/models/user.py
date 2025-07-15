@@ -24,3 +24,4 @@ class User(Base):
     class_name = Column(String(100), nullable=True)
     gender = Column(SqlEnum(Gender, values_callable=lambda x: [e.value for e in x]), default=Gender.OTHER.value)
     lectures = relationship("Lecture", back_populates="teacher")
+    quiz_attempts = relationship("QuizAttempt", back_populates="user")
