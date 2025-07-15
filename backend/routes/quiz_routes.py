@@ -9,7 +9,7 @@ from schemas.quiz_models import (
     QuizListResponse, QuizResponse, UserQuizStats, GenerateQuizRequest,
     GenerateQuizResponse
 )
-from services.quiz_service import QuizService
+from services.mysql_quiz_service import MySQLQuizService
 from my_agents.quiz_generator import QuizGenerationAgent
 from utils.auth import get_current_user
 from models.user import User
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize services
 try:
-    quiz_service = QuizService()
+    quiz_service = MySQLQuizService()
     quiz_generation_agent = QuizGenerationAgent()
 except Exception as e:
     logger.warning(f"Failed to initialize quiz services: {e}")
@@ -84,24 +84,27 @@ async def create_quiz(
 async def health_check():
     """Health check endpoint for quiz service"""
     try:
-        # Test Redis connection
-        if not quiz_service or not quiz_service.client:
-            raise HTTPException(status_code=503, detail="Quiz service unavailable - Redis not connected")
+        # Test MySQL connection
+        if not quiz_service:
+            raise HTTPException(status_code=503, detail="Quiz service unavailable - MySQL not connected")
         
-        # Try to ping Redis
-        quiz_service.client.ping()
+        # Try to connect to database
+        db = quiz_service.get_db()
         
-        # Check Redis data
-        quiz_keys = quiz_service.client.keys('quiz:*')
-        quiz_ids = quiz_service.client.smembers('quiz_index')
+        # Check database data
+        from models.quiz import Quiz, QuizAttempt
+        quiz_count = db.query(Quiz).count()
+        attempt_count = db.query(QuizAttempt).count()
+        
+        db.close()
         
         return QuizResponse(
             success=True,
-            message=f"Quiz service is healthy. Found {len(quiz_keys)} quiz keys and {len(quiz_ids)} quiz IDs in index",
+            message=f"Quiz service is healthy. Found {quiz_count} quizzes and {attempt_count} attempts in database",
             data={
-                "quiz_keys_count": len(quiz_keys),
-                "quiz_index_count": len(quiz_ids),
-                "redis_connected": True
+                "quiz_count": quiz_count,
+                "attempt_count": attempt_count,
+                "mysql_connected": True
             }
         )
         
@@ -116,12 +119,12 @@ async def list_quizzes(
     limit: int = Query(default=50, ge=1, le=100),
     current_user: User = Depends(get_current_user)
 ):
-    """List all available quizzes"""
+    """List available quizzes (filtered by class for students)"""
     if not quiz_service:
         raise HTTPException(status_code=503, detail="Quiz service unavailable")
     
     try:
-        quizzes = quiz_service.list_quizzes(limit)
+        quizzes = quiz_service.list_quizzes(limit, user=current_user)
         quiz_summaries = [QuizSummary(**quiz) for quiz in quizzes]
         
         return QuizListResponse(
@@ -410,6 +413,63 @@ async def generate_quiz_from_document(
         raise
     except Exception as e:
         logger.error(f"Error generating quiz: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/assign/{quiz_id}/{class_code}", response_model=QuizResponse)
+async def assign_quiz_to_class(
+    quiz_id: str,
+    class_code: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Assign a quiz to a specific class (teachers only)"""
+    if not quiz_service:
+        raise HTTPException(status_code=503, detail="Quiz service unavailable")
+    
+    # Check if user is teacher or admin
+    from models.user import Role
+    user_role = Role(current_user.role) if isinstance(current_user.role, int) else current_user.role
+    if user_role not in [Role.TEACHER, Role.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only teachers and admins can assign quizzes")
+    
+    try:
+        success = quiz_service.assign_quiz_to_class(quiz_id, class_code)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail="Quiz not found")
+        
+        return QuizResponse(
+            success=True,
+            message=f"Quiz assigned to class {class_code} successfully"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error assigning quiz to class: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/my-quizzes", response_model=QuizListResponse)
+async def get_my_quizzes(
+    limit: int = Query(default=50, ge=1, le=100),
+    current_user: User = Depends(get_current_user)
+):
+    """Get quizzes assigned to current user's class (students only)"""
+    if not quiz_service:
+        raise HTTPException(status_code=503, detail="Quiz service unavailable")
+    
+    try:
+        quizzes = quiz_service.get_quizzes_for_user(current_user)
+        quiz_summaries = [QuizSummary(**quiz) for quiz in quizzes[:limit]]
+        
+        return QuizListResponse(
+            quizzes=quiz_summaries,
+            total_count=len(quiz_summaries)
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting user quizzes: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
