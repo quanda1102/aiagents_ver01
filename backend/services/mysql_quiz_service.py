@@ -247,47 +247,61 @@ class MySQLQuizService:
             db.close()
 
     def get_user_attempts(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get all quiz attempts for a user"""
+        """Get all quiz attempts for a specific user"""
         db = self.get_db()
         try:
-            # Work with existing database schema - get user ID as integer
-            try:
-                user_id_int = int(user_id)
-                # Verify user exists using direct SQL
-                from sqlalchemy import text
-                result = db.execute(text("SELECT id FROM users WHERE id = :user_id"), {"user_id": user_id_int})
-                user_exists = result.fetchone()
-                
-                if not user_exists:
-                    logger.error(f"User not found: {user_id}")
-                    return []
-                    
-            except ValueError:
-                logger.error(f"Invalid user ID format: {user_id}")
-                return []
+            attempts = db.query(QuizAttempt).filter(QuizAttempt.user_id == user_id).all()
             
-            attempts = db.query(QuizAttempt).filter(
-                QuizAttempt.user_id == user_id_int
-            ).order_by(QuizAttempt.submitted_at.desc()).all()
-            
-            attempts_data = []
+            attempt_data = []
             for attempt in attempts:
-                attempts_data.append({
+                attempt_dict = {
                     "attempt_id": attempt.attempt_id,
                     "quiz_id": attempt.quiz_id,
-                    "user_id": str(attempt.user_id),
-                    "answers": attempt.answers,
-                    "results": attempt.results,
-                    "total_points": attempt.total_points,
+                    "user_id": attempt.user_id,
+                    "submitted_at": attempt.submitted_at.isoformat(),
                     "earned_points": attempt.earned_points,
-                    "score_percentage": attempt.score_percentage,
-                    "submitted_at": attempt.submitted_at.isoformat()
-                })
-            
-            return attempts_data
+                    "total_points": attempt.total_points,
+                    "score_percentage": round((attempt.earned_points / attempt.total_points * 100), 2) if attempt.total_points > 0 else 0,
+                    "results": attempt.results,
+                    "is_passed": attempt.is_passed
+                }
+                attempt_data.append(attempt_dict)
+                
+            # Sort by submission time (newest first)
+            attempt_data.sort(key=lambda x: x["submitted_at"], reverse=True)
+            return attempt_data
             
         except Exception as e:
             logger.error(f"Error retrieving user attempts: {e}")
+            return []
+        finally:
+            db.close()
+            
+    def get_all_attempts(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Get all quiz attempts (for teachers/admins)"""
+        db = self.get_db()
+        try:
+            attempts = db.query(QuizAttempt).order_by(QuizAttempt.submitted_at.desc()).limit(limit).all()
+            
+            attempt_data = []
+            for attempt in attempts:
+                attempt_dict = {
+                    "attempt_id": attempt.attempt_id,
+                    "quiz_id": attempt.quiz_id,
+                    "user_id": attempt.user_id,
+                    "submitted_at": attempt.submitted_at.isoformat(),
+                    "earned_points": attempt.earned_points,
+                    "total_points": attempt.total_points,
+                    "score_percentage": round((attempt.earned_points / attempt.total_points * 100), 2) if attempt.total_points > 0 else 0,
+                    "results": attempt.results,
+                    "is_passed": attempt.is_passed
+                }
+                attempt_data.append(attempt_dict)
+                
+            return attempt_data
+            
+        except Exception as e:
+            logger.error(f"Error retrieving all attempts: {e}")
             return []
         finally:
             db.close()

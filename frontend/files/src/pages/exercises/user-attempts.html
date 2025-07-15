@@ -303,9 +303,15 @@
             </div>
             <div class="card-body">
                 <div class="mb-4">
-                  <label for="userIdInput" class="form-label">Nhập User ID:</label>
-                  <input type="text" id="userIdInput" class="form-control" placeholder="Ví dụ: test_user_456">
-                  <button id="loadAttemptsBtn" class="btn btn-primary mt-2">Tải kết quả</button>
+                  <label class="form-label">Kết quả bài làm</label>
+                  <div class="d-flex gap-2 flex-wrap">
+                    <button id="loadMyAttemptsBtn" class="btn btn-primary">Tải kết quả của tôi</button>
+                    <div id="adminControls" style="display: none;" class="d-flex gap-2">
+                      <input type="text" class="form-control" id="userIdInput" placeholder="User ID (cho admin/teacher)" style="width: 200px;">
+                      <button id="loadSpecificAttemptsBtn" class="btn btn-secondary">Tải kết quả user khác</button>
+                    </div>
+                  </div>
+                  <small class="text-muted mt-1 d-block" id="roleInfo"></small>
                 </div>
             
                 <div id="attemptResults"></div>
@@ -373,71 +379,197 @@
 
 <script>font_change("Public-Sans");</script>
 
+<script src="../../assets/js/config.js"></script>
 <script>
-    document.getElementById('loadAttemptsBtn').addEventListener('click', async () => {
-      const userId = document.getElementById('userIdInput').value.trim();
-      const resultContainer = document.getElementById('attemptResults');
-      if (!userId) return alert('Vui lòng nhập User ID');
+    let currentUser = null;
 
-      resultContainer.innerHTML = '<div class="text-muted">Đang tải dữ liệu...</div>';
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initializePage();
+    });
 
+    async function initializePage() {
       try {
-        const res = await fetch(`https://api.aagents.vn/api/v1/quiz/user/${userId}/attempts?limit=5`, {
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('access_token')
-          }
-        });
-        const json = await res.json();
-
-        if (!json.success) {
-          resultContainer.innerHTML = '<div class="alert alert-danger">Không thể tải kết quả.</div>';
+        // Get current user info
+        currentUser = await getCurrentUser();
+        
+        if (!currentUser) {
+          showError('Vui lòng đăng nhập để sử dụng tính năng này.');
+          setTimeout(() => {
+            window.location.href = '../../auth/login.html';
+          }, 3000);
           return;
         }
 
-        const data = json.data;
-        let html = `
-          <div class="mb-4">
-            <h4>📌 Thống kê</h4>
-            <ul class="list-group">
-              <li class="list-group-item"><strong>Tổng lượt làm:</strong> ${data.total_attempts}</li>
-              <li class="list-group-item"><strong>Điểm trung bình:</strong> ${data.average_score.toFixed(2)}%</li>
-              <li class="list-group-item"><strong>Điểm cao nhất:</strong> ${data.best_score}%</li>
-              <li class="list-group-item"><strong>Số bài đã làm:</strong> ${data.quizzes_taken}</li>
-            </ul>
-          </div>
-        `;
+        setupUI();
+        setupEventListeners();
+        
+      } catch (error) {
+        console.error('Error initializing page:', error);
+        showError('Có lỗi xảy ra khi khởi tạo trang.');
+      }
+    }
 
-        if (!data.recent_attempts || data.recent_attempts.length === 0) {
-          html += `<div class="alert alert-info">Chưa có bài nào được làm.</div>`;
-        } else {
-          data.recent_attempts.forEach((attempt, i) => {
-            html += `
-              <div class="card mb-4">
-                <div class="card-header">📝 Bài ${i + 1} - ${new Date(attempt.submitted_at).toLocaleString()}</div>
-                <div class="card-body">
-                  <p><strong>Quiz ID:</strong> ${attempt.quiz_id}</p>
-                  <p><strong>Điểm:</strong> ${attempt.earned_points} / ${attempt.total_points} (${attempt.score_percentage}%)</p>
-                  <hr>
-                  <h6>Câu hỏi & Kết quả:</h6>
-                  ${attempt.results.map((r, idx) => `
-                    <div class="mb-3">
-                      <strong>Câu ${idx + 1}:</strong><br>
-                      Trả lời: <span class="${r.is_correct ? 'text-success' : 'text-danger'}">${r.user_answer}</span><br>
-                      Đáp án đúng: ${r.correct_answer}
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            `;
-          });
+    async function getCurrentUser() {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (!token) return null;
+
+        const response = await fetch(`${getApiUrl('AUTH')}/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          return await response.json();
+        }
+        return null;
+      } catch (error) {
+        console.error('Error getting current user:', error);
+        return null;
+      }
+    }
+
+    function setupUI() {
+      const roleInfo = document.getElementById('roleInfo');
+      const adminControls = document.getElementById('adminControls');
+      
+      // Check user role (STUDENT = 3, TEACHER = 2, ADMIN = 8686)
+      const isStudent = currentUser.role === 3;
+      const isTeacherOrAdmin = currentUser.role === 2 || currentUser.role === 8686;
+      
+      if (isStudent) {
+        roleInfo.textContent = 'Bạn chỉ có thể xem kết quả bài làm của mình.';
+        adminControls.style.display = 'none';
+      } else if (isTeacherOrAdmin) {
+        roleInfo.textContent = 'Với vai trò của bạn, có thể xem kết quả của tất cả học viên.';
+        adminControls.style.display = 'flex';
+      }
+    }
+
+    function setupEventListeners() {
+      // Load my attempts button
+      document.getElementById('loadMyAttemptsBtn').addEventListener('click', () => {
+        loadMyAttempts();
+      });
+
+      // Load specific user attempts button (for admin/teachers)
+      const loadSpecificBtn = document.getElementById('loadSpecificAttemptsBtn');
+      if (loadSpecificBtn) {
+        loadSpecificBtn.addEventListener('click', () => {
+          const userId = document.getElementById('userIdInput').value.trim();
+          if (!userId) {
+            alert('Vui lòng nhập User ID');
+            return;
+          }
+          loadUserAttempts(userId);
+        });
+      }
+    }
+
+    async function loadMyAttempts() {
+      const resultContainer = document.getElementById('attemptResults');
+      resultContainer.innerHTML = '<div class="text-muted">Đang tải dữ liệu...</div>';
+
+      try {
+        const response = await fetch(`${getApiUrl('QUIZ')}/my-attempts?limit=10`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const json = await response.json();
+
+        if (!response.ok) {
+          throw new Error(json.detail || 'Không thể tải kết quả');
         }
 
-        resultContainer.innerHTML = html;
-      } catch (err) {
-        console.error(err);
-        resultContainer.innerHTML = '<div class="alert alert-danger">Lỗi khi tải dữ liệu.</div>';
+        displayAttempts(json.data, 'Kết quả bài làm của bạn');
+
+      } catch (error) {
+        console.error('Error loading my attempts:', error);
+        resultContainer.innerHTML = `<div class="alert alert-danger">Lỗi: ${error.message}</div>`;
       }
-    });
+    }
+
+    async function loadUserAttempts(userId) {
+      const resultContainer = document.getElementById('attemptResults');
+      resultContainer.innerHTML = '<div class="text-muted">Đang tải dữ liệu...</div>';
+
+      try {
+        const response = await fetch(`${getApiUrl('QUIZ')}/user/${userId}/attempts?limit=10`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const json = await response.json();
+
+        if (!response.ok) {
+          throw new Error(json.detail || 'Không thể tải kết quả');
+        }
+
+        displayAttempts(json.data, `Kết quả bài làm của User ID: ${userId}`);
+
+      } catch (error) {
+        console.error('Error loading user attempts:', error);
+        resultContainer.innerHTML = `<div class="alert alert-danger">Lỗi: ${error.message}</div>`;
+      }
+    }
+
+    function displayAttempts(data, title) {
+      const resultContainer = document.getElementById('attemptResults');
+      
+      let html = `
+        <div class="mb-4">
+          <h4>📌 ${title}</h4>
+          <ul class="list-group">
+            <li class="list-group-item"><strong>Tổng lượt làm:</strong> ${data.total_attempts}</li>
+            <li class="list-group-item"><strong>Điểm trung bình:</strong> ${data.average_score.toFixed(2)}%</li>
+            <li class="list-group-item"><strong>Điểm cao nhất:</strong> ${data.best_score}%</li>
+            <li class="list-group-item"><strong>Số bài đã làm:</strong> ${data.quizzes_taken}</li>
+          </ul>
+        </div>
+      `;
+
+      if (!data.recent_attempts || data.recent_attempts.length === 0) {
+        html += `<div class="alert alert-info">Chưa có bài nào được làm.</div>`;
+      } else {
+        data.recent_attempts.forEach((attempt, i) => {
+          html += `
+            <div class="card mb-4">
+              <div class="card-header">📝 Bài ${i + 1} - ${new Date(attempt.submitted_at).toLocaleString()}</div>
+              <div class="card-body">
+                <p><strong>Quiz ID:</strong> ${attempt.quiz_id}</p>
+                <p><strong>User ID:</strong> ${attempt.user_id}</p>
+                <p><strong>Điểm:</strong> ${attempt.earned_points} / ${attempt.total_points} (${attempt.score_percentage}%)</p>
+                <p><strong>Trạng thái:</strong> <span class="badge ${attempt.is_passed ? 'bg-success' : 'bg-danger'}">${attempt.is_passed ? 'Đạt' : 'Không đạt'}</span></p>
+                <hr>
+                <h6>Câu hỏi & Kết quả:</h6>
+                ${attempt.results && attempt.results.map ? attempt.results.map((r, idx) => `
+                  <div class="mb-3">
+                    <strong>Câu ${idx + 1}:</strong><br>
+                    Trả lời: <span class="${r.is_correct ? 'text-success' : 'text-danger'}">${r.user_answer}</span><br>
+                    Đáp án đúng: ${r.correct_answer}
+                  </div>
+                `).join('') : '<p class="text-muted">Không có chi tiết kết quả</p>'}
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      resultContainer.innerHTML = html;
+    }
+
+    function showError(message) {
+      const resultContainer = document.getElementById('attemptResults');
+      resultContainer.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+    }
   </script>
   
 </body>
