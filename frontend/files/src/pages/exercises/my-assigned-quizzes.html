@@ -293,7 +293,7 @@
           <div class="class-header" id="classHeader">
             <div class="row align-items-center">
               <div class="col-md-8">
-                <h3 class="mb-2"><i class="ti ti-school me-2"></i>Lớp của bạn</h3>
+                <h3 class="mb-2" id="headerTitle"><i class="ti ti-school me-2"></i>Lớp của bạn</h3>
                 <p class="mb-0 opacity-75" id="classInfo">Đang tải thông tin lớp học...</p>
               </div>
               <div class="col-md-4 text-md-end">
@@ -310,7 +310,7 @@
         <div class="col-12">
           <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-              <h5 class="mb-0"><i class="ti ti-clipboard-list me-2"></i>Bài tập được giao cho lớp</h5>
+              <h5 class="mb-0" id="cardTitle"><i class="ti ti-clipboard-list me-2"></i>Bài tập được giao cho lớp</h5>
               <div>
                 <button class="btn btn-outline-info btn-sm me-2" onclick="debugUserInfo()">
                   <i class="ti ti-bug me-1"></i>Debug
@@ -428,20 +428,41 @@
     function updateClassInfo() {
       console.log('Updating class info for user:', currentUser);
       
-      if (currentUser && currentUser.class_name) {
-        const classDisplayName = getClassDisplayName(currentUser.class_name);
-        document.getElementById('classInfo').textContent = `${classDisplayName} • ${currentUser.full_name || currentUser.email} • Role: ${currentUser.role}`;
+      if (!currentUser) {
+        document.getElementById('classInfo').textContent = 'Chưa có thông tin người dùng';
+        return;
+      }
+
+      const isStudent = currentUser.role === 3 || currentUser.role === 'STUDENT';
+      const isTeacher = currentUser.role === 2 || currentUser.role === 'TEACHER'; 
+      const isAdmin = currentUser.role === 8686 || currentUser.role === 'ADMIN';
+      
+      let roleText = '';
+      if (isAdmin) roleText = 'Quản trị viên';
+      else if (isTeacher) roleText = 'Giáo viên';
+      else if (isStudent) roleText = 'Học sinh';
+      else roleText = `Role: ${currentUser.role}`;
+
+      if (isStudent) {
+        // For students, show class info
+        document.getElementById('headerTitle').innerHTML = '<i class="ti ti-school me-2"></i>Lớp của bạn';
+        document.getElementById('cardTitle').innerHTML = '<i class="ti ti-clipboard-list me-2"></i>Bài tập được giao cho lớp';
+        if (currentUser.class_name) {
+          const classDisplayName = getClassDisplayName(currentUser.class_name);
+          document.getElementById('classInfo').textContent = `${classDisplayName} • ${currentUser.full_name || currentUser.email} • ${roleText}`;
+        } else {
+          document.getElementById('classInfo').innerHTML = `
+            <span class="text-warning">
+              <i class="ti ti-alert-triangle me-1"></i>
+              ${currentUser.full_name || currentUser.email} (${roleText}) - Chưa có lớp - <a href="../class-selection.html" class="text-white text-decoration-underline">Chọn lớp ngay</a>
+            </span>
+          `;
+        }
       } else {
-        const userInfo = currentUser ? 
-          `${currentUser.full_name || currentUser.email} (Role: ${currentUser.role}) - Chưa có lớp` : 
-          'Chưa có thông tin người dùng';
-          
-        document.getElementById('classInfo').innerHTML = `
-          <span class="text-warning">
-            <i class="ti ti-alert-triangle me-1"></i>
-            ${userInfo} - <a href="../class-selection.html" class="text-white text-decoration-underline">Chọn lớp ngay</a>
-          </span>
-        `;
+        // For teachers/admins, show general info
+        document.getElementById('headerTitle').innerHTML = '<i class="ti ti-clipboard-list me-2"></i>Quản lý bài tập';
+        document.getElementById('cardTitle').innerHTML = '<i class="ti ti-clipboard-list me-2"></i>Tất cả bài tập trong hệ thống';
+        document.getElementById('classInfo').textContent = `${currentUser.full_name || currentUser.email} • ${roleText} • Xem tất cả bài tập`;
       }
     }
 
@@ -489,19 +510,24 @@
         console.log('API URL:', `${getApiUrl('QUIZ')}/my-quizzes`);
         console.log('Token:', localStorage.getItem('access_token') ? 'Present' : 'Missing');
 
-        // Validate user role - backend expects STUDENT role (3)
+        // Validate user role - allow students, teachers, and admins
         if (!currentUser) {
           showError('Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.');
           return;
         }
 
-        if (currentUser.role !== 'STUDENT' && currentUser.role !== 3) {
-          showError('Tính năng này chỉ dành cho học sinh. Bạn hiện đang đăng nhập với vai trò: ' + currentUser.role);
+        // Check user role (STUDENT = 3, TEACHER = 2, ADMIN = 8686)
+        const isStudent = currentUser.role === 3 || currentUser.role === 'STUDENT';
+        const isTeacher = currentUser.role === 2 || currentUser.role === 'TEACHER'; 
+        const isAdmin = currentUser.role === 8686 || currentUser.role === 'ADMIN';
+
+        if (!isStudent && !isTeacher && !isAdmin) {
+          showError('Bạn không có quyền truy cập tính năng này. Vai trò hiện tại: ' + currentUser.role);
           return;
         }
 
         // Check if student has class assignment (only for students)
-        if (!currentUser.class_name) {
+        if (isStudent && !currentUser.class_name) {
           showError('Bạn chưa được phân lớp. Vui lòng liên hệ với giáo viên để được phân lớp.');
           return;
         }
@@ -676,8 +702,17 @@
       console.log('Current Role Type:', typeof currentUser?.role);
       console.log('=== END DEBUG ===');
       
-      const roleCheck = currentUser?.role === 'STUDENT' || currentUser?.role === 3;
+      const isStudent = currentUser?.role === 3 || currentUser?.role === 'STUDENT';
+      const isTeacher = currentUser?.role === 2 || currentUser?.role === 'TEACHER'; 
+      const isAdmin = currentUser?.role === 8686 || currentUser?.role === 'ADMIN';
+      const roleCheck = isStudent || isTeacher || isAdmin;
       const roleDisplay = currentUser?.role + (roleCheck ? ' ✅' : ' ❌');
+      
+      let roleText = '';
+      if (isAdmin) roleText = 'ADMIN (8686)';
+      else if (isTeacher) roleText = 'TEACHER (2)';
+      else if (isStudent) roleText = 'STUDENT (3)';
+      else roleText = `Unknown (${currentUser?.role})`;
       
       const debugInfo = `
         <h6>Debug Information</h6>
@@ -685,15 +720,16 @@
           <li><strong>User Name:</strong> ${currentUser?.full_name || currentUser?.email || 'N/A'}</li>
           <li><strong>User Email:</strong> ${currentUser?.email || 'N/A'}</li>
           <li><strong>User Role:</strong> ${roleDisplay}</li>
-          <li><strong>Role Check:</strong> ${roleCheck ? 'PASS' : 'FAIL (Expected STUDENT or 3)'}</li>
+          <li><strong>Role Type:</strong> ${roleText}</li>
+          <li><strong>Role Check:</strong> ${roleCheck ? 'PASS' : 'FAIL (Expected STUDENT, TEACHER, or ADMIN)'}</li>
           <li><strong>Class Name:</strong> ${currentUser?.class_name || 'N/A'}</li>
           <li><strong>User ID:</strong> ${currentUser?.id || 'N/A'}</li>
           <li><strong>Token Present:</strong> ${localStorage.getItem('access_token') ? 'Yes' : 'No'}</li>
           <li><strong>API Endpoint:</strong> ${getApiUrl('QUIZ')}/my-quizzes</li>
-          <li><strong>Page Requirements:</strong> Role=STUDENT + class_name assigned</li>
+          <li><strong>Page Requirements:</strong> Role=STUDENT/TEACHER/ADMIN</li>
         </ul>
         <p>Check browser console for more detailed logs.</p>
-        <p><small>If role check fails, you need STUDENT role to access this page.</small></p>
+        <p><small>Students need class assignment, Teachers/Admins see all quizzes.</small></p>
       `;
       
       Swal.fire({

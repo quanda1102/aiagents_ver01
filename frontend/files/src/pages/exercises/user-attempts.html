@@ -337,17 +337,11 @@
         </div>
       </div>
     </div>
-  </footer> <!-- Required Js -->
+  </footer>   <!-- Required Js -->
     <!--Hàm check login-->
   <script src="../../assets/js/auth.js"></script>
     <script>
       requireAuth();
-    </script>
-    <script>
-      document.addEventListener('DOMContentLoaded', async () => {
-        const ok = await checkRole(['TEACHER', 'ADMIN']);
-        if (!ok) return;
-      });
     </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="../../assets/js/plugins/popper.min.js"></script>
@@ -410,27 +404,7 @@
       }
     }
 
-    async function getCurrentUser() {
-      try {
-        const token = localStorage.getItem('access_token');
-        if (!token) return null;
-
-        const response = await fetch(`${getApiUrl('AUTH')}/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          return await response.json();
-        }
-        return null;
-      } catch (error) {
-        console.error('Error getting current user:', error);
-        return null;
-      }
-    }
+    // Use the getCurrentUser function from auth.js
 
     function setupUI() {
       const roleInfo = document.getElementById('roleInfo');
