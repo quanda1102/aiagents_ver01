@@ -631,7 +631,8 @@
               </div>
               
               <div class="mb-3">
-                <label class="form-label">Tài liệu tham khảo</label>
+                <label class="form-label">Tài liệu tham khảo / Ví dụ minh họa</label>
+                <small class="text-muted d-block mb-2">Tải lên tài liệu để làm ví dụ minh họa cho cấu trúc bài giảng</small>
                 
                 <!-- Tab Navigation -->
                 <ul class="nav nav-pills mb-3" id="documentSourceTabs" role="tablist">
@@ -658,7 +659,7 @@
                   <div class="tab-pane fade show active" id="file-content" role="tabpanel">
                     <div class="file-upload-area" id="fileUploadArea">
                       <i class="ti ti-upload" style="font-size: 2rem; color: #6c757d;"></i>
-                      <p class="mb-2 mt-2">Kéo thả file hoặc click để chọn</p>
+                      <p class="mb-2 mt-2">Kéo thả file tài liệu tham khảo hoặc click để chọn</p>
                       <p class="text-muted small">Hỗ trợ: .txt, .doc, .docx (tối đa 10MB)</p>
                       <input type="file" id="documentFile" accept=".txt,.doc,.docx" style="display: none;">
                     </div>
@@ -677,7 +678,7 @@
                     <div class="url-input-area">
                       <div class="input-group mb-2">
                         <span class="input-group-text"><i class="ti ti-world"></i></span>
-                        <input type="url" id="documentUrl" class="form-control" placeholder="Nhập URL (VD: Google Docs, Wikipedia, trang tin tức)" />
+                        <input type="url" id="documentUrl" class="form-control" placeholder="Nhập URL tài liệu tham khảo (VD: Google Docs, Wikipedia, trang tin tức)" />
                         <button class="btn btn-primary" type="button" onclick="loadFromUrl()">
                           <i class="ti ti-download me-1"></i>Tải nội dung
                         </button>
@@ -779,12 +780,7 @@
                 <textarea id="specialRequirements" class="form-control" rows="3" placeholder="VD: Thêm ví dụ thực tế, bài tập thực hành, v.v..."></textarea>
               </div>
 
-              <!-- Example field for reference documents -->
-              <div class="mb-3">
-                <label class="form-label">Ví dụ minh họa</label>
-                <textarea id="exampleContent" class="form-control" rows="3" placeholder="Nhập các ví dụ minh họa cho cấu trúc tài liệu..."></textarea>
-                <small class="text-muted">Mục đích: Gửi thêm ví dụ minh họa cho cấu trúc tài liệu</small>
-              </div>
+
 
               <!-- Advanced Configuration (Hidden by default) -->
               <div class="mb-3">
@@ -821,11 +817,11 @@
         
         <!-- [ Extracted Content Editor ] start -->
         <div class="col-md-6">
-          <!-- Extracted Text Viewer -->
+          <!-- Reference Document Viewer -->
           <div class="card mb-3" id="extractedTextCard" style="display: none;">
             <div class="card-header">
-              <h5><i class="ti ti-file-text me-2"></i>Nội dung đã trích xuất</h5>
-              <small class="text-muted">Xem nội dung tài liệu (chỉ xem, đã được xử lý chính xác 100%)</small>
+              <h5><i class="ti ti-file-text me-2"></i>Tài liệu tham khảo / Ví dụ minh họa</h5>
+              <small class="text-muted">Nội dung này sẽ được sử dụng làm ví dụ minh họa cho cấu trúc bài giảng (chỉ xem)</small>
             </div>
             <div class="card-body">
               <textarea id="extractedTextEditor" class="form-control"></textarea>
@@ -1018,8 +1014,9 @@
       lesson: null
     };
 
-    let extractedDocumentText = '';
+    let extractedDocumentText = '';  // For reference documents (files/URLs)
     let extractedFileName = '';
+    let selectedDocumentContent = '';  // For selected document from tree
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', function() {
@@ -1065,7 +1062,7 @@
         language: 'vi',
         branding: false,
         statusbar: true,
-        placeholder: 'Nội dung được trích xuất từ file sẽ hiển thị ở đây (chỉ xem, không thể chỉnh sửa)...'
+        placeholder: 'Tài liệu tham khảo / Ví dụ minh họa sẽ hiển thị ở đây (chỉ xem, không thể chỉnh sửa)...'
       });
 
       // Initialize document editing editor
@@ -1166,7 +1163,7 @@
 
         extractedDocumentText = text;
         
-        // Show extracted text in TinyMCE editor
+        // Show reference document text in TinyMCE editor
         const setExtractedContent = () => {
           const editor = tinymce.get('extractedTextEditor');
           if (editor) {
@@ -1596,29 +1593,16 @@
           throw new Error('Không thể trích xuất nội dung text từ URL này');
         }
         
-        // Store the extracted content (EXACT same as loadFromUrl)
-        extractedDocumentText = text;
-        extractedFileName = `content-from-${sourceName}`;
+        // Store the extracted content for selected document
+        selectedDocumentContent = text;
         
-        // Display in TinyMCE editor (EXACT same as loadFromUrl)
-        const setExtractedContent = () => {
-          const editor = tinymce.get('extractedTextEditor');
-          if (editor) {
-            const htmlContent = text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-            editor.setContent(`<p>${htmlContent}</p>`);
-          } else {
-            setTimeout(setExtractedContent, 100);
-          }
-        };
-        setExtractedContent();
-        
-        // Show success state (same as loadFromUrl)
-        document.getElementById('extractedTextCard').style.display = 'block';
-        
-        // Enable generate button (same as loadFromUrl)
+        // Enable generate button
         if (selectedDocument && selectedDocument.lesson) {
           document.getElementById('generateBtn').disabled = false;
         }
+        
+        // Show success message
+        console.log(`Đã tải nội dung từ "${lessonObj.title}": ${text.substring(0, 100)}...`);
         
 
         
@@ -1951,11 +1935,13 @@
           selectedDocument.subject = subject;
           selectedDocument.grade = null;
           selectedDocument.lesson = null;
+          selectedDocumentContent = '';  // Clear selected document content
         } else if (type === 'grade') {
           toggleTreeLevel(this);
           selectedDocument.subject = subject;
           selectedDocument.grade = grade;
           selectedDocument.lesson = null;
+          selectedDocumentContent = '';  // Clear selected document content
         } else if (type === 'lesson') {
           // Clear all selections
           document.querySelectorAll('.tree-item').forEach(item => item.classList.remove('selected'));
@@ -1967,10 +1953,13 @@
           
           // Check if this is a Google Docs lesson (object with URL)
           if (typeof lesson === 'object' && lesson.url) {
+            selectedDocumentContent = '';  // Clear any previous selected content
             loadGoogleDocsContent(lesson);
           } else {
-            // For regular lessons, enable generate button only if we have document uploaded
-            document.getElementById('generateBtn').disabled = !extractedDocumentText;
+            // For regular lessons, clear selected document content
+            selectedDocumentContent = '';
+            // Enable generate button (regular lessons don't need uploaded documents)
+            document.getElementById('generateBtn').disabled = false;
           }
         }
       });
@@ -2007,18 +1996,26 @@
       document.getElementById('loadingSpinner').style.display = 'block';
       document.getElementById('generateBtn').disabled = true;
 
-      // Get document text from TinyMCE editor if available, otherwise use stored text
-      let documentText = extractedDocumentText;
+      // Get document text from selected document in tree (e.g., Google Docs content)
+      let documentText = selectedDocumentContent;
+      
+      // If no selected document content, use basic lesson info
+      if (!documentText && selectedDocument.lesson) {
+        const lessonTitle = typeof selectedDocument.lesson === 'object' ? selectedDocument.lesson.title : selectedDocument.lesson;
+        documentText = `Môn học: ${selectedDocument.subject}\nLớp: ${selectedDocument.grade}\nBài học: ${lessonTitle}`;
+      }
+
+      // Get reference document text from TinyMCE editor if available, otherwise use stored text
+      let referenceDocumentText = extractedDocumentText;
       const extractedEditor = tinymce.get('extractedTextEditor');
       if (extractedEditor) {
         // Convert HTML back to plain text for API
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = extractedEditor.getContent();
-        documentText = tempDiv.textContent || tempDiv.innerText || extractedDocumentText;
+        referenceDocumentText = tempDiv.textContent || tempDiv.innerText || extractedDocumentText;
       }
 
-      // Get example content and advanced config
-      const exampleContent = document.getElementById('exampleContent').value;
+      // Get advanced config
       const numberOfPeriods = document.getElementById('numberOfPeriods').value;
       const minutesPerPeriod = document.getElementById('minutesPerPeriod').value;
 
@@ -2029,11 +2026,18 @@
         lesson: selectedDocument.lesson,
         documentText: documentText || 'Không có',
         specialRequirements: requirements || 'Không có',
-        example: exampleContent || 'Không có',
+        example: referenceDocumentText || 'Không có',
         numberOfPeriods: numberOfPeriods || 3,
         minutesPerPeriod: minutesPerPeriod || 35,
         timestamp: new Date().toISOString()
       };
+
+      console.log('Request data:', {
+        documentText: documentText ? documentText.substring(0, 100) + '...' : 'Không có',
+        example: referenceDocumentText ? referenceDocumentText.substring(0, 100) + '...' : 'Không có',
+        selectedDocumentContent: selectedDocumentContent ? selectedDocumentContent.substring(0, 100) + '...' : 'Không có',
+        extractedDocumentText: extractedDocumentText ? extractedDocumentText.substring(0, 100) + '...' : 'Không có'
+      });
 
       try {
         // Send to the specified webhook endpoint
