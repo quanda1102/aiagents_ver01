@@ -778,6 +778,38 @@
                 <label class="form-label">Yêu cầu đặc biệt</label>
                 <textarea id="specialRequirements" class="form-control" rows="3" placeholder="VD: Thêm ví dụ thực tế, bài tập thực hành, v.v..."></textarea>
               </div>
+
+              <!-- Example field for reference documents -->
+              <div class="mb-3">
+                <label class="form-label">Ví dụ minh họa</label>
+                <textarea id="exampleContent" class="form-control" rows="3" placeholder="Nhập các ví dụ minh họa cho cấu trúc tài liệu..."></textarea>
+                <small class="text-muted">Mục đích: Gửi thêm ví dụ minh họa cho cấu trúc tài liệu</small>
+              </div>
+
+              <!-- Advanced Configuration (Hidden by default) -->
+              <div class="mb-3">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAdvancedConfig()">
+                  <i class="ti ti-settings me-1"></i>
+                  <span id="advancedToggleText">Hiện cấu hình nâng cao</span>
+                </button>
+                
+                <div id="advancedConfig" class="mt-3" style="display: none;">
+                  <div class="border rounded p-3 bg-light">
+                    <h6 class="mb-3"><i class="ti ti-clock me-1"></i>Cấu hình thời gian</h6>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <label class="form-label">Số tiết học</label>
+                        <input type="number" id="numberOfPeriods" class="form-control" value="3" min="1" max="10">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Số phút mỗi tiết</label>
+                        <input type="number" id="minutesPerPeriod" class="form-control" value="35" min="15" max="60">
+                      </div>
+                    </div>
+                    <small class="text-muted">Cấu hình thời gian cho bài giảng (mặc định: 3 tiết, 35 phút/tiết)</small>
+                  </div>
+                </div>
+              </div>
               
               <button type="button" id="generateBtn" class="btn btn-primary btn-lg w-100" disabled>
                 <i class="ti ti-robot me-2"></i>Tạo nội dung với AI
@@ -789,11 +821,11 @@
         
         <!-- [ Extracted Content Editor ] start -->
         <div class="col-md-6">
-          <!-- Extracted Text Editor -->
+          <!-- Extracted Text Viewer -->
           <div class="card mb-3" id="extractedTextCard" style="display: none;">
             <div class="card-header">
-              <h5><i class="ti ti-file-edit me-2"></i>Nội dung đã trích xuất</h5>
-              <small class="text-muted">Chỉnh sửa nội dung tài liệu trước khi tạo bài giảng</small>
+              <h5><i class="ti ti-file-text me-2"></i>Nội dung đã trích xuất</h5>
+              <small class="text-muted">Xem nội dung tài liệu (chỉ xem, đã được xử lý chính xác 100%)</small>
             </div>
             <div class="card-body">
               <textarea id="extractedTextEditor" class="form-control"></textarea>
@@ -816,11 +848,8 @@
               <!-- Main Content Display Area -->
               <div id="contentDisplayArea" style="display: none;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h5><i class="ti ti-sparkles me-2"></i>Nội dung bài giảng</h5>
+                  <h5><i class="ti ti-sparkles me-2"></i>Nội dung bài giảng (Chỉ xem)</h5>
                   <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleEditor()">
-                      <i class="ti ti-edit me-1"></i>Chế độ chỉnh sửa
-                    </button>
                     <button type="button" class="btn btn-sm btn-outline-success" onclick="exportToWord()">
                       <i class="ti ti-file-text me-1"></i>Xuất Word
                     </button>
@@ -830,27 +859,9 @@
                   </div>
                 </div>
                 
-                <!-- Content Preview Mode -->
+                <!-- Content Preview Mode (View Only) -->
                 <div id="contentPreview" class="content-preview-area">
                   <!-- AI generated content will appear here -->
-                </div>
-                
-                <!-- Rich Text Editor Mode -->
-                <div id="editorMode" style="display: none;">
-                  <div class="mb-3">
-                    <label class="form-label">Tiêu đề bài giảng</label>
-                    <input type="text" id="lessonTitle" class="form-control" placeholder="Nhập tiêu đề bài giảng...">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Nội dung bài giảng</label>
-                    <textarea id="richTextEditor" class="form-control">
-                      <!-- Content will be loaded here -->
-                    </textarea>
-                  </div>
-                  <div class="text-end">
-                    <button type="button" class="btn btn-secondary me-2" onclick="cancelEdit()">Hủy</button>
-                    <button type="button" class="btn btn-primary" onclick="saveEditedContent()">Lưu thay đổi</button>
-                  </div>
                 </div>
               </div>
               
@@ -1028,45 +1039,33 @@
     });
 
     function initializeTinyMCE() {
-      // Initialize main content editor
+      // Initialize main content editor (VIEW-ONLY MODE)
       tinymce.init({
         selector: '#richTextEditor',
         height: 400,
         menubar: false,
-        plugins: [
-          'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-          'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-          'insertdatetime', 'media', 'table', 'help', 'wordcount'
-        ],
-        toolbar: 'undo redo | blocks | ' +
-          'bold italic forecolor | alignleft aligncenter ' +
-          'alignright alignjustify | bullist numlist outdent indent | ' +
-          'removeformat | help',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 16px; line-height: 1.6; }',
+        toolbar: false,
+        readonly: true,
+        plugins: ['visualblocks', 'fullscreen'],
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 16px; line-height: 1.6; background-color: #f8f9fa; }',
         language: 'vi',
         branding: false,
         statusbar: false
       });
 
-      // Initialize extracted text editor
+      // Initialize extracted text editor (VIEW-ONLY MODE)
       tinymce.init({
         selector: '#extractedTextEditor',
         height: 400,
         menubar: false,
-        plugins: [
-          'advlist', 'autolink', 'lists', 'link', 'charmap',
-          'searchreplace', 'visualblocks', 'code', 'fullscreen',
-          'insertdatetime', 'table', 'help', 'wordcount'
-        ],
-        toolbar: 'undo redo | blocks | ' +
-          'bold italic forecolor | alignleft aligncenter ' +
-          'alignright alignjustify | bullist numlist outdent indent | ' +
-          'removeformat | fullscreen',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 16px; line-height: 1.6; padding: 15px; }',
+        toolbar: false,
+        readonly: true,
+        plugins: ['visualblocks', 'fullscreen'],
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 16px; line-height: 1.6; padding: 15px; background-color: #f8f9fa; }',
         language: 'vi',
         branding: false,
         statusbar: true,
-        placeholder: 'Nội dung được trích xuất từ file sẽ hiển thị ở đây. Bạn có thể chỉnh sửa trước khi tạo bài giảng...'
+        placeholder: 'Nội dung được trích xuất từ file sẽ hiển thị ở đây (chỉ xem, không thể chỉnh sửa)...'
       });
 
       // Initialize document editing editor
@@ -2018,6 +2017,11 @@
         documentText = tempDiv.textContent || tempDiv.innerText || extractedDocumentText;
       }
 
+      // Get example content and advanced config
+      const exampleContent = document.getElementById('exampleContent').value;
+      const numberOfPeriods = document.getElementById('numberOfPeriods').value;
+      const minutesPerPeriod = document.getElementById('minutesPerPeriod').value;
+
       // Prepare request data for the webhook
       const requestData = {
         subject: selectedDocument.subject,
@@ -2025,6 +2029,9 @@
         lesson: selectedDocument.lesson,
         documentText: documentText || 'Không có',
         specialRequirements: requirements || 'Không có',
+        example: exampleContent || 'Không có',
+        numberOfPeriods: numberOfPeriods || 3,
+        minutesPerPeriod: minutesPerPeriod || 35,
         timestamp: new Date().toISOString()
       };
 
@@ -2315,19 +2322,6 @@
       // Store the response for export/save functions
       window.currentLessonContent = response;
       
-      // Set lesson title if available
-      const lessonTitle = document.getElementById('lessonTitle');
-      if (lessonTitle && response.title) {
-        lessonTitle.value = response.title;
-      }
-      
-      // Auto-switch to TinyMCE editor mode after API response
-      setTimeout(() => {
-        if (response.metadata?.apiResponse) {
-          toggleEditor();
-        }
-      }, 1000);
-      
       
     }
 
@@ -2526,13 +2520,9 @@
       try {
         const content = window.currentLessonContent;
         
-        // Get clean content (either from editor or API response)
+        // Get clean content from API response (view-only mode)
         let cleanContent = '';
-        const editorMode = document.getElementById('editorMode');
-        if (tinymce.get('richTextEditor') && editorMode && editorMode.style.display !== 'none') {
-          // If editor is active, get content from TinyMCE
-          cleanContent = tinymce.get('richTextEditor').getContent();
-        } else if (content.metadata?.outputContent) {
+        if (content.metadata?.outputContent) {
           // Use API response content
           cleanContent = content.metadata.outputContent;
         } else {
@@ -2586,91 +2576,23 @@
       }
     }
 
-    function toggleEditor() {
-      const contentPreview = document.getElementById('contentPreview');
-      const editorMode = document.getElementById('editorMode');
-      const toggleBtn = event.target.closest('button');
-      
-      if (editorMode.style.display === 'none') {
-        // Switch to editor mode
-        contentPreview.style.display = 'none';
-        editorMode.style.display = 'block';
-        toggleBtn.innerHTML = '<i class="ti ti-eye me-1"></i>Xem trước';
-        toggleBtn.className = 'btn btn-sm btn-outline-secondary';
-        
-        // Load content into TinyMCE
-        if (window.currentLessonContent) {
-          const lessonTitle = document.getElementById('lessonTitle');
-          lessonTitle.value = window.currentLessonContent.title || '';
-          
-          let contentToEdit = '';
-          if (window.currentLessonContent.metadata?.outputContent) {
-            // Convert plain text to HTML for TinyMCE
-            contentToEdit = window.currentLessonContent.metadata.outputContent
-              .replace(/\n\s*\n/g, '</p><p>')
-              .replace(/\n/g, '<br>')
-              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-              .replace(/\*(.*?)\*/g, '<em>$1</em>');
-            
-            if (!contentToEdit.includes('<p>')) {
-              contentToEdit = `<p>${contentToEdit}</p>`;
-            }
-          } else {
-            contentToEdit = window.currentLessonContent.content || '';
-          }
-          
-          tinymce.get('richTextEditor').setContent(contentToEdit);
-        }
-      } else {
-        // Switch to preview mode
-        contentPreview.style.display = 'block';
-        editorMode.style.display = 'none';
-        toggleBtn.innerHTML = '<i class="ti ti-edit me-1"></i>Chế độ chỉnh sửa';
-        toggleBtn.className = 'btn btn-sm btn-outline-primary';
-      }
-    }
-
-    function cancelEdit() {
-      const contentPreview = document.getElementById('contentPreview');
-      const editorMode = document.getElementById('editorMode');
-      const toggleBtn = document.querySelector('button[onclick="toggleEditor()"]');
-      
-      contentPreview.style.display = 'block';
-      editorMode.style.display = 'none';
-      toggleBtn.innerHTML = '<i class="ti ti-edit me-1"></i>Chế độ chỉnh sửa';
-      toggleBtn.className = 'btn btn-sm btn-outline-primary';
-    }
-
-    function saveEditedContent() {
-      const title = document.getElementById('lessonTitle').value;
-      const content = tinymce.get('richTextEditor').getContent();
-      
-      if (window.currentLessonContent) {
-        window.currentLessonContent.title = title;
-        window.currentLessonContent.content = content;
-        
-        // Update the metadata
-        if (window.currentLessonContent.metadata) {
-          // Convert HTML back to plain text for outputContent
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = content;
-          window.currentLessonContent.metadata.outputContent = tempDiv.textContent || tempDiv.innerText || '';
-          window.currentLessonContent.metadata.lastEdited = new Date().toISOString();
-        }
-        
-        // Update the preview display
-        document.getElementById('contentPreview').innerHTML = content;
-        
-        // Switch back to preview mode
-        cancelEdit();
-        
-        alert('Đã cập nhật nội dung thành công!\n\nNội dung đã được lưu và sẵn sàng để xuất hoặc lưu lên server.');
-      }
-    }
-
-    // Legacy function for compatibility
+    // Legacy function for compatibility - removed since content is now view-only
     function editContent() {
-      toggleEditor();
+      alert('Nội dung bài giảng được tạo 100% chính xác và không thể chỉnh sửa.');
+    }
+
+    // Toggle advanced configuration visibility
+    function toggleAdvancedConfig() {
+      const advancedConfig = document.getElementById('advancedConfig');
+      const toggleText = document.getElementById('advancedToggleText');
+      
+      if (advancedConfig.style.display === 'none') {
+        advancedConfig.style.display = 'block';
+        toggleText.textContent = 'Ẩn cấu hình nâng cao';
+      } else {
+        advancedConfig.style.display = 'none';
+        toggleText.textContent = 'Hiện cấu hình nâng cao';
+      }
     }
 
     // ===== EXISTING DOCUMENTS FUNCTIONS =====
