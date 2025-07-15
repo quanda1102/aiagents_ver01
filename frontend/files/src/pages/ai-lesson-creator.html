@@ -1504,7 +1504,7 @@
         lessonDiv.innerHTML = `<i class="ti ti-file-text me-2"></i>${title}`;
         lessonDiv.classList.remove('loading-lesson');
         
-        console.log(`✅ Đã tải tiêu đề: ${title}`);
+
         
       } catch (error) {
         console.warn('Error loading Google Docs title:', error);
@@ -1621,7 +1621,7 @@
           document.getElementById('generateBtn').disabled = false;
         }
         
-        console.log(`✅ Đã tải thành công nội dung: ${lessonObj.title} từ ${sourceName}`);
+
         
       } catch (error) {
         console.error('Error loading Google Docs content:', error);
@@ -2001,11 +2001,6 @@
         return;
       }
 
-      if (!extractedDocumentText) {
-        alert('Vui lòng tải lên tài liệu tham khảo');
-        return;
-      }
-
       const requirements = document.getElementById('specialRequirements').value;
 
       // Show loading
@@ -2028,8 +2023,8 @@
         subject: selectedDocument.subject,
         grade: selectedDocument.grade,
         lesson: selectedDocument.lesson,
-        documentText: documentText,
-        specialRequirements: requirements,
+        documentText: documentText || 'Không có',
+        specialRequirements: requirements || 'Không có',
         timestamp: new Date().toISOString()
       };
 
@@ -2062,23 +2057,16 @@
          let formattedContent = '';
          let outputContent = '';
          
-         // Debug: Log the raw result
-         console.log('API Response received:', result);
-         
          if (Array.isArray(result) && result.length > 0 && result[0].output) {
            // Extract output from first element of array
            outputContent = result[0].output;
-           console.log('Extracted output content (length):', outputContent.length);
-           console.log('First 200 chars:', outputContent.substring(0, 200));
            formattedContent = formatAIOutput(outputContent);
          } else if (result.output) {
            // Handle direct object format as fallback
            outputContent = result.output;
-           console.log('Direct output content (length):', outputContent.length);
            formattedContent = formatAIOutput(outputContent);
          } else {
            // Fallback if expected format is not found
-           console.log('Unexpected format, showing raw response');
            formattedContent = `
              <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
                <h5>📄 Phản hồi từ API:</h5>
@@ -2090,7 +2078,7 @@
            `;
          }
          
-         console.log('Formatted content (length):', formattedContent.length);
+
 
          // Display the formatted API response
          const contentToDisplay = {
@@ -2107,11 +2095,7 @@
            }
          };
          
-         console.log('About to display content:', {
-           title: contentToDisplay.title,
-           contentLength: contentToDisplay.content.length,
-           outputLength: outputContent.length
-         });
+
          
          displayGeneratedContent(contentToDisplay);
          
@@ -2122,13 +2106,12 @@
            const emptyState = document.getElementById('emptyState');
            
            if (contentDisplayArea && contentDisplayArea.style.display === 'none') {
-             console.log('Fallback: Force displaying content area');
+
              emptyState.style.display = 'none';
              contentDisplayArea.style.display = 'block';
            }
            
            if (preview && (!preview.innerHTML || preview.innerHTML.trim() === '')) {
-             console.log('Fallback: Force displaying content');
              preview.innerHTML = `
                <div style="background: #fff3cd; padding: 20px; border: 1px solid #ffc107; border-radius: 8px;">
                  <h5><i class="ti ti-alert-triangle me-2"></i>Nội dung bài giảng (Hiển thị dự phòng)</h5>
@@ -2158,10 +2141,10 @@
     }
 
     function formatAIOutput(output) {
-      console.log('formatAIOutput called with:', output ? `${output.length} characters` : 'null/undefined');
+
       
       if (!output || output.trim() === '') {
-        console.log('Empty output detected');
+        
         return `
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
             <p style="color: #666; margin: 0;">Không có nội dung để hiển thị</p>
@@ -2171,7 +2154,7 @@
 
       // If the output is already HTML, return as is
       if (output.includes('<h') || output.includes('<p') || output.includes('<div')) {
-        console.log('HTML content detected');
+
         return `
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 25px; color: white; margin: 20px 0;">
             <h4 style="color: white; margin-bottom: 20px;">
@@ -2184,7 +2167,7 @@
         `;
       }
 
-      console.log('Processing plain text content');
+      
       
       // Convert plain text to formatted HTML
       let formattedOutput = output
@@ -2219,7 +2202,7 @@
         </div>
       `;
       
-      console.log('formatAIOutput result length:', result.length);
+      
       return result;
     }
 
@@ -2290,11 +2273,7 @@
     }
 
     function displayGeneratedContent(response) {
-      console.log('displayGeneratedContent called with:', {
-        hasContent: !!response.content,
-        contentLength: response.content ? response.content.length : 0,
-        isAPIResponse: response.metadata?.apiResponse
-      });
+
       
       // Hide empty state and show content display area
       const emptyState = document.getElementById('emptyState');
@@ -2328,7 +2307,7 @@
         }
         
         contentPreview.innerHTML = displayContent;
-        console.log('Content displayed successfully');
+
       } else {
         console.error('contentPreview element not found!');
       }
@@ -2349,7 +2328,7 @@
         }
       }, 1000);
       
-      console.log('Content display completed');
+      
     }
 
     async function exportToWord() {
@@ -2577,7 +2556,7 @@
           }
         };
 
-        console.log('Saving to server:', saveData);
+
 
         // Call the specified API endpoint
         const response = await fetch('https://aimarketingvn.com/webhook/save-text-to-mysql', {
@@ -2591,7 +2570,7 @@
 
         if (response.ok) {
           const result = await response.json();
-          console.log('Save response:', result);
+
           alert('✅ Đã lưu bài giảng lên server thành công!\n\n📋 Thông tin lưu:\n' +
                 `• Môn học: ${saveData.metadata.subject}\n` +
                 `• Lớp: ${saveData.metadata.grade}\n` +

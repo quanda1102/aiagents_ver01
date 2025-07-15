@@ -1,12 +1,8 @@
-import uuid
-import json
-import logging
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-import fastapi
 from routes.quiz_routes import router as quiz_router
 from routes.auth_routes import router as auth_router
 from routes.user_routes import router as user_router
@@ -14,8 +10,6 @@ from routes.chat_routes import router as chat_router
 from routes.lecture_routes import router as lecture_router
 from my_agents.exam_agents.unified_routes import unified_router
 from utils.pydantic_helper import format_validation_errors
-from utils.serialization import ensure_serializable
-from schemas.chat import ChatRequest, ChatResponse
 
 app = FastAPI(
     title="AI Agent Backend API",

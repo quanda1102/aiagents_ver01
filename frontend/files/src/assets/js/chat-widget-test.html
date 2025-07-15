@@ -67,7 +67,7 @@
     <script>
         // Force initialize for testing (bypass auth page check)
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🧪 Test Page - Force initializing chat widget...');
+
             
             window.chatWidget = new ChatWidget({
                 apiUrl: 'https://aimarketingvn.com/webhook/chat', // Production endpoint
@@ -75,13 +75,13 @@
                 subtitle: 'This is a test chat'
             });
             
-            console.log('🧪 Test Page - Widget instance:', window.chatWidget);
+
         });
         
         function testWidget() {
             if (window.chatWidget) {
                 window.chatWidget.open();
-                console.log('🧪 Opening widget');
+
             } else {
                 console.error('🧪 Widget not found!');
                 alert('Widget not initialized!');
@@ -91,14 +91,14 @@
         function showBadge() {
             if (window.chatWidget) {
                 window.chatWidget.showBadge('5');
-                console.log('🧪 Showing badge');
+
             }
         }
         
         function addTestMessage() {
             if (window.chatWidget) {
                 window.chatWidget.addCustomMessage('This is a test message from the system!');
-                console.log('🧪 Added test message');
+
             }
         }
     </script>

@@ -484,7 +484,7 @@
     // Logout function
     document.getElementById('logoutBtn').addEventListener('click', function() {
         localStorage.removeItem('access_token');
-        window.location.href = '../../auth/login.html';
+        window.location.href = '../../pages/login.html';
     });
 </script>
 
@@ -527,6 +527,6 @@
     window.addEventListener('unhandledrejection', function(event) {
         if (event.reason && event.reason.message && event.reason.message.includes('401')) {
             localStorage.removeItem('access_token');
-            window.location.href = '../../auth/login.html';
+            window.location.href = '../../pages/login.html';
         }
     });

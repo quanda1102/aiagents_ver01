@@ -499,12 +499,12 @@
         try {
             currentUser = await getCurrentUser();
             if (!currentUser) {
-                window.location.href = '../../auth/login.html';
+                window.location.href = '../../pages/login.html';
                 return;
             }
         } catch (error) {
             console.error('Authentication error:', error);
-            window.location.href = '../../auth/login.html';
+            window.location.href = '../../pages/login.html';
             return;
         }
         
@@ -526,7 +526,7 @@
             if (!response.ok) {
                 if (response.status === 401) {
                     localStorage.removeItem('access_token');
-                    window.location.href = '../../auth/login.html';
+                    window.location.href = '../../pages/login.html';
                     return;
                 }
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -742,7 +742,7 @@
             if (!response.ok) {
                 if (response.status === 401) {
                     localStorage.removeItem('access_token');
-                    window.location.href = '../../auth/login.html';
+                    window.location.href = '../../pages/login.html';
                     return;
                 }
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -870,7 +870,7 @@
     // Logout function (using the onclick attribute instead to avoid conflicts)
     function logoutBtn() {
         localStorage.removeItem('access_token');
-        window.location.href = '../../auth/login.html';
+        window.location.href = '../../pages/login.html';
     }
 
     // Prevent accidental navigation away during quiz

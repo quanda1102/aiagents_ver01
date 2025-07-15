@@ -311,14 +311,9 @@
           <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h5 class="mb-0"><i class="ti ti-clipboard-list me-2"></i>Bài tập được giao cho lớp</h5>
-              <div>
-                <button class="btn btn-outline-info btn-sm me-2" onclick="debugUserInfo()">
-                  <i class="ti ti-bug me-1"></i>Debug
-                </button>
-                <button class="btn btn-outline-primary btn-sm" onclick="loadMyQuizzes()">
-                  <i class="ti ti-refresh me-1"></i>Làm mới
-                </button>
-              </div>
+              <button class="btn btn-outline-primary btn-sm" onclick="loadMyQuizzes()">
+                <i class="ti ti-refresh me-1"></i>Làm mới
+              </button>
             </div>
             <div class="card-body">
               <!-- Loading State -->
@@ -418,20 +413,14 @@
 
     // Update class information in header
     function updateClassInfo() {
-      console.log('Updating class info for user:', currentUser);
-      
       if (currentUser && currentUser.class_name) {
         const classDisplayName = getClassDisplayName(currentUser.class_name);
-        document.getElementById('classInfo').textContent = `${classDisplayName} • ${currentUser.user_name} • Role: ${currentUser.user_role}`;
+        document.getElementById('classInfo').textContent = `${classDisplayName} • ${currentUser.user_name}`;
       } else {
-        const userInfo = currentUser ? 
-          `${currentUser.user_name} (Role: ${currentUser.user_role}) - Chưa có lớp` : 
-          'Chưa có thông tin người dùng';
-          
         document.getElementById('classInfo').innerHTML = `
           <span class="text-warning">
             <i class="ti ti-alert-triangle me-1"></i>
-            ${userInfo} - <a href="../class-selection.html" class="text-white text-decoration-underline">Chọn lớp ngay</a>
+            Chưa được phân lớp - <a href="../class-selection.html" class="text-white text-decoration-underline">Chọn lớp ngay</a>
           </span>
         `;
       }
@@ -477,10 +466,6 @@
       showLoading();
       
       try {
-        console.log('Loading quizzes for user:', currentUser);
-        console.log('API URL: https://api.aagents.vn/api/v1/quiz/my-quizzes');
-        console.log('Token:', localStorage.getItem('access_token') ? 'Present' : 'Missing');
-
         const response = await fetch('https://api.aagents.vn/api/v1/quiz/my-quizzes?limit=50', {
           method: 'GET',
           headers: {
@@ -489,11 +474,7 @@
           }
         });
 
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-
         const data = await response.json();
-        console.log('Response data:', data);
 
         if (!response.ok) {
           throw new Error(data.detail || `HTTP ${response.status}: Không thể tải danh sách bài tập`);
@@ -509,7 +490,6 @@
         document.getElementById('quizCount').textContent = (data.quizzes || []).length;
 
       } catch (error) {
-        console.error('Error loading quizzes:', error);
         if (error.message.includes('401') || error.message.includes('unauthorized')) {
           showError('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
         } else if (error.message.includes('403') || error.message.includes('forbidden')) {
@@ -627,33 +607,7 @@
       document.getElementById('errorState').style.display = 'block';
     }
 
-    // Debug function to show user info and test API
-    function debugUserInfo() {
-      console.log('=== DEBUG INFO ===');
-      console.log('Current User:', currentUser);
-      console.log('Access Token:', localStorage.getItem('access_token'));
-      console.log('=== END DEBUG ===');
-      
-      const debugInfo = `
-        <h6>Debug Information</h6>
-        <ul>
-          <li><strong>User Name:</strong> ${currentUser?.user_name || 'N/A'}</li>
-          <li><strong>User Email:</strong> ${currentUser?.user_email || 'N/A'}</li>
-          <li><strong>User Role:</strong> ${currentUser?.user_role || 'N/A'}</li>
-          <li><strong>Class Name:</strong> ${currentUser?.class_name || 'N/A'}</li>
-          <li><strong>User ID:</strong> ${currentUser?.user_id || 'N/A'}</li>
-          <li><strong>Token Present:</strong> ${localStorage.getItem('access_token') ? 'Yes' : 'No'}</li>
-        </ul>
-        <p>Check browser console for more detailed logs.</p>
-      `;
-      
-      Swal.fire({
-        title: 'Debug Information',
-        html: debugInfo,
-        icon: 'info',
-        confirmButtonText: 'OK'
-      });
-    }
+
   </script>
 </body>
 <!-- [Body] end -->

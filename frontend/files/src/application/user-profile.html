@@ -1130,7 +1130,7 @@
 
         if (response.ok) {
           const userData = await response.json();
-          console.log('User data loaded:', userData);
+  
           
           // Populate form fields
           document.getElementById('full_name').value = userData.full_name || '';
@@ -1177,7 +1177,7 @@
 
         if (response.ok) {
           alert('Class name updated successfully!');
-          console.log('Update result:', result);
+
         } else {
           alert(result.detail || 'Failed to update class name');
         }
