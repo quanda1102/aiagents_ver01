@@ -320,6 +320,9 @@ class ChatWidget {
     }
 
     const data = await response.json();
+    
+    // Debug logging to see what we received
+    console.log('Chat API Response:', data);
 
     // Persist returned session_id (from ChatResponse) for future requests
     if (data.session_id) {
@@ -328,11 +331,16 @@ class ChatWidget {
     }
 
     // Handle array response format: [{"output": "message"}]
-    if (Array.isArray(data) && data.length > 0 && data[0].output) {
-      return data[0].output;
+    if (Array.isArray(data) && data.length > 0) {
+      console.log('Array response detected, first item:', data[0]);
+      if (data[0] && data[0].output) {
+        console.log('Returning output:', data[0].output);
+        return data[0].output;
+      }
     }
 
     // Handle direct response formats for backward compatibility
+    console.log('Using fallback response handling');
     return data.response || data.message || 'Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.';
   }
 
