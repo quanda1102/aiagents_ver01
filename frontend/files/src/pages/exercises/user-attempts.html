@@ -3,273 +3,170 @@
 <!-- [Head] start -->
 
 <head>
-  <title>Kết quả bài làm của người dùng</title>
+  <title>Kết quả bài làm</title>
   <!-- [Meta] -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="description" content="Mantis is made using Bootstrap 5 design framework. Download the free admin template & use it for your project.">
-  <meta name="keywords" content="Mantis, Dashboard UI Kit, Bootstrap 5, Admin Template, Admin Dashboard, CRM, CMS, Bootstrap Admin Template">
-  <meta name="author" content="CodedThemes">
+  <meta name="description" content="Xem kết quả bài làm của bạn">
+  <meta name="keywords" content="quiz, results, attempts">
+  <meta name="author" content="TMA">
 
   <!-- [Favicon] icon -->
-  <link rel="icon" href="../../assets/images/logo_tma.png" type="image/x-icon"> <!-- [Google Font] Family -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" id="main-font-link">
-<!-- [Tabler Icons] https://tablericons.com -->
-<link rel="stylesheet" href="../../assets/fonts/tabler-icons.min.css" >
-<!-- [Feather Icons] https://feathericons.com -->
-<link rel="stylesheet" href="../../assets/fonts/feather.css" >
-<!-- [Font Awesome Icons] https://fontawesome.com/icons -->
-<link rel="stylesheet" href="../../assets/fonts/fontawesome.css" >
-<!-- [Material Icons] https://fonts.google.com/icons -->
-<link rel="stylesheet" href="../../assets/fonts/material.css" >
-<!-- [Template CSS Files] -->
-<link rel="stylesheet" href="../../assets/css/style.css" id="main-style-link" >
-<link rel="stylesheet" href="../../assets/css/style-preset.css" >
+  <link rel="icon" href="../../assets/images/logo_tma.png" type="image/x-icon">
+  <!-- [Google Font] Family -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" id="main-font-link">
+  <!-- [Tabler Icons] https://tablericons.com -->
+  <link rel="stylesheet" href="../../assets/fonts/tabler-icons.min.css">
+  <!-- [Feather Icons] https://feathericons.com -->
+  <link rel="stylesheet" href="../../assets/fonts/feather.css">
+  <!-- [Font Awesome Icons] https://fontawesome.com/icons -->
+  <link rel="stylesheet" href="../../assets/fonts/fontawesome.css">
+  <!-- [Material Icons] https://fonts.google.com/icons -->
+  <link rel="stylesheet" href="../../assets/fonts/material.css">
+  <!-- [Template CSS Files] -->
+  <link rel="stylesheet" href="../../assets/css/style.css" id="main-style-link">
+  <link rel="stylesheet" href="../../assets/css/style-preset.css">
 
+  <style>
+    .attempt-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+      transition: all 0.3s ease;
+    }
+    
+    .attempt-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    
+    .score-badge {
+      font-size: 1.2em;
+      font-weight: bold;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+    
+    .score-excellent { background: #e8f5e8; color: #2e7d32; }
+    .score-good { background: #fff3e0; color: #f57c00; }
+    .score-fair { background: #fff8e1; color: #f9a825; }
+    .score-poor { background: #ffebee; color: #d32f2f; }
+    
+    .stats-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+    
+    .stats-item {
+      text-align: center;
+      padding: 15px;
+    }
+    
+    .stats-number {
+      font-size: 2.5em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .stats-label {
+      font-size: 0.9em;
+      opacity: 0.9;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+    
+    .empty-state i {
+      font-size: 4em;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <!-- [Head] end -->
 <!-- [Body] Start -->
 
 <body data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
   <!-- [ Pre-loader ] start -->
-<div class="loader-bg">
-  <div class="loader-track">
-    <div class="loader-fill"></div>
+  <div class="loader-bg">
+    <div class="loader-track">
+      <div class="loader-fill"></div>
+    </div>
   </div>
-</div>
-<!-- [ Pre-loader ] End -->
- <!-- [ Sidebar Menu ] start -->
-<div data-include="../../layouts/sidebar-pc.html"></div>
-<!-- [ Sidebar Menu ] end --> <!-- [ Header Topbar ] start -->
-<header class="pc-header">
-  <div class="header-wrapper"> <!-- [Mobile Media Block] start -->
-<div class="me-auto pc-mob-drp">
-  <ul class="list-unstyled">
-    <!-- ======= Menu collapse Icon ===== -->
-    <li class="pc-h-item pc-sidebar-collapse">
-      <a href="#" class="pc-head-link ms-0" id="sidebar-hide">
-        <i class="ti ti-menu-2"></i>
-      </a>
-    </li>
-    <li class="pc-h-item pc-sidebar-popup">
-      <a href="#" class="pc-head-link ms-0" id="mobile-collapse">
-        <i class="ti ti-menu-2"></i>
-      </a>
-    </li>
-    <li class="dropdown pc-h-item d-inline-flex d-md-none">
-      <a
-        class="pc-head-link dropdown-toggle arrow-none m-0"
-        data-bs-toggle="dropdown"
-        href="#"
-        role="button"
-        aria-haspopup="false"
-        aria-expanded="false"
-      >
-        <i class="ti ti-search"></i>
-      </a>
-      <div class="dropdown-menu pc-h-dropdown drp-search">
-        <form class="px-3">
-          <div class="form-group mb-0 d-flex align-items-center">
-            <i data-feather="search"></i>
-            <input type="search" class="form-control border-0 shadow-none" placeholder="Search here. . .">
-          </div>
-        </form>
-      </div>
-    </li>
-    <li class="pc-h-item d-none d-md-inline-flex">
-      <form class="header-search">
-        <i data-feather="search" class="icon-search"></i>
-        <input type="search" class="form-control" placeholder="Search here. . .">
-      </form>
-    </li>
-  </ul>
-</div>
-<!-- [Mobile Media Block end] -->
-<div class="ms-auto">
-  <ul class="list-unstyled">
-    <li class="dropdown pc-h-item">
-      <a
-        class="pc-head-link dropdown-toggle arrow-none me-0"
-        data-bs-toggle="dropdown"
-        href="#"
-        role="button"
-        aria-haspopup="false"
-        aria-expanded="false"
-      >
-        <i class="ti ti-mail"></i>
-      </a>
-      <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
-        <div class="dropdown-header d-flex align-items-center justify-content-between">
-          <h5 class="m-0">Message</h5>
-          <a href="#!" class="pc-head-link bg-transparent"><i class="ti ti-x text-danger"></i></a>
-        </div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-header px-0 text-wrap header-notification-scroll position-relative" style="max-height: calc(100vh - 215px)">
-          <div class="list-group list-group-flush w-100">
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
-                </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">3:00 AM</span>
-                  <p class="text-body mb-1">It's <b>Cristina danny's</b> birthday today.</p>
-                  <span class="text-muted">2 min ago</span>
-                </div>
-              </div>
+  <!-- [ Pre-loader ] End -->
+  
+  <!-- [ Sidebar Menu ] start -->
+  <div data-include="../../layouts/sidebar-pc.html"></div>
+  <!-- [ Sidebar Menu ] end -->
+  
+  <!-- [ Header Topbar ] start -->
+  <header class="pc-header">
+    <div class="header-wrapper">
+      <!-- [Mobile Media Block] start -->
+      <div class="me-auto pc-mob-drp">
+        <ul class="list-unstyled">
+          <!-- ======= Menu collapse Icon ===== -->
+          <li class="pc-h-item pc-sidebar-collapse">
+            <a href="#" class="pc-head-link ms-0" id="sidebar-hide">
+              <i class="ti ti-menu-2"></i>
             </a>
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <img src="../../assets/images/user/avatar-1.jpg" alt="user-image" class="user-avtar">
-                </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">6:00 PM</span>
-                  <p class="text-body mb-1"><b>Aida Burg</b> commented your post.</p>
-                  <span class="text-muted">5 August</span>
-                </div>
-              </div>
-            </a>
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <img src="../../assets/images/user/avatar-3.jpg" alt="user-image" class="user-avtar">
-                </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">2:45 PM</span>
-                  <p class="text-body mb-1"><b>There was a failure to your setup.</b></p>
-                  <span class="text-muted">7 hours ago</span>
-                </div>
-              </div>
-            </a>
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <img src="../../assets/images/user/avatar-4.jpg" alt="user-image" class="user-avtar">
-                </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">9:10 PM</span>
-                  <p class="text-body mb-1"><b>Cristina Danny </b> invited to join <b> Meeting.</b></p>
-                  <span class="text-muted">Daily scrum meeting time</span>
-                </div>
-              </div>
-            </a>
-          </div>
-        </div>
-        <div class="dropdown-divider"></div>
-        <div class="text-center py-2">
-          <a href="#!" class="link-primary">View all</a>
-        </div>
-      </div>
-    </li>
-    <li class="dropdown pc-h-item header-user-profile">
-      <a
-        class="pc-head-link dropdown-toggle arrow-none me-0"
-        data-bs-toggle="dropdown"
-        href="#"
-        role="button"
-        aria-haspopup="false"
-        data-bs-auto-close="outside"
-        aria-expanded="false"
-      >
-        <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
-        <span class="user_name"></span>
-      </a>
-      <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
-        <div class="dropdown-header">
-          <div class="d-flex mb-1">
-            <div class="flex-shrink-0">
-              <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar wid-35">
-            </div>
-            <div class="flex-grow-1 ms-3">
-              <h6 class="mb-1 user_name"></h6>
-              <span class="user_role"></span>
-            </div>
-            <button type="button" id="logoutBtn" class="pc-head-link bg-transparent" style="border: unset;" onclick="logoutBtn()"><i class="ti ti-power text-danger"></i></button>
-          </div>
-        </div>
-        <ul class="nav drp-tabs nav-fill nav-tabs" id="mydrpTab" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button
-              class="nav-link active"
-              id="drp-t1"
-              data-bs-toggle="tab"
-              data-bs-target="#drp-tab-1"
-              type="button"
-              role="tab"
-              aria-controls="drp-tab-1"
-              aria-selected="true"
-              ><i class="ti ti-user"></i> Profile</button
-            >
-          </li>
-          <li class="nav-item" role="presentation">
-            <button
-              class="nav-link"
-              id="drp-t2"
-              data-bs-toggle="tab"
-              data-bs-target="#drp-tab-2"
-              type="button"
-              role="tab"
-              aria-controls="drp-tab-2"
-              aria-selected="false"
-              ><i class="ti ti-settings"></i> Setting</button
-            >
           </li>
         </ul>
-        <div class="tab-content" id="mysrpTabContent">
-          <div class="tab-pane fade show active" id="drp-tab-1" role="tabpanel" aria-labelledby="drp-t1" tabindex="0">
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-edit-circle"></i>
-              <span>Edit Profile</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-user"></i>
-              <span>View Profile</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-clipboard-list"></i>
-              <span>Social Profile</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-wallet"></i>
-              <span>Billing</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-power"></i>
-              <span onclick="logoutBtn()">Logout</span>
-            </a>
-          </div>
-          <div class="tab-pane fade" id="drp-tab-2" role="tabpanel" aria-labelledby="drp-t2" tabindex="0">
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-help"></i>
-              <span>Support</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-user"></i>
-              <span>Account Settings</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-lock"></i>
-              <span>Privacy Center</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-messages"></i>
-              <span>Feedback</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-list"></i>
-              <span>History</span>
-            </a>
-          </div>
-        </div>
       </div>
-    </li>
-  </ul>
-</div>
- </div>
-</header>
-<!-- [ Header ] end -->
+      <!-- [Mobile Media Block end] -->
+      <div class="ms-auto">
+        <ul class="list-unstyled">
+          <li class="dropdown pc-h-item">
+            <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+              <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar wid-35">
+            </a>
+            <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
+              <div class="dropdown-header">
+                <h6 class="text-overflow m-0">Chào bạn!</h6>
+              </div>
+              <a href="#!" class="dropdown-item">
+                <i class="ti ti-user"></i>
+                <span>Hồ sơ</span>
+              </a>
+              <a href="#!" class="dropdown-item">
+                <i class="ti ti-settings"></i>
+                <span>Cài đặt</span>
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#!" class="dropdown-item">
+                <i class="ti ti-power"></i>
+                <span>Đăng xuất</span>
+              </a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </header>
+  <!-- [ Header ] end -->
 
   <!-- [ Main Content ] start -->
   <div class="pc-container">
@@ -279,14 +176,16 @@
         <div class="page-block">
           <div class="row align-items-center">
             <div class="col-md-12">
-              <div class="page-header-title">
-                <h5 class="m-b-10">Sample Page</h5>
-              </div>
               <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="../../dashboard/index.html">Home</a></li>
-                <li class="breadcrumb-item"><a href="javascript: void(0)">Exercises</a></li>
-                <li class="breadcrumb-item" aria-current="page">Kết quả bài làm của người dùng</li>
+                <li class="breadcrumb-item"><a href="../../dashboard/index.html">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="javascript: void(0)">Bài tập</a></li>
+                <li class="breadcrumb-item" aria-current="page">Kết quả bài làm</li>
               </ul>
+            </div>
+            <div class="col-md-12">
+              <div class="page-header-title">
+                <h2 class="mb-0"><i class="ti ti-chart-bar me-2"></i>Kết quả bài làm của tôi</h2>
+              </div>
             </div>
           </div>
         </div>
@@ -295,258 +194,229 @@
 
       <!-- [ Main Content ] start -->
       <div class="row">
-        <!-- [ sample-page ] start -->
-        <div class="col-sm-12">
-          <div class="card">
-            <div class="card-header">
-              <h5>Kết quả bài làm của người dùng</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-4">
-                  <label class="form-label">Kết quả bài làm</label>
-                  <div class="d-flex gap-2 flex-wrap">
-                    <button id="loadMyAttemptsBtn" class="btn btn-primary">Tải kết quả của tôi</button>
-                    <div id="adminControls" style="display: none;" class="d-flex gap-2">
-                      <input type="text" class="form-control" id="userIdInput" placeholder="User ID (cho admin/teacher)" style="width: 200px;">
-                      <button id="loadSpecificAttemptsBtn" class="btn btn-secondary">Tải kết quả user khác</button>
-                    </div>
-                  </div>
-                  <small class="text-muted mt-1 d-block" id="roleInfo"></small>
+        <!-- Stats Overview -->
+        <div class="col-12">
+          <div class="stats-card">
+            <div class="row" id="statsContainer">
+              <div class="col-md-3">
+                <div class="stats-item">
+                  <div class="stats-number" id="totalAttempts">-</div>
+                  <div class="stats-label">Tổng số bài làm</div>
                 </div>
-            
-                <div id="attemptResults"></div>
+              </div>
+              <div class="col-md-3">
+                <div class="stats-item">
+                  <div class="stats-number" id="averageScore">-</div>
+                  <div class="stats-label">Điểm trung bình (%)</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="stats-item">
+                  <div class="stats-number" id="uniqueQuizzes">-</div>
+                  <div class="stats-label">Bài tập đã làm</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="stats-item">
+                  <div class="stats-number" id="bestScore">-</div>
+                  <div class="stats-label">Điểm cao nhất (%)</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <!-- [ sample-page ] end -->
+
+        <!-- Attempts List -->
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0"><i class="ti ti-list me-2"></i>Lịch sử bài làm</h5>
+              <button class="btn btn-primary btn-sm" onclick="loadAttempts()" id="refreshBtn">
+                <i class="ti ti-refresh me-1"></i>Tải lại
+              </button>
+            </div>
+            <div class="card-body">
+              <div id="loadingIndicator" class="text-center py-4" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p class="mt-2 text-muted">Đang tải kết quả...</p>
+              </div>
+              
+              <div id="attemptsList">
+                <!-- Attempts will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <!-- [ Main Content ] end -->
     </div>
   </div>
   <!-- [ Main Content ] end -->
-  <footer class="pc-footer">
-    <div class="footer-wrapper container-fluid">
-      <div class="row">
-        <div class="col-sm my-1">
-            <p class="m-0">Website được tạo bởi TMA.</p>
-        </div>
-        <div class="col-auto my-1">
-          <ul class="list-inline footer-link mb-0">
-            <li class="list-inline-item"><a href="../../index.html">Trang chủ</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </footer>   <!-- Required Js -->
-    <!--Hàm check login-->
+
+  <!-- Required Js -->
+  <script src="../../assets/js/plugins/popper.min.js"></script>
+  <script src="../../assets/js/plugins/simplebar.min.js"></script>
+  <script src="../../assets/js/plugins/bootstrap.min.js"></script>
+  <script src="../../assets/js/fonts/custom-font.js"></script>
+  <script src="../../assets/js/pcoded.js"></script>
+  <script src="../../assets/js/plugins/feather.min.js"></script>
+  
+  <!-- Auth Check -->
   <script src="../../assets/js/auth.js"></script>
-    <script>
-      requireAuth();
-    </script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="../../assets/js/plugins/popper.min.js"></script>
-<script src="../../assets/js/plugins/simplebar.min.js"></script>
-<script src="../../assets/js/plugins/bootstrap.min.js"></script>
-<script src="../../assets/js/fonts/custom-font.js"></script>
-<script src="../../assets/js/pcoded.js"></script>
-<script src="../../assets/js/plugins/feather.min.js"></script>
-  <script src="../../assets/js/customer.js"></script>
-  <script src="../../assets/js/include-layout.js"></script>
-
-
-
-
-<script>layout_change('light');</script>
-
-
-
-
-<script>change_box_container('false');</script>
-
-
-
-<script>layout_rtl_change('false');</script>
-
-
-<script>preset_change("preset-1");</script>
-
-
-<script>font_change("Public-Sans");</script>
-
-<script src="../../assets/js/config.js"></script>
-<script>
-    let currentUser = null;
-
+  <script src="../../assets/js/config.js"></script>
+  
+  <script>
+    requireAuth();
+    
     // Initialize page
-    document.addEventListener('DOMContentLoaded', async () => {
-      await initializePage();
+    document.addEventListener('DOMContentLoaded', function() {
+      loadAttempts();
     });
 
-    async function initializePage() {
+    async function loadAttempts() {
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      const attemptsList = document.getElementById('attemptsList');
+      const refreshBtn = document.getElementById('refreshBtn');
+      
+      // Show loading
+      loadingIndicator.style.display = 'block';
+      attemptsList.innerHTML = '';
+      refreshBtn.disabled = true;
+      
       try {
-        // Get current user info
-        currentUser = await getCurrentUser();
-        
-        if (!currentUser) {
-          showError('Vui lòng đăng nhập để sử dụng tính năng này.');
-          setTimeout(() => {
-            window.location.href = '../../auth/login.html';
-          }, 3000);
-          return;
-        }
+        const response = await fetch(`${getApiUrl('QUIZ')}/my-attempts?limit=50`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-        setupUI();
-        setupEventListeners();
-        
-      } catch (error) {
-        console.error('Error initializing page:', error);
-        showError('Có lỗi xảy ra khi khởi tạo trang.');
-      }
-    }
-
-    // Use the getCurrentUser function from auth.js
-
-    function setupUI() {
-      const roleInfo = document.getElementById('roleInfo');
-      const adminControls = document.getElementById('adminControls');
-      
-      // Check user role (STUDENT = 3, TEACHER = 2, ADMIN = 8686)
-      const isStudent = currentUser.role === 3;
-      const isTeacherOrAdmin = currentUser.role === 2 || currentUser.role === 8686;
-      
-      if (isStudent) {
-        roleInfo.textContent = 'Bạn chỉ có thể xem kết quả bài làm của mình.';
-        adminControls.style.display = 'none';
-      } else if (isTeacherOrAdmin) {
-        roleInfo.textContent = 'Với vai trò của bạn, có thể xem kết quả của tất cả học viên.';
-        adminControls.style.display = 'flex';
-      }
-    }
-
-    function setupEventListeners() {
-      // Load my attempts button
-      document.getElementById('loadMyAttemptsBtn').addEventListener('click', () => {
-        loadMyAttempts();
-      });
-
-      // Load specific user attempts button (for admin/teachers)
-      const loadSpecificBtn = document.getElementById('loadSpecificAttemptsBtn');
-      if (loadSpecificBtn) {
-        loadSpecificBtn.addEventListener('click', () => {
-          const userId = document.getElementById('userIdInput').value.trim();
-          if (!userId) {
-            alert('Vui lòng nhập User ID');
+        if (!response.ok) {
+          if (response.status === 401) {
+            showError('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
+            setTimeout(() => {
+              window.location.href = '../../pages/login.html';
+            }, 3000);
             return;
           }
-          loadUserAttempts(userId);
-        });
-      }
-    }
-
-    async function loadMyAttempts() {
-      const resultContainer = document.getElementById('attemptResults');
-      resultContainer.innerHTML = '<div class="text-muted">Đang tải dữ liệu...</div>';
-
-      try {
-        const response = await fetch(`${getApiUrl('QUIZ')}/my-attempts?limit=10`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const json = await response.json();
-
-        if (!response.ok) {
-          throw new Error(json.detail || 'Không thể tải kết quả');
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        displayAttempts(json.data, 'Kết quả bài làm của bạn');
-
+        const data = await response.json();
+        
+        // Update stats
+        updateStats(data.data);
+        
+        // Display attempts
+        displayAttempts(data.data.recent_attempts || []);
+        
       } catch (error) {
-        console.error('Error loading my attempts:', error);
-        resultContainer.innerHTML = `<div class="alert alert-danger">Lỗi: ${error.message}</div>`;
+        console.error('Error loading attempts:', error);
+        showError('Không thể tải kết quả bài làm: ' + error.message);
+        
+        // Show empty state
+        attemptsList.innerHTML = `
+          <div class="empty-state">
+            <i class="ti ti-alert-circle"></i>
+            <h5>Có lỗi xảy ra</h5>
+            <p class="text-muted">${error.message}</p>
+            <button class="btn btn-primary" onclick="loadAttempts()">Thử lại</button>
+          </div>
+        `;
+      } finally {
+        loadingIndicator.style.display = 'none';
+        refreshBtn.disabled = false;
       }
     }
 
-    async function loadUserAttempts(userId) {
-      const resultContainer = document.getElementById('attemptResults');
-      resultContainer.innerHTML = '<div class="text-muted">Đang tải dữ liệu...</div>';
-
-      try {
-        const response = await fetch(`${getApiUrl('QUIZ')}/user/${userId}/attempts?limit=10`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const json = await response.json();
-
-        if (!response.ok) {
-          throw new Error(json.detail || 'Không thể tải kết quả');
-        }
-
-        displayAttempts(json.data, `Kết quả bài làm của User ID: ${userId}`);
-
-      } catch (error) {
-        console.error('Error loading user attempts:', error);
-        resultContainer.innerHTML = `<div class="alert alert-danger">Lỗi: ${error.message}</div>`;
-      }
+    function updateStats(data) {
+      document.getElementById('totalAttempts').textContent = data.total_attempts || 0;
+      document.getElementById('averageScore').textContent = data.average_score ? Math.round(data.average_score) : 0;
+      document.getElementById('uniqueQuizzes').textContent = data.unique_quizzes || 0;
+      document.getElementById('bestScore').textContent = data.best_score ? Math.round(data.best_score) : 0;
     }
 
-    function displayAttempts(data, title) {
-      const resultContainer = document.getElementById('attemptResults');
+    function displayAttempts(attempts) {
+      const attemptsList = document.getElementById('attemptsList');
       
-      let html = `
-        <div class="mb-4">
-          <h4>📌 ${title}</h4>
-          <ul class="list-group">
-            <li class="list-group-item"><strong>Tổng lượt làm:</strong> ${data.total_attempts}</li>
-            <li class="list-group-item"><strong>Điểm trung bình:</strong> ${data.average_score.toFixed(2)}%</li>
-            <li class="list-group-item"><strong>Điểm cao nhất:</strong> ${data.best_score}%</li>
-            <li class="list-group-item"><strong>Số bài đã làm:</strong> ${data.quizzes_taken}</li>
-          </ul>
-        </div>
-      `;
+      if (!attempts || attempts.length === 0) {
+        attemptsList.innerHTML = `
+          <div class="empty-state">
+            <i class="ti ti-clipboard-off"></i>
+            <h5>Chưa có kết quả bài làm</h5>
+            <p class="text-muted">Bạn chưa làm bài tập nào. Hãy vào phần "Bài tập được giao" để bắt đầu!</p>
+            <a href="./my-assigned-quizzes.html" class="btn btn-primary">
+              <i class="ti ti-clipboard-list me-1"></i>Xem bài tập được giao
+            </a>
+          </div>
+        `;
+        return;
+      }
 
-      if (!data.recent_attempts || data.recent_attempts.length === 0) {
-        html += `<div class="alert alert-info">Chưa có bài nào được làm.</div>`;
-      } else {
-        data.recent_attempts.forEach((attempt, i) => {
-          html += `
-            <div class="card mb-4">
-              <div class="card-header">📝 Bài ${i + 1} - ${new Date(attempt.submitted_at).toLocaleString()}</div>
-              <div class="card-body">
-                <p><strong>Quiz ID:</strong> ${attempt.quiz_id}</p>
-                <p><strong>User ID:</strong> ${attempt.user_id}</p>
-                <p><strong>Điểm:</strong> ${attempt.earned_points} / ${attempt.total_points} (${attempt.score_percentage}%)</p>
-                <p><strong>Trạng thái:</strong> <span class="badge ${attempt.is_passed ? 'bg-success' : 'bg-danger'}">${attempt.is_passed ? 'Đạt' : 'Không đạt'}</span></p>
-                <hr>
-                <h6>Câu hỏi & Kết quả:</h6>
-                ${attempt.results && attempt.results.map ? attempt.results.map((r, idx) => `
-                  <div class="mb-3">
-                    <strong>Câu ${idx + 1}:</strong><br>
-                    Trả lời: <span class="${r.is_correct ? 'text-success' : 'text-danger'}">${r.user_answer}</span><br>
-                    Đáp án đúng: ${r.correct_answer}
-                  </div>
-                `).join('') : '<p class="text-muted">Không có chi tiết kết quả</p>'}
+      const attemptsHtml = attempts.map(attempt => {
+        const score = attempt.score_percentage || 0;
+        const scoreClass = getScoreClass(score);
+        const date = new Date(attempt.completed_at || attempt.created_at).toLocaleString('vi-VN');
+        
+        return `
+          <div class="attempt-card">
+            <div class="row align-items-center">
+              <div class="col-md-6">
+                <h6 class="mb-1">
+                  <i class="ti ti-clipboard-text me-2"></i>
+                  ${attempt.quiz_title || `Quiz ID: ${attempt.quiz_id}`}
+                </h6>
+                <small class="text-muted">
+                  <i class="ti ti-calendar me-1"></i>
+                  ${date}
+                </small>
+              </div>
+              <div class="col-md-3 text-center">
+                <div class="score-badge ${scoreClass}">
+                  ${Math.round(score)}%
+                </div>
+              </div>
+              <div class="col-md-3 text-end">
+                <small class="text-muted d-block">
+                  ${attempt.correct_answers || 0}/${attempt.total_questions || 0} đúng
+                </small>
+                <small class="text-muted">
+                  Thời gian: ${formatDuration(attempt.time_taken)}
+                </small>
               </div>
             </div>
-          `;
-        });
-      }
+          </div>
+        `;
+      }).join('');
 
-      resultContainer.innerHTML = html;
+      attemptsList.innerHTML = attemptsHtml;
+    }
+
+    function getScoreClass(score) {
+      if (score >= 90) return 'score-excellent';
+      if (score >= 75) return 'score-good';
+      if (score >= 60) return 'score-fair';
+      return 'score-poor';
+    }
+
+    function formatDuration(seconds) {
+      if (!seconds) return 'N/A';
+      
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      
+      if (minutes > 0) {
+        return `${minutes}p ${remainingSeconds}s`;
+      }
+      return `${remainingSeconds}s`;
     }
 
     function showError(message) {
-      const resultContainer = document.getElementById('attemptResults');
-      resultContainer.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+      // You could implement a toast notification here
+      console.error(message);
+      alert(message); // Simple fallback
     }
   </script>
-  
 </body>
-<!-- [Body] end -->
-
 </html>
