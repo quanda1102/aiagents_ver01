@@ -34,9 +34,7 @@
   <!-- [TinyMCE Rich Text Editor - Self-hosted for local development] -->
   <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
   
-  <!-- [Docx.js for Word document generation] -->
-  <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <!-- [Word document generation now handled by API] -->
 
   <style>
     .ai-response {
@@ -2165,6 +2163,45 @@
       
     }
 
+    async function downloadFormattedDoc(textToFormat) {
+      const requestBody = {
+          raw_text: textToFormat,
+          file_name: "My Custom Lesson Plan.docx" // You can set the name here
+      };
+
+      try {
+          const response = await fetch('https://edu.aagents.vn/api/v1/format-and-download', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestBody),
+          });
+
+          if (!response.ok) {
+              throw new Error(`Server responded with status: ${response.status}`);
+          }
+
+          // The download logic from the previous answer remains the same
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          // Use the filename from the request for consistency
+          a.download = requestBody.file_name;
+          document.body.appendChild(a);
+          a.click();
+          
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+      } catch (error) {
+          console.error("Failed to download document:", error);
+          alert('❌ Có lỗi khi tải tài liệu: ' + error.message);
+      }
+    }
+
     async function exportToWord() {
       if (!window.currentLessonContent) {
         alert('Không có nội dung để xuất');
@@ -2172,13 +2209,6 @@
       }
 
       try {
-        // Check if docx library is available
-        if (typeof docx === 'undefined') {
-          console.warn('Docx library not available, using HTML fallback');
-          exportToWordHTML();
-          return;
-        }
-
         const content = window.currentLessonContent;
         
         // Get clean text content (without HTML tags)
@@ -2192,83 +2222,51 @@
           cleanText = tempDiv.textContent || tempDiv.innerText || '';
         }
 
-        // Create paragraphs from text
-        const paragraphs = cleanText.split('\n\n').filter(p => p.trim());
-        const docParagraphs = paragraphs.map(paragraph => {
-          return new docx.Paragraph({
-            children: [new docx.TextRun({
-              text: paragraph.replace(/\n/g, ' ').trim(),
-              size: 24, // 12pt font
-              font: "Times New Roman"
-            })],
-            spacing: {
-              after: 200,
-            }
-          });
-        });
-
-        // Create the document
-        const doc = new docx.Document({
-          sections: [{
-            properties: {},
-            children: [
-              // Title
-              new docx.Paragraph({
-                children: [new docx.TextRun({
-                  text: content.title || 'Bài giảng được tạo bởi AI',
-                  bold: true,
-                  size: 32, // 16pt font
-                  font: "Times New Roman"
-                })],
-                heading: docx.HeadingLevel.TITLE,
-                alignment: docx.AlignmentType.CENTER,
-                spacing: {
-                  after: 400,
-                }
-              }),
-              
-              // Content paragraphs
-              ...docParagraphs,
-              
-              // Footer
-              new docx.Paragraph({
-                children: [new docx.TextRun({
-                  text: `\nTài liệu được tạo bởi AI vào ${new Date().toLocaleString('vi-VN')}`,
-                  italics: true,
-                  size: 20, // 10pt font
-                  font: "Times New Roman"
-                })],
-                spacing: {
-                  before: 400,
-                }
-              })
-            ]
-          }]
-        });
-
-        // Generate and save the document
-        const blob = await docx.Packer.toBlob(doc);
-        const fileName = `${(content.title || 'Bai-giang-AI').replace(/[^a-zA-Z0-9\u00C0-\u1EF9\s]/g, '')}.docx`;
+        // Create formatted text with title and content
+        const title = content.title || 'Bài giảng được tạo bởi AI';
+        const formattedText = `# ${title}\n\n${cleanText}\n\n---\n\n*Tài liệu được tạo bởi AI vào ${new Date().toLocaleString('vi-VN')}*`;
         
-        if (window.saveAs) {
-          saveAs(blob, fileName);
-        } else {
-          // Fallback method
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+        // Generate clean filename
+        const fileName = `${title.replace(/[^a-zA-Z0-9\u00C0-\u1EF9\s]/g, '')}.docx`;
+        
+        // Use the new API method
+        const requestBody = {
+          raw_text: formattedText,
+          file_name: fileName
+        };
+
+        const response = await fetch('https://edu.aagents.vn/api/v1/format-and-download', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
         }
+
+        // Download the formatted document
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
         
         alert('✅ Đã xuất file Word (.docx) thành công!');
         
       } catch (error) {
         console.error('Error exporting to Word:', error);
-        alert('❌ Có lỗi khi xuất file Word. Sử dụng chế độ dự phòng...');
+        alert('❌ Có lỗi khi xuất file Word: ' + error.message);
+        
+        // Fallback to HTML export
         exportToWordHTML();
       }
     }
@@ -2607,34 +2605,66 @@
       }
     }
 
-    function exportEditedDocument() {
+    async function exportEditedDocument() {
       if (!currentEditingDocument) {
         alert('Không có tài liệu nào đang được chỉnh sửa');
         return;
       }
 
-      // Create a temporary content object for export
-      const title = document.getElementById('editLessonTitle').value;
-      const editor = tinymce.get('editDocumentEditor');
-      const content = editor ? editor.getContent() : '';
+      try {
+        // Get the edited content
+        const title = document.getElementById('editLessonTitle').value;
+        const editor = tinymce.get('editDocumentEditor');
+        const content = editor ? editor.getContent() : '';
 
-      // Convert HTML to plain text for export
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = content;
-      const plainText = tempDiv.textContent || tempDiv.innerText || '';
+        // Convert HTML to plain text for export
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        const plainText = tempDiv.textContent || tempDiv.innerText || '';
 
-      window.currentLessonContent = {
-        title: title,
-        content: content,
-        metadata: {
-          outputContent: plainText,
-          subject: currentEditingDocument.subject,
-          grade: currentEditingDocument.grade,
-          apiResponse: false
+        // Create formatted text with title and content
+        const formattedText = `# ${title}\n\n${plainText}\n\n---\n\n*Tài liệu được chỉnh sửa vào ${new Date().toLocaleString('vi-VN')}*`;
+        
+        // Generate clean filename
+        const fileName = `${title.replace(/[^a-zA-Z0-9\u00C0-\u1EF9\s]/g, '')}.docx`;
+        
+        // Use the new API method
+        const requestBody = {
+          raw_text: formattedText,
+          file_name: fileName
+        };
+
+        const response = await fetch('https://edu.aagents.vn/api/v1/format-and-download', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
         }
-      };
 
-      exportToWord();
+        // Download the formatted document
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        alert('✅ Đã xuất file Word (.docx) thành công!');
+        
+      } catch (error) {
+        console.error('Error exporting edited document:', error);
+        alert('❌ Có lỗi khi xuất file Word: ' + error.message);
+      }
     }
 
   </script>
