@@ -502,8 +502,22 @@
 
                     <div class="mb-4">
                       <label class="form-label">Giao cho lớp (tùy chọn)</label>
-                      <input type="text" name="class_assignment" class="form-control" placeholder="Nhập mã lớp (VD: CNTT2024)">
-                      <small class="text-muted">Để trống nếu không muốn giao cho lớp cụ thể</small>
+                      <select name="class_assignment" class="form-select">
+                        <option value="">-- Chọn lớp --</option>
+                        <option value="AI-01">AI-01</option>
+                        <option value="AI-02">AI-02</option>
+                        <option value="AI-03">AI-03</option>
+                        <option value="AI-04">AI-04</option>
+                        <option value="AI-05">AI-05</option>
+                        <option value="AI-06">AI-06</option>
+                        <option value="AI-07">AI-07</option>
+                        <option value="AI-08">AI-08</option>
+                        <option value="AI-09">AI-09</option>
+                        <option value="AI-10">AI-10</option>
+                        <option value="AI-11">AI-11</option>
+                        <option value="AI-12">AI-12</option>
+                      </select>
+                      <small class="text-muted">Chọn lớp để giao bài tập hoặc để trống nếu không muốn giao</small>
                     </div>
               
                     <h5 class="mb-3">Danh sách câu hỏi</h5>
@@ -610,8 +624,22 @@
 
                     <div class="mb-4">
                       <label class="form-label">Giao cho lớp (tùy chọn)</label>
-                      <input type="text" name="ai_class_assignment" class="form-control" placeholder="Nhập mã lớp (VD: CNTT2024)">
-                      <small class="text-muted">Để trống nếu không muốn giao cho lớp cụ thể</small>
+                      <select name="ai_class_assignment" class="form-select">
+                        <option value="">-- Chọn lớp --</option>
+                        <option value="AI-01">AI-01</option>
+                        <option value="AI-02">AI-02</option>
+                        <option value="AI-03">AI-03</option>
+                        <option value="AI-04">AI-04</option>
+                        <option value="AI-05">AI-05</option>
+                        <option value="AI-06">AI-06</option>
+                        <option value="AI-07">AI-07</option>
+                        <option value="AI-08">AI-08</option>
+                        <option value="AI-09">AI-09</option>
+                        <option value="AI-10">AI-10</option>
+                        <option value="AI-11">AI-11</option>
+                        <option value="AI-12">AI-12</option>
+                      </select>
+                      <small class="text-muted">Chọn lớp để giao bài tập hoặc để trống nếu không muốn giao</small>
                     </div>
 
                     <hr>
@@ -1350,7 +1378,7 @@
             const quizId = result.data?.quiz_id;
             
             // Check if class assignment is provided
-            const classAssignment = form.class_assignment.value.trim();
+            const classAssignment = form.class_assignment.value;
             if (classAssignment && quizId) {
               // Assign to class after successful creation
               try {
@@ -1444,7 +1472,7 @@
           const quizId = result.quiz_id;
           
           // Check if class assignment is provided
-          const classAssignment = formData.get('ai_class_assignment').trim();
+          const classAssignment = formData.get('ai_class_assignment');
           if (classAssignment && quizId) {
             // Assign to class after successful creation
             try {
