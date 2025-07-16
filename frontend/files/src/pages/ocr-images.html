@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="vi">
+<!-- [Head] start -->
+
+<head>
+  <title>OCR hình ảnh | AI Agents</title>
+  <!-- [Meta] -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Trích xuất văn bản từ hình ảnh và PDF bằng công nghệ OCR">
+  <meta name="keywords" content="OCR, AI, Text Recognition, Image Processing">
+  <meta name="author" content="TMA">
+
+  <!-- [Favicon] icon -->
+  <link rel="icon" href="../assets/images/logo_tma.png" type="image/x-icon">
+  <!-- [Google Font] Family -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" id="main-font-link">
+  <!-- [Tabler Icons] https://tablericons.com -->
+  <link rel="stylesheet" href="../assets/fonts/tabler-icons.min.css" >
+  <!-- [Feather Icons] https://feathericons.com -->
+  <link rel="stylesheet" href="../assets/fonts/feather.css" >
+  <!-- [Font Awesome Icons] https://fontawesome.com/icons -->
+  <link rel="stylesheet" href="../assets/fonts/fontawesome.css" >
+  <!-- [Material Icons] https://fonts.google.com/icons -->
+  <link rel="stylesheet" href="../assets/fonts/material.css" >
+  <!-- [Template CSS Files] -->
+  <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" >
+  <link rel="stylesheet" href="../assets/css/style-preset.css" >
+
+  <style>
+    .upload-area {
+      border: 3px dashed #ddd;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      background: #f8f9fa;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      margin: 20px 0;
+    }
+    
+    .upload-area:hover,
+    .upload-area.dragover {
+      border-color: #2196F3;
+      background: #f0f8ff;
+    }
+    
+    .upload-icon {
+      font-size: 48px;
+      color: #666;
+      margin-bottom: 15px;
+    }
+    
+    .upload-area.dragover .upload-icon {
+      color: #2196F3;
+    }
+    
+    .file-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin: 20px 0;
+    }
+    
+    .file-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: white;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    
+    .file-item .file-info {
+      flex: 1;
+      margin-left: 10px;
+    }
+    
+    .file-item .file-name {
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .file-item .file-size {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .file-item .remove-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+    }
+    
+    .processing-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    
+    .processing-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 400px;
+    }
+    
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .results-section {
+      margin-top: 30px;
+    }
+    
+    .result-item {
+      background: white;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: between;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .result-filename {
+      font-weight: 600;
+      color: #333;
+      flex: 1;
+    }
+    
+    .copy-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .result-text {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #e9ecef;
+    }
+    
+    .btn-process {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-process:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-process:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .alert {
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    
+    .alert-success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+    
+    .alert-error {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+    
+    .supported-formats {
+      background: #e3f2fd;
+      border: 1px solid #bbdefb;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    
+    .supported-formats h6 {
+      color: #1976d2;
+      margin-bottom: 10px;
+    }
+    
+    .format-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .format-tag {
+      background: #2196F3;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<!-- [Head] end -->
+
+<!-- [Body] Start -->
+<body data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-layout="vertical" data-pc-direction="ltr" data-pc-theme_contrast="false" data-pc-theme="light">
+
+  <!-- [ Pre-loader ] start -->
+  <div class="loader-bg">
+    <div class="loader-track">
+      <div class="loader-fill"></div>
+    </div>
+  </div>
+  <!-- [ Pre-loader ] end -->
+
+  <!-- [ Sidebar Menu ] start -->
+  <nav class="pc-sidebar">
+    <div class="navbar-wrapper">
+      <div class="m-header">
+        <a href="../dashboard/index.html" class="b-brand text-primary">
+          <!-- ========   Change your logo from here   ============ -->
+          <img src="../assets/images/logo_tma.png" class="img-fluid logo-lg" alt="logo">
+        </a>
+      </div>
+      <div class="navbar-content">
+        <div class="card pc-user-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="flex-shrink-0">
+                <img src="../assets/images/user/avatar-1.jpg" alt="user-image" class="user-avtar wid-45 rounded-circle">
+              </div>
+              <div class="flex-grow-1 ms-3 me-2">
+                <h6 class="mb-0">Jonh Smith</h6>
+                <small>Administrator</small>
+              </div>
+              <a class="btn btn-icon btn-link-secondary avtar" data-bs-toggle="collapse" href="#pc_sidebar_userlink">
+                <svg class="pc-icon">
+                  <use xlink:href="#custom-sort-outline"></use>
+                </svg>
+              </a>
+            </div>
+            <div class="collapse pc-user-links" id="pc_sidebar_userlink">
+              <div class="pt-3">
+                <a href="#!">
+                  <i class="ti ti-user"></i>
+                  <span>My Account</span>
+                </a>
+                <a href="#!">
+                  <i class="ti ti-settings"></i>
+                  <span>Settings</span>
+                </a>
+                <a href="#!">
+                  <i class="ti ti-lock"></i>
+                  <span>Lock Screen</span>
+                </a>
+                <a href="#!">
+                  <i class="ti ti-power"></i>
+                  <span>Logout</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ul class="pc-navbar">
+          <li class="pc-item">
+            <a href="../dashboard/index.html" class="pc-link">
+              <span class="pc-micon"><i class="ti ti-dashboard"></i></span>
+              <span class="pc-mtext">Dashboard</span>
+            </a>
+          </li>
+
+          <!-- Người dùng -->
+          <li class="pc-item pc-caption">
+            <label>Người dùng</label>
+          </li>
+          <li class="pc-item">
+            <a href="users-list.html" class="pc-link">
+              <span class="pc-micon"><i class="ti ti-users"></i></span>
+              <span class="pc-mtext">Danh sách người dùng</span>
+            </a>
+          </li>
+          <li class="pc-item">
+            <a href="class-selection.html" class="pc-link">
+              <span class="pc-micon"><i class="ti ti-school"></i></span>
+              <span class="pc-mtext">Chọn lớp học</span>
+            </a>
+          </li>
+
+          <!-- AI tools -->
+          <li class="pc-item pc-caption">
+            <label>Công cụ AI</label>
+            <i class="ti ti-robot"></i>
+          </li>
+          <li class="pc-item">
+            <a href="ai-lesson-creator.html" class="pc-link">
+              <span class="pc-micon"><i class="ti ti-bulb"></i></span>
+              <span class="pc-mtext">Tạo bài giảng AI</span>
+            </a>
+          </li>
+          <li class="pc-item">
+            <a href="ocr-images.html" class="pc-link active">
+              <span class="pc-micon"><i class="ti ti-scan"></i></span>
+              <span class="pc-mtext">OCR hình ảnh</span>
+            </a>
+          </li>
+
+          <!-- Exercises submenu -->
+          <li class="pc-item pc-caption">
+            <label>Bài tập</label>
+            <i class="ti ti-news"></i>
+          </li>
+          <li class="pc-item pc-hasmenu">
+            <a href="#" class="pc-link"><span class="pc-micon"><i class="ti ti-menu"></i></span><span class="pc-mtext">Bài tập</span><span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
+            <ul class="pc-submenu">
+              <li class="pc-item"><a class="pc-link" href="exercises/create-quizz.html">Tạo bài tập</a></li>
+              <li class="pc-item"><a class="pc-link" href="exercises/list-quizz.html">Danh sách bài tập</a></li>
+              <li class="pc-item"><a class="pc-link" href="exercises/my-assigned-quizzes.html">Bài tập được giao</a></li>
+              <li class="pc-item"><a class="pc-link" href="exercises/user-attempts.html">Kết quả bài làm</a></li>
+            </ul>
+          </li>
+
+          <!-- Auth -->
+          <li class="pc-item pc-caption">
+            <label>Auth</label>
+            <i class="ti ti-lock"></i>
+          </li>
+          <li class="pc-item">
+            <a href="login.html" class="pc-link">
+              <span class="pc-micon"><i class="ti ti-lock"></i></span>
+              <span class="pc-mtext">Login</span>
+            </a>
+          </li>
+          <li class="pc-item">
+            <a href="register.html" class="pc-link">
+              <span class="pc-micon"><i class="ti ti-user-plus"></i></span>
+              <span class="pc-mtext">Register</span>
+            </a>
+          </li>
+
+          <!-- Other -->
+          <li class="pc-item pc-caption">
+            <label>Other</label>
+            <i class="ti ti-brand-chrome"></i>
+          </li>
+          <li class="pc-item">
+            <a href="../other/sample-page.html" class="pc-link">
+              <span class="pc-micon"><i class="ti ti-brand-chrome"></i></span>
+              <span class="pc-mtext">Sample page</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <!-- [ Sidebar Menu ] end -->
+
+  <!-- [ Header Topbar ] start -->
+  <header class="pc-header">
+    <div class="header-wrapper">
+      <div class="me-auto pc-mob-drp">
+        <ul class="list-unstyled">
+          <!-- ======= Menu collapse Icon ===== -->
+          <li class="pc-h-item pc-sidebar-collapse">
+            <a href="#" class="pc-head-link ms-0" id="sidebar-hide">
+              <i class="ti ti-menu-2"></i>
+            </a>
+          </li>
+          <li class="pc-h-item pc-sidebar-popup">
+            <a href="#" class="pc-head-link ms-0" id="mobile-collapse">
+              <i class="ti ti-menu-2"></i>
+            </a>
+          </li>
+          <li class="dropdown pc-h-item">
+            <a class="pc-head-link dropdown-toggle arrow-none m-0 trig-drp-search" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false">
+              <svg class="pc-icon">
+                <use xlink:href="#custom-search-normal-1"></use>
+              </svg>
+            </a>
+            <div class="dropdown-menu pc-h-dropdown drp-search">
+              <form class="px-3 py-2">
+                <input type="search" class="form-control border-0 shadow-none" placeholder="Search here. . .">
+              </form>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <!-- [Header] end -->
+
+      <!-- [Header tools] start -->
+      <div class="ms-auto">
+        <ul class="list-unstyled">
+          <li class="dropdown pc-h-item">
+            <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false">
+              <svg class="pc-icon">
+                <use xlink:href="#custom-sun-1"></use>
+              </svg>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
+              <a href="#!" class="dropdown-item" onclick="layout_change('dark')">
+                <svg class="pc-icon">
+                  <use xlink:href="#custom-moon"></use>
+                </svg>
+                <span>Dark</span>
+              </a>
+              <a href="#!" class="dropdown-item" onclick="layout_change('light')">
+                <svg class="pc-icon">
+                  <use xlink:href="#custom-sun-1"></use>
+                </svg>
+                <span>Light</span>
+              </a>
+              <a href="#!" class="dropdown-item" onclick="layout_change_default()">
+                <svg class="pc-icon">
+                  <use xlink:href="#custom-setting-2"></use>
+                </svg>
+                <span>Default</span>
+              </a>
+            </div>
+          </li>
+          <li class="dropdown pc-h-item">
+            <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false">
+              <svg class="pc-icon">
+                <use xlink:href="#custom-setting-2"></use>
+              </svg>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
+              <a href="#!" class="dropdown-item">
+                <i class="ti ti-user"></i>
+                <span>My Account</span>
+              </a>
+              <a href="#!" class="dropdown-item">
+                <i class="ti ti-settings"></i>
+                <span>Settings</span>
+              </a>
+              <a href="#!" class="dropdown-item">
+                <i class="ti ti-headset"></i>
+                <span>Support</span>
+              </a>
+              <a href="#!" class="dropdown-item">
+                <i class="ti ti-lock"></i>
+                <span>Lock Screen</span>
+              </a>
+              <a href="#!" class="dropdown-item">
+                <i class="ti ti-power"></i>
+                <span>Logout</span>
+              </a>
+            </div>
+          </li>
+          <li class="pc-h-item">
+            <a class="pc-head-link me-0" href="#" data-bs-toggle="offcanvas" data-bs-target="#announcement" aria-controls="announcement">
+              <svg class="pc-icon">
+                <use xlink:href="#custom-flash"></use>
+              </svg>
+            </a>
+          </li>
+        </ul>
+      </div>
+      <!-- [Header tools] end -->
+    </div>
+  </header>
+  <!-- [ Header ] end -->
+
+  <!-- [ Main Content ] start -->
+  <div class="pc-container">
+    <div class="pc-content">
+      
+      <!-- [ breadcrumb ] start -->
+      <div class="page-header">
+        <div class="page-block">
+          <div class="row align-items-center">
+            <div class="col-md-12">
+              <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../dashboard/index.html">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="javascript: void(0)">Công cụ AI</a></li>
+                <li class="breadcrumb-item" aria-current="page">OCR hình ảnh</li>
+              </ul>
+            </div>
+            <div class="col-md-12">
+              <div class="page-header-title">
+                <h2 class="mb-0">OCR hình ảnh</h2>
+                <p class="text-muted">Trích xuất văn bản từ hình ảnh và PDF bằng công nghệ OCR</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- [ breadcrumb ] end -->
+
+      <!-- [ Main Content ] start -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h5><i class="ti ti-scan me-2"></i>Tải lên tệp để xử lý OCR</h5>
+            </div>
+            <div class="card-body">
+              
+              <!-- Supported formats info -->
+              <div class="supported-formats">
+                <h6><i class="ti ti-info-circle me-2"></i>Định dạng hỗ trợ</h6>
+                <div class="format-list">
+                  <span class="format-tag">PNG</span>
+                  <span class="format-tag">JPG</span>
+                  <span class="format-tag">JPEG</span>
+                  <span class="format-tag">GIF</span>
+                  <span class="format-tag">BMP</span>
+                  <span class="format-tag">TIFF</span>
+                  <span class="format-tag">PDF</span>
+                </div>
+              </div>
+
+              <!-- Upload area -->
+              <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">
+                  <i class="ti ti-cloud-upload"></i>
+                </div>
+                <h5>Kéo thả tệp vào đây hoặc nhấp để chọn</h5>
+                <p>Hỗ trợ tải lên nhiều tệp cùng lúc</p>
+                <p class="text-muted">Kích thước tối đa: 10MB mỗi tệp</p>
+                <input type="file" id="fileInput" multiple accept="image/*,.pdf" style="display: none;">
+              </div>
+
+              <!-- File list -->
+              <div id="fileList" class="file-list"></div>
+
+              <!-- Process button -->
+              <div class="text-center mt-3">
+                <button id="processBtn" class="btn-process" disabled>
+                  <i class="ti ti-play me-2"></i>Xử lý OCR
+                </button>
+              </div>
+
+              <!-- Alert messages -->
+              <div id="alertContainer"></div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results section -->
+      <div class="row results-section" id="resultsSection" style="display: none;">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h5><i class="ti ti-file-text me-2"></i>Kết quả OCR</h5>
+            </div>
+            <div class="card-body" id="resultsContainer">
+              <!-- Results will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!-- [ Main Content ] end -->
+
+  <!-- Processing overlay -->
+  <div class="processing-overlay" id="processingOverlay">
+    <div class="processing-content">
+      <div class="spinner"></div>
+      <h5>Đang xử lý OCR...</h5>
+      <p class="text-muted">Vui lòng đợi trong giây lát</p>
+    </div>
+  </div>
+
+  <!-- [ footer ] start -->
+  <footer class="pc-footer">
+    <div class="footer-wrapper container-fluid">
+      <div class="row">
+        <div class="col my-1">
+          <p class="m-0">TMA Solutions &#9829; by <a href="https://themeforest.net/user/phoenixcoded" target="_blank">Phoenixcoded</a></p>
+        </div>
+        <div class="col-auto my-1">
+          <ul class="list-inline footer-link mb-0">
+            <li class="list-inline-item"><a href="../index.html">Home</a></li>
+            <li class="list-inline-item"><a href="https://codedthemes.gitbook.io/gradient-able-bootstrap/" target="_blank">Documentation</a></li>
+            <li class="list-inline-item"><a href="https://phoenixcoded.authordesk.app/" target="_blank">Support</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <!-- [ footer ] end -->
+
+  <!-- Required Js -->
+  <script src="../assets/js/plugins/popper.min.js"></script>
+  <script src="../assets/js/plugins/simplebar.min.js"></script>
+  <script src="../assets/js/plugins/bootstrap.min.js"></script>
+  <script src="../assets/js/fonts/custom-font.js"></script>
+  <script src="../assets/js/pcoded.js"></script>
+  <script src="../assets/js/plugins/feather.min.js"></script>
+
+  <script>
+    // DOM elements
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const processBtn = document.getElementById('processBtn');
+    const processingOverlay = document.getElementById('processingOverlay');
+    const alertContainer = document.getElementById('alertContainer');
+    const resultsSection = document.getElementById('resultsSection');
+    const resultsContainer = document.getElementById('resultsContainer');
+
+    // State
+    let selectedFiles = [];
+
+    // Utility functions
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function isValidFile(file) {
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp', 'image/tiff', 'application/pdf'];
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      
+      if (!validTypes.includes(file.type)) {
+        showAlert('Định dạng tệp không được hỗ trợ: ' + file.name, 'error');
+        return false;
+      }
+      
+      if (file.size > maxSize) {
+        showAlert('Tệp quá lớn (>10MB): ' + file.name, 'error');
+        return false;
+      }
+      
+      return true;
+    }
+
+    function showAlert(message, type = 'success') {
+      const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+      const alertHtml = `
+        <div class="alert ${alertClass}">
+          <i class="ti ti-${type === 'error' ? 'x' : 'check'} me-2"></i>
+          ${message}
+        </div>
+      `;
+      alertContainer.innerHTML = alertHtml;
+      
+      // Auto hide after 5 seconds
+      setTimeout(() => {
+        alertContainer.innerHTML = '';
+      }, 5000);
+    }
+
+    function updateFileList() {
+      fileList.innerHTML = '';
+      
+      selectedFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.innerHTML = `
+          <i class="ti ti-file-text" style="font-size: 24px; color: #666;"></i>
+          <div class="file-info">
+            <div class="file-name">${file.name}</div>
+            <div class="file-size">${formatFileSize(file.size)}</div>
+          </div>
+          <button class="remove-btn" onclick="removeFile(${index})">
+            <i class="ti ti-x"></i>
+          </button>
+        `;
+        fileList.appendChild(fileItem);
+      });
+      
+      processBtn.disabled = selectedFiles.length === 0;
+    }
+
+    function removeFile(index) {
+      selectedFiles.splice(index, 1);
+      updateFileList();
+    }
+
+    function addFiles(files) {
+      Array.from(files).forEach(file => {
+        if (isValidFile(file)) {
+          // Check if file already exists
+          const exists = selectedFiles.some(existing => 
+            existing.name === file.name && existing.size === file.size
+          );
+          
+          if (!exists) {
+            selectedFiles.push(file);
+          } else {
+            showAlert('Tệp đã tồn tại: ' + file.name, 'error');
+          }
+        }
+      });
+      updateFileList();
+    }
+
+    // Event listeners
+    uploadArea.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      addFiles(e.target.files);
+    });
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      addFiles(e.dataTransfer.files);
+    });
+
+    // Process OCR
+    processBtn.addEventListener('click', async () => {
+      if (selectedFiles.length === 0) return;
+      
+      processingOverlay.style.display = 'flex';
+      processBtn.disabled = true;
+      
+      try {
+        const formData = new FormData();
+        selectedFiles.forEach(file => {
+          formData.append('files', file);
+        });
+        
+        const response = await fetch('https://api.aagents.vn/api/v1/ocr-ai/images', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error('Lỗi xử lý OCR: ' + response.status);
+        }
+        
+        const results = await response.json();
+        displayResults(results);
+        showAlert(`Đã xử lý thành công ${results.length} tệp`);
+        
+      } catch (error) {
+        console.error('OCR processing error:', error);
+        showAlert('Có lỗi xảy ra khi xử lý OCR: ' + error.message, 'error');
+      } finally {
+        processingOverlay.style.display = 'none';
+        processBtn.disabled = false;
+      }
+    });
+
+    function displayResults(results) {
+      resultsContainer.innerHTML = '';
+      
+      results.forEach((result, index) => {
+        const resultItem = document.createElement('div');
+        resultItem.className = 'result-item';
+        resultItem.innerHTML = `
+          <div class="result-header">
+            <div class="result-filename">
+              <i class="ti ti-file-text me-2"></i>
+              ${result.filename}
+            </div>
+            <button class="copy-btn" onclick="copyToClipboard('${result.text.replace(/'/g, "\\'")}', ${index})">
+              <i class="ti ti-copy me-1"></i>Sao chép
+            </button>
+          </div>
+          <div class="result-text">${result.text || 'Không tìm thấy văn bản trong tệp này.'}</div>
+        `;
+        resultsContainer.appendChild(resultItem);
+      });
+      
+      resultsSection.style.display = 'block';
+      resultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function copyToClipboard(text, index) {
+      navigator.clipboard.writeText(text).then(() => {
+        showAlert('Đã sao chép văn bản vào clipboard');
+      }).catch(() => {
+        showAlert('Không thể sao chép văn bản', 'error');
+      });
+    }
+
+    // Make functions available globally
+    window.removeFile = removeFile;
+    window.copyToClipboard = copyToClipboard;
+  </script>
+
+</body>
+<!-- [Body] end -->
+</html> 
