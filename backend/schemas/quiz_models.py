@@ -121,6 +121,17 @@ class QuizResult(BaseModel):
 class QuizAttempt(BaseModel):
     attempt_id: str
     quiz_id: str
+    user_id: str
+    answers: List[QuizAnswer]
+    results: List[QuizResult]
+    total_points: int
+    earned_points: int
+    score_percentage: float
+    submitted_at: str
+
+class QuizAttemptWithInfo(BaseModel):
+    attempt_id: str
+    quiz_id: str
     quiz_title: Optional[str] = None
     quiz_class_code: Optional[str] = None
     user_id: str
@@ -185,4 +196,4 @@ class UserQuizStats(BaseModel):
     average_score: float
     best_score: float
     quizzes_taken: int
-    recent_attempts: List[QuizAttempt]
+    recent_attempts: List[QuizAttemptWithInfo]
