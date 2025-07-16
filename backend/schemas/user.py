@@ -1,13 +1,14 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 from models.user import Role, Gender
+
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
     age: Optional[int] = None
     role: Optional[str] = None
-    class_name: Optional[str] = None
+    class_name: Optional[List[str]] = None
     gender: Optional[str] = "other"
 
 class UserLogin(BaseModel):
@@ -20,7 +21,7 @@ class UserOut(BaseModel):
     role: str
     full_name: Optional[str]
     age: Optional[int]
-    class_name: Optional[str]
+    class_name: Optional[List[str]]
     gender: Optional[str]
 
     class Config:
@@ -44,7 +45,7 @@ class UserUpdate(BaseModel):
     role: Optional[str] = None
     full_name: Optional[str] = None
     age: Optional[int] = None
-    class_name: Optional[str] = None
+    class_name: Optional[List[str]] = None
     gender: Optional[str] = None
 
 class Token(BaseModel):
@@ -52,4 +53,4 @@ class Token(BaseModel):
     token_type: str
 
 class ClassUpdate(BaseModel):
-    class_name: str
+    class_name: List[str]
