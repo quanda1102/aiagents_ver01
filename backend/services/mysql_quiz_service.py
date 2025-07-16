@@ -92,6 +92,34 @@ class MySQLQuizService:
             return None
         finally:
             db.close()
+            
+    def get_quizzes_by_class_codes(self, class_codes: List[str]) -> List[Dict[str, Any]]:
+        """Lấy danh sách quiz thuộc các class_code nhất định"""
+        db = self.get_db()
+        try:
+            quizzes = db.query(Quiz).filter(Quiz.class_code.in_(class_codes)).all()
+            results = []
+    
+            for quiz in quizzes:
+                results.append({
+                    "quiz_id": quiz.quiz_id,
+                    "title": quiz.title,
+                    "description": quiz.description,
+                    "questions": quiz.questions,
+                    "created_by": quiz.created_by,
+                    "created_at": quiz.created_at.isoformat(),
+                    "time_limit": quiz.time_limit,
+                    "allow_multiple_attempts": quiz.allow_multiple_attempts,
+                    "shuffle_questions": quiz.shuffle_questions,
+                    "class_code": quiz.class_code
+                })
+
+            return results
+        except Exception as e:
+            logger.error(f"Error fetching quizzes by class codes: {e}")
+            return []
+        finally:
+            db.close()
 
     def get_quiz_questions(self, quiz_id: str) -> Optional[List[Dict[str, Any]]]:
         """Get quiz questions without answers (for taking quiz)"""
@@ -434,34 +462,6 @@ class MySQLQuizService:
             return self.list_quizzes(user=user)
         else:
             return self.list_quizzes()
-        
-    def get_quizzes_by_class_codes(self, class_codes: List[str]) -> List[Dict[str, Any]]:
-        """Lấy danh sách quiz thuộc các class_code nhất định"""
-        db = self.get_db()
-        try:
-            quizzes = db.query(Quiz).filter(Quiz.class_code.in_(class_codes)).all()
-            results = []
-    
-            for quiz in quizzes:
-                results.append({
-                    "quiz_id": quiz.quiz_id,
-                    "title": quiz.title,
-                    "description": quiz.description,
-                    "questions": quiz.questions,
-                    "created_by": quiz.created_by,
-                    "created_at": quiz.created_at.isoformat(),
-                    "time_limit": quiz.time_limit,
-                    "allow_multiple_attempts": quiz.allow_multiple_attempts,
-                    "shuffle_questions": quiz.shuffle_questions,
-                    "class_code": quiz.class_code
-                })
-
-            return results
-        except Exception as e:
-            logger.error(f"Error fetching quizzes by class codes: {e}")
-            return []
-        finally:
-            db.close()
 
 
 
