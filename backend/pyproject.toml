@@ -12,6 +12,7 @@ dependencies = [
     "openai>=1.93.0",
     "openai-agents>=0.1.0",
     "passlib>=1.7.4",
+    "pdf2image>=1.17.0",
     "pydantic[email]>=2.11.7",
     "pyjwt>=2.10.1",
     "pymysql>=1.1.1",
