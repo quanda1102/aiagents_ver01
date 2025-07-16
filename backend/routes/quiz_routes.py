@@ -2,6 +2,14 @@ from fastapi import APIRouter, HTTPException, Request, Query, Depends
 from pydantic import BaseModel, ValidationError
 from typing import Optional, List, Dict, Any
 import logging
+from sqlalchemy.orm import Session
+from models.quiz import Quiz
+from models.user import User
+from utils.auth import get_current_user
+from config import config
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from typing import List
 
 from schemas.quiz_models import (
     CreateQuizRequest, QuizSummary, QuizForTaking, SubmitQuizRequest, 
@@ -212,6 +220,38 @@ async def submit_quiz(
     except Exception as e:
         logger.error(f"Error submitting quiz: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+    
+@router.get("/my-class-quizzes", response_model=List[QuizSummary])
+async def get_my_class_quizzes(
+    current_user: User = Depends(get_current_user)
+):
+    """Get quizzes based on user's class_name list"""
+    if not quiz_service:
+        raise HTTPException(status_code=503, detail="Quiz service unavailable")
+
+    if not current_user.class_name or not isinstance(current_user.class_name, list):
+        raise HTTPException(status_code=400, detail="User has no class_name assigned or format is invalid.")
+
+    try:
+        quizzes = quiz_service.get_quizzes_by_class_codes(current_user.class_name)
+        summaries = []
+        for quiz in quizzes:
+            summaries.append(QuizSummary(
+                quiz_id=quiz["quiz_id"],
+                title=quiz["title"],
+                description=quiz.get("description"),
+                created_at=quiz["created_at"],
+                created_by=quiz["created_by"],
+                question_count=len(quiz["questions"]),
+                total_points=sum(q.get("points", 1) for q in quiz["questions"]),
+                time_limit=quiz.get("time_limit"),
+                allow_multiple_attempts=quiz.get("allow_multiple_attempts", True),
+                shuffle_questions=quiz.get("shuffle_questions", False)
+            ))
+        return summaries
+    except Exception as e:
+        logger.error(f"Error fetching class quizzes: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch quizzes.")
 
 
 @router.get("/attempt/{attempt_id}", response_model=QuizResponse)
