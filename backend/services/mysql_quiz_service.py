@@ -342,9 +342,21 @@ class MySQLQuizService:
             
             # Filter by class if user is a student
             if user and user.role == 3:  # STUDENT role
-                query = query.filter(
-                    (Quiz.class_code == user.class_name) | (Quiz.class_code.is_(None))
-                )
+                if user.class_name:
+                    # Handle both single class (string) and multiple classes (array)
+                    if isinstance(user.class_name, list):
+                        # User has multiple classes - show quizzes for any of their classes
+                        query = query.filter(
+                            (Quiz.class_code.in_(user.class_name)) | (Quiz.class_code.is_(None))
+                        )
+                    else:
+                        # User has single class (backward compatibility)
+                        query = query.filter(
+                            (Quiz.class_code == user.class_name) | (Quiz.class_code.is_(None))
+                        )
+                else:
+                    # No classes assigned - only show quizzes with no class restriction
+                    query = query.filter(Quiz.class_code.is_(None))
             elif class_code:
                 query = query.filter(Quiz.class_code == class_code)
             
