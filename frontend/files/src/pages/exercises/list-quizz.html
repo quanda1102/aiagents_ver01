@@ -449,10 +449,10 @@
     // Assign quiz to class
     async function assignQuizToClass() {
         const quizId = document.getElementById('assignQuizId').value;
-        const classCode = document.getElementById('classCode').value.trim();
+        const classCode = document.getElementById('classCode').value;
         
         if (!classCode) {
-            alert('Vui lòng nhập mã lớp');
+            alert('Vui lòng chọn lớp');
             return;
         }
         
@@ -501,8 +501,22 @@
                 <p>Bài tập: <strong id="assignQuizTitle"></strong></p>
                 <div class="mb-3">
                     <label for="classCode" class="form-label">Mã lớp</label>
-                    <input type="text" class="form-control" id="classCode" placeholder="Nhập mã lớp (VD: CNTT2024)">
-                    <div class="form-text">Nhập mã lớp mà bạn muốn giao bài tập này</div>
+                    <select class="form-select" id="classCode">
+                        <option value="">-- Chọn lớp --</option>
+                        <option value="AI-01">AI-01</option>
+                        <option value="AI-02">AI-02</option>
+                        <option value="AI-03">AI-03</option>
+                        <option value="AI-04">AI-04</option>
+                        <option value="AI-05">AI-05</option>
+                        <option value="AI-06">AI-06</option>
+                        <option value="AI-07">AI-07</option>
+                        <option value="AI-08">AI-08</option>
+                        <option value="AI-09">AI-09</option>
+                        <option value="AI-10">AI-10</option>
+                        <option value="AI-11">AI-11</option>
+                        <option value="AI-12">AI-12</option>
+                    </select>
+                    <div class="form-text">Chọn lớp mà bạn muốn giao bài tập này</div>
                 </div>
             </div>
             <div class="modal-footer">
