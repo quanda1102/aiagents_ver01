@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum as SqlEnum
+from sqlalchemy import Column, Integer, String, Enum as SqlEnum, JSON
 from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
 from models import Base  # sửa lại dòng này
@@ -21,6 +21,7 @@ class User(Base):
     role = Column(Integer, default=Role.STUDENT.value)
     full_name = Column(String(255))
     age = Column(Integer, nullable=True)
-    class_name = Column(String(100), nullable=True)
+    class_name = Column(JSON, default=[])
     gender = Column(SqlEnum(Gender, values_callable=lambda x: [e.value for e in x]), default=Gender.OTHER.value)
     lectures = relationship("Lecture", back_populates="teacher")
+    quiz_attempts = relationship("QuizAttempt", back_populates="user")

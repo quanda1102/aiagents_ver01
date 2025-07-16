@@ -164,12 +164,34 @@
           <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h5 class="mb-0">Danh sách bài tập</h5>
-              <a href="../../pages/exercises/create-quizz.html" class="btn btn-primary">
+              <a href="../../pages/exercises/create-quizz.html" class="btn btn-primary" id="createQuizBtn">
                 <i class="ti ti-plus me-1"></i>Tạo bài tập mới
               </a>
             </div>
             <div class="card-body">
-                <div id="quizList" class="row g-4"></div>
+                <!-- Quiz View Tabs -->
+                <ul class="nav nav-tabs mb-3" id="quizTabs" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="all-quizzes-tab" data-bs-toggle="tab" data-bs-target="#all-quizzes" type="button" role="tab">
+                      <i class="ti ti-list me-1"></i>Tất cả bài tập
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation" id="my-quizzes-tab-li" style="display: none;">
+                    <button class="nav-link" id="my-quizzes-tab" data-bs-toggle="tab" data-bs-target="#my-quizzes" type="button" role="tab">
+                      <i class="ti ti-user me-1"></i>Bài tập của tôi
+                    </button>
+                  </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="quizTabContent">
+                  <div class="tab-pane fade show active" id="all-quizzes" role="tabpanel">
+                    <div id="quizList" class="row g-4"></div>
+                  </div>
+                  <div class="tab-pane fade" id="my-quizzes" role="tabpanel">
+                    <div id="myQuizList" class="row g-4"></div>
+                  </div>
+                </div>
             </div>
           </div>
         </div>
@@ -215,78 +237,310 @@
 <script>font_change("Public-Sans");</script>
 
 <script>
+    let currentUser;
+    let isTeacherOrAdmin = false;
+
     document.addEventListener('DOMContentLoaded', async () => {
+        // Initialize user info
+        currentUser = await getCurrentUser();
+        isTeacherOrAdmin = currentUser && ['TEACHER', 'ADMIN'].includes(currentUser.role);
+        
+        // Show/hide UI elements based on role
+        if (currentUser?.role === 'STUDENT') {
+            document.getElementById('my-quizzes-tab-li').style.display = 'block';
+            document.getElementById('createQuizBtn').style.display = 'none';
+        }
+        
+        // Load initial quiz list
+        await loadQuizzes('all');
+        
+        // Add tab click handlers
+        document.getElementById('all-quizzes-tab').addEventListener('click', () => loadQuizzes('all'));
+        document.getElementById('my-quizzes-tab').addEventListener('click', () => loadQuizzes('my'));
+    });
+
+    // Load quizzes based on view type
+    async function loadQuizzes(viewType) {
         const token = localStorage.getItem('access_token');
-      const quizListContainer = document.getElementById('quizList');
-
-      try {
-        const apiUrl = getApiUrl('QUIZ') + '/list';
-        const response = await fetch(apiUrl, {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
+        let container, endpoint;
+        
+        if (viewType === 'my') {
+            container = document.getElementById('myQuizList');
+            endpoint = getApiUrl('QUIZ') + '/my-quizzes';
+        } else {
+            container = document.getElementById('quizList');
+            endpoint = getApiUrl('QUIZ') + '/list';
+        }
+        
+        try {
+            const response = await fetch(endpoint, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             });
-        const json = await response.json();
-        const quizzes = json.quizzes;
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const json = await response.json();
+            const quizzes = json.quizzes || [];
+            
+            renderQuizzes(quizzes, container, viewType);
+            
+        } catch (error) {
+            console.error('Error loading quizzes:', error);
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger" role="alert">
+                        <i class="ti ti-exclamation-triangle me-2"></i>
+                        Lỗi tải danh sách bài tập: ${error.message}
+                    </div>
+                </div>
+            `;
+        }
+    }
 
+    // Render quiz cards
+    function renderQuizzes(quizzes, container, viewType) {
         if (!Array.isArray(quizzes) || quizzes.length === 0) {
-          quizListContainer.innerHTML = `
-            <div class="col-12">
-              <div class="text-center py-5">
-                <i class="ti ti-clipboard-list" style="font-size: 4rem; color: #ccc;"></i>
-                <h6 class="mt-3 text-muted">Chưa có bài tập nào</h6>
-                <p class="text-muted">Tạo bài tập đầu tiên của bạn</p>
-                <a href="../../pages/exercises/create-quizz.html" class="btn btn-primary">
-                  <i class="ti ti-plus me-1"></i>Tạo bài tập
-                </a>
-              </div>
-            </div>
-          `;
-          return;
+            const emptyMessage = viewType === 'my' 
+                ? 'Bạn chưa có bài tập nào được giao'
+                : 'Chưa có bài tập nào';
+            
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="ti ti-clipboard-list" style="font-size: 4rem; color: #ccc;"></i>
+                        <h6 class="mt-3 text-muted">${emptyMessage}</h6>
+                        ${viewType === 'all' && isTeacherOrAdmin ? `
+                            <p class="text-muted">Tạo bài tập đầu tiên của bạn</p>
+                            <a href="../../pages/exercises/create-quizz.html" class="btn btn-primary">
+                                <i class="ti ti-plus me-1"></i>Tạo bài tập
+                            </a>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            return;
         }
 
+        container.innerHTML = '';
+        
         quizzes.forEach((quiz) => {
-          const card = document.createElement('div');
-          card.className = 'col-md-6 col-lg-4';
+            const card = document.createElement('div');
+            card.className = 'col-md-6 col-lg-4';
+            
+            // Format time limit display
+            const timeDisplay = quiz.time_limit ? `${Math.floor(quiz.time_limit / 60)}:${String(quiz.time_limit % 60).padStart(2, '0')}` : 'Không giới hạn';
+            
+            // Build action buttons based on role and view
+            let actionButtons = '';
+            
+            if (viewType === 'my' || currentUser?.role === 'STUDENT') {
+                actionButtons = `
+                    <a href="../../pages/exercises/attempt-quizz.html?id=${quiz.quiz_id}" class="btn btn-primary btn-sm flex-fill">
+                        <i class="ti ti-play me-1"></i>Làm bài
+                    </a>
+                `;
+            } else {
+                actionButtons = `
+                    <a href="../../pages/exercises/attempt-quizz.html?id=${quiz.quiz_id}" class="btn btn-primary btn-sm">
+                        <i class="ti ti-play me-1"></i>Làm bài
+                    </a>
+                    ${isTeacherOrAdmin ? `
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="openAssignModal('${quiz.quiz_id}', '${quiz.title.replace(/'/g, "\\'")}')"
+                            title="Giao bài cho lớp">
+                            <i class="ti ti-users"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteQuiz('${quiz.quiz_id}', this)" title="Xóa bài tập">
+                            <i class="ti ti-trash"></i>
+                        </button>
+                    ` : ''}
+                `;
+            }
 
-          card.innerHTML = `
-            <div class="card h-100 shadow-sm">
-              <div class="card-body">
-                <h5 class="card-title">${quiz.title}</h5>
-                <p class="card-text text-muted">${quiz.description}</p>
-                <div class="row text-center mb-3">
-                  <div class="col-6">
-                    <div class="d-flex flex-column">
-                      <span class="h6 mb-0">${quiz.question_count}</span>
-                      <small class="text-muted">Câu hỏi</small>
+            card.innerHTML = `
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">${quiz.title}</h5>
+                        <p class="card-text text-muted">${quiz.description || 'Không có mô tả'}</p>
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <div class="d-flex flex-column">
+                                    <span class="h6 mb-0">${quiz.question_count}</span>
+                                    <small class="text-muted">Câu hỏi</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex flex-column">
+                                    <span class="h6 mb-0">${quiz.total_points}</span>
+                                    <small class="text-muted">Điểm</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex flex-column">
+                                    <span class="h6 mb-0">${timeDisplay}</span>
+                                    <small class="text-muted">Thời gian</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="ti ti-user me-1"></i>${quiz.created_by}
+                                <br><i class="ti ti-calendar me-1"></i>${new Date(quiz.created_at).toLocaleDateString('vi-VN')}
+                            </small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            ${actionButtons}
+                        </div>
                     </div>
-                  </div>
-                  <div class="col-6">
-                    <div class="d-flex flex-column">
-                      <span class="h6 mb-0">${quiz.total_points}</span>
-                      <small class="text-muted">Điểm</small>
-                    </div>
-                  </div>
                 </div>
-                <div class="mb-3">
-                  <small class="text-muted">
-                    <i class="ti ti-user me-1"></i>${quiz.created_by} •
-                    <i class="ti ti-clock me-1"></i>${quiz.time_limit}s
-                  </small>
-                </div>
-                <div class="d-flex gap-2">
-                  <a href="/pages/exercises/attempt-quizz.html?id=${quiz.quiz_id}" class="btn btn-primary btn-sm flex-fill">
-                    <i class="ti ti-play me-1"></i>Làm bài
-                  </a>
-                  <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteQuiz('${quiz.quiz_id}', this)" title="Xóa bài tập">
-                    <i class="ti ti-trash"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          `;
-          quizListContainer.appendChild(card);
+            `;
+            
+            container.appendChild(card);
         });
-      } catch (error) {
-        console.error('Lỗi tải danh sách:', error);
-        quizListContainer.innerHTML = `
+    }
+
+    // Delete quiz function
+    async function deleteQuiz(quizId, buttonElement) {
+        if (!confirm('Bạn có chắc chắn muốn xóa bài tập này?')) {
+            return;
+        }
+        
+        const token = localStorage.getItem('access_token');
+        
+        try {
+            const response = await fetch(getApiUrl('QUIZ') + `/${quizId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // Remove the quiz card from UI
+                const card = buttonElement.closest('.col-md-6');
+                if (card) {
+                    card.remove();
+                }
+                alert('Xóa bài tập thành công!');
+            } else {
+                throw new Error('Không thể xóa bài tập');
+            }
+        } catch (error) {
+            console.error('Error deleting quiz:', error);
+            alert('Lỗi khi xóa bài tập: ' + error.message);
+        }
+    }
+
+    // Open assignment modal
+    function openAssignModal(quizId, quizTitle) {
+        document.getElementById('assignQuizId').value = quizId;
+        document.getElementById('assignQuizTitle').textContent = quizTitle;
+        document.getElementById('classCode').value = '';
+        
+        const modal = new bootstrap.Modal(document.getElementById('assignModal'));
+        modal.show();
+    }
+
+    // Assign quiz to class
+    async function assignQuizToClass() {
+        const quizId = document.getElementById('assignQuizId').value;
+        const classCode = document.getElementById('classCode').value;
+        
+        if (!classCode) {
+            alert('Vui lòng chọn lớp');
+            return;
+        }
+        
+        const token = localStorage.getItem('access_token');
+        
+        try {
+            const response = await fetch(getApiUrl('QUIZ') + `/assign/${quizId}/${classCode}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                alert(`Đã giao bài tập cho lớp ${classCode} thành công!`);
+                bootstrap.Modal.getInstance(document.getElementById('assignModal')).hide();
+            } else {
+                throw new Error(result.detail || 'Không thể giao bài tập');
+            }
+        } catch (error) {
+            console.error('Error assigning quiz:', error);
+            alert('Lỗi khi giao bài tập: ' + error.message);
+        }
+    }
+
+    // Logout function
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        localStorage.removeItem('access_token');
+        window.location.href = '../../pages/login.html';
+    });
+</script>
+
+<!-- Quiz Assignment Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assignModalLabel">Giao bài tập cho lớp</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignQuizId">
+                <p>Bài tập: <strong id="assignQuizTitle"></strong></p>
+                <div class="mb-3">
+                    <label for="classCode" class="form-label">Mã lớp</label>
+                    <select class="form-select" id="classCode">
+                        <option value="">-- Chọn lớp --</option>
+                        <option value="AI-01">AI-01</option>
+                        <option value="AI-02">AI-02</option>
+                        <option value="AI-03">AI-03</option>
+                        <option value="AI-04">AI-04</option>
+                        <option value="AI-05">AI-05</option>
+                        <option value="AI-06">AI-06</option>
+                        <option value="AI-07">AI-07</option>
+                        <option value="AI-08">AI-08</option>
+                        <option value="AI-09">AI-09</option>
+                        <option value="AI-10">AI-10</option>
+                        <option value="AI-11">AI-11</option>
+                        <option value="AI-12">AI-12</option>
+                    </select>
+                    <div class="form-text">Chọn lớp mà bạn muốn giao bài tập này</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="assignQuizToClass()">Giao bài tập</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add error handling for missing functions
+    if (typeof getApiUrl === 'undefined') {
+        console.error('getApiUrl function not found. Please ensure config.js is loaded.');
+    }
+    
+    if (typeof getCurrentUser === 'undefined') {
+        console.error('getCurrentUser function not found. Please ensure auth.js is loaded.');
+    }
+
+    // Handle authentication errors globally
+    window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason && event.reason.message && event.reason.message.includes('401')) {
+            localStorage.removeItem('access_token');
+            window.location.href = '../../pages/login.html';
+        }
+    });

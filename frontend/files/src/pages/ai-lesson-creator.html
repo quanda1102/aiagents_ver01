@@ -34,41 +34,9 @@
   <!-- [TinyMCE Rich Text Editor - Self-hosted for local development] -->
   <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
   
-  <!-- [Docx.js for Word document generation] -->
-  <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <!-- [Word document generation now handled by API] -->
 
   <style>
-    .document-tree {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .tree-level {
-      margin-left: 20px;
-      border-left: 2px solid #e9ecef;
-      padding-left: 15px;
-      margin-top: 10px;
-    }
-    .tree-item {
-      background: white;
-      border: 1px solid #dee2e6;
-      border-radius: 6px;
-      padding: 10px;
-      margin: 5px 0;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    .tree-item:hover {
-      background: #e3f2fd;
-      border-color: #2196F3;
-    }
-    .tree-item.selected {
-      background: #1976D2;
-      color: white;
-      border-color: #1976D2;
-    }
     .ai-response {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border-radius: 12px;
@@ -279,28 +247,7 @@
       background: #a8a8a8;
     }
     
-    /* Loading and error states for lessons */
-    .loading-lesson {
-      opacity: 0.7;
-      background: linear-gradient(90deg, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%);
-      background-size: 200% 100%;
-      animation: loading-shimmer 1.5s infinite;
-    }
-    
-    .error-lesson {
-      background: #fff5f5;
-      border-color: #f5c6cb;
-      color: #721c24;
-    }
-    
-    @keyframes loading-shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-      100% {
-        background-position: 200% 0;
-      }
-    }
+
   </style>
 </head>
 <!-- [Head] end -->
@@ -623,160 +570,244 @@
               <h5><i class="ti ti-folder me-2"></i>Chọn tài liệu</h5>
             </div>
             <div class="card-body">
-              <div class="document-tree">
-                <h6 class="mb-3">Cấu trúc tài liệu</h6>
-                <div id="documentTree">
-                  <!-- Document tree will be populated here -->
+              <!-- Subject, Grade, Lesson Selection -->
+              <div class="mb-4">
+                <h6 class="mb-3">Thông tin bài giảng</h6>
+                
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label">Môn học <span class="text-danger">*</span></label>
+                    <select id="subjectSelect" class="form-select" onchange="onSubjectChange()" required>
+                      <option value="">Chọn môn học</option>
+                      <option value="AI-01">Trí tuệ nhân tạo</option>
+                      <option value="TOAN">Toán học</option>
+                      <option value="VATLY">Vật lý</option>
+                      <option value="HOAHOC">Hóa học</option>
+                      <option value="SINHHOC">Sinh học</option>
+                    </select>
+                  </div>
+                  
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label">Lớp <span class="text-danger">*</span></label>
+                    <select id="gradeSelect" class="form-select" onchange="onGradeChange()" required disabled>
+                      <option value="">Chọn lớp</option>
+                    </select>
+                  </div>
+                  
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label">Bài học <span class="text-danger">*</span></label>
+                    <select id="lessonSelect" class="form-select" onchange="onLessonChange()" required disabled>
+                      <option value="">Chọn bài học</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
-              
-              <div class="mb-3">
-                <label class="form-label">Tài liệu tham khảo</label>
                 
-                <!-- Tab Navigation -->
-                <ul class="nav nav-pills mb-3" id="documentSourceTabs" role="tablist">
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="file-tab" data-bs-toggle="pill" data-bs-target="#file-content" type="button" role="tab">
-                      <i class="ti ti-file-upload me-1"></i>Tải file
-                    </button>
-                  </li>
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="url-tab" data-bs-toggle="pill" data-bs-target="#url-content" type="button" role="tab">
-                      <i class="ti ti-world me-1"></i>Từ URL
-                    </button>
-                  </li>
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="server-docs-tab" data-bs-toggle="pill" data-bs-target="#server-docs" type="button" role="tab" onclick="loadServerDocuments()">
-                      <i class="ti ti-server me-1"></i>Từ server
-                    </button>
-                  </li>
-                </ul>
-                
-                <!-- Tab Content -->
-                <div class="tab-content" id="documentSourceContent">
-                  <!-- File Upload Tab -->
-                  <div class="tab-pane fade show active" id="file-content" role="tabpanel">
-                    <div class="file-upload-area" id="fileUploadArea">
-                      <i class="ti ti-upload" style="font-size: 2rem; color: #6c757d;"></i>
-                      <p class="mb-2 mt-2">Kéo thả file hoặc click để chọn</p>
-                      <p class="text-muted small">Hỗ trợ: .txt, .doc, .docx (tối đa 10MB)</p>
-                      <input type="file" id="documentFile" accept=".txt,.doc,.docx" style="display: none;">
-                    </div>
-                    <div class="uploaded-file" id="uploadedFile">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <span id="fileName"></span>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
-                          <i class="ti ti-x"></i>
-                        </button>
+                <!-- Selected Document Content Preview -->
+                <div id="documentContentPreview" class="mt-3" style="display: none;">
+                  <div class="alert alert-info">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <i class="ti ti-file-text me-2"></i>
+                        <strong>Đã chọn:</strong> <span id="selectedDocumentInfo"></span>
                       </div>
+                      <button type="button" class="btn btn-sm btn-outline-info" onclick="toggleDocumentContent()">
+                        <i class="ti ti-eye me-1"></i>Xem nội dung
+                      </button>
                     </div>
                   </div>
                   
-                  <!-- URL Input Tab -->
-                  <div class="tab-pane fade" id="url-content" role="tabpanel">
-                    <div class="url-input-area">
-                      <div class="input-group mb-2">
-                        <span class="input-group-text"><i class="ti ti-world"></i></span>
-                        <input type="url" id="documentUrl" class="form-control" placeholder="Nhập URL (VD: Google Docs, Wikipedia, trang tin tức)" />
-                        <button class="btn btn-primary" type="button" onclick="loadFromUrl()">
-                          <i class="ti ti-download me-1"></i>Tải nội dung
-                        </button>
-                      </div>
-                      <div class="url-help mb-2">
-                        <small class="text-muted">
-                          <i class="ti ti-info-circle me-1"></i>
-                          <strong>Hỗ trợ:</strong> Google Docs (public), Wikipedia, tin tức, blog. Nhấn Enter để tải nhanh.
-                        </small>
-                        <div class="mt-1">
-                          <small class="text-warning">
-                            <i class="ti ti-alert-triangle me-1"></i>
-                            <strong>Google Docs:</strong> Đảm bảo chia sẻ công khai ("Anyone with the link can view")
-                          </small>
-                        </div>
-                        <div class="mt-1">
-                          <small class="text-primary">
-                            <i class="ti ti-bulb me-1"></i>
-                            Thử ngay: 
-                            <a href="#" onclick="document.getElementById('documentUrl').value='https://vi.wikipedia.org/wiki/Tr%C3%AD_tu%E1%BB%87_nh%C3%A2n_t%E1%BA%A1o'; return false;" 
-                               class="text-decoration-none">
-                              Wikipedia AI
-                            </a>
-                          </small>
-                        </div>
-                      </div>
-                      <div class="url-loading" id="urlLoading" style="display: none;">
-                        <div class="d-flex align-items-center">
-                          <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                          <span>Đang tải nội dung từ URL...</span>
-                        </div>
-                      </div>
-                      <div class="url-success" id="urlSuccess" style="display: none;">
-                        <div class="alert alert-success d-flex justify-content-between align-items-center mb-0">
-                          <div>
-                            <i class="ti ti-check me-2"></i>
-                            <span id="urlSourceName">Đã tải thành công từ URL</span>
-                          </div>
-                          <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeUrl()">
-                            <i class="ti ti-x"></i>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Server Documents Tab -->
-                  <div class="tab-pane fade" id="server-docs" role="tabpanel">
-                    <div class="server-docs-area">
-                      <!-- Loading State -->
-                      <div id="serverDocsLoading" class="text-center py-4" style="display: none;">
-                        <div class="spinner-border text-primary" role="status">
-                          <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2 text-muted">Đang tải danh sách tài liệu từ server...</p>
-                      </div>
-                      
-                      <!-- Error State -->
-                      <div id="serverDocsError" class="alert alert-danger" style="display: none;">
-                        <i class="ti ti-alert-circle me-2"></i>
-                        <span id="serverDocsErrorMessage">Lỗi khi tải danh sách tài liệu</span>
-                        <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="loadServerDocuments()">
-                          <i class="ti ti-refresh me-1"></i>Thử lại
-                        </button>
-                      </div>
-                      
-                      <!-- Documents List -->
-                      <div id="serverDocsList" style="display: none;">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                          <h6 class="mb-0"><i class="ti ti-files me-1"></i>Tài liệu có sẵn trên server</h6>
-                          <button type="button" class="btn btn-sm btn-outline-primary" onclick="loadServerDocuments()">
-                            <i class="ti ti-refresh me-1"></i>Làm mới
-                          </button>
-                        </div>
-                        <div id="documentsContainer" class="documents-list">
-                          <!-- Documents will be loaded here -->
-                        </div>
-                      </div>
-                      
-                      <!-- Success State -->
-                      <div id="serverDocSuccess" class="alert alert-success" style="display: none;">
-                        <div class="d-flex justify-content-between align-items-center">
-                          <div>
-                            <i class="ti ti-check me-2"></i>
-                            <span id="serverDocSourceName">Đã tải thành công từ server</span>
-                          </div>
-                          <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearServerDocSelection()">
-                            <i class="ti ti-x"></i>
-                          </button>
-                        </div>
+                  <div id="documentContentDetails" class="mt-2" style="display: none;">
+                    <div class="border rounded p-3 bg-light">
+                      <h6>Nội dung tài liệu:</h6>
+                      <div id="documentContentText" class="text-muted" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Document content will be displayed here -->
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
               
+              <!-- Advanced Configuration (Hidden by default) -->
               <div class="mb-3">
-                <label class="form-label">Yêu cầu đặc biệt</label>
-                <textarea id="specialRequirements" class="form-control" rows="3" placeholder="VD: Thêm ví dụ thực tế, bài tập thực hành, v.v..."></textarea>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAdvancedConfig()">
+                  <i class="ti ti-settings me-1"></i>
+                  <span id="advancedToggleText">Hiện cấu hình nâng cao</span>
+                </button>
+                
+                <div id="advancedConfig" class="mt-3" style="display: none;">
+                  <div class="border rounded p-3 bg-light">
+                    
+                    <!-- Time Configuration -->
+                    <div class="mb-4">
+                      <h6 class="mb-3"><i class="ti ti-clock me-1"></i>Cấu hình thời gian</h6>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <label class="form-label">Số tiết học</label>
+                          <input type="number" id="numberOfPeriods" class="form-control" value="3" min="1" max="10">
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">Số phút mỗi tiết</label>
+                          <input type="number" id="minutesPerPeriod" class="form-control" value="35" min="15" max="60">
+                        </div>
+                      </div>
+                      <small class="text-muted">Cấu hình thời gian cho bài giảng (mặc định: 3 tiết, 35 phút/tiết)</small>
+                    </div>
+
+                    <!-- Special Requirements -->
+                    <div class="mb-4">
+                      <h6 class="mb-3"><i class="ti ti-alert-circle me-1"></i>Yêu cầu đặc biệt</h6>
+                      <textarea id="specialRequirements" class="form-control" rows="3" placeholder="VD: Thêm ví dụ thực tế, bài tập thực hành, v.v..."></textarea>
+                      <small class="text-muted">Bổ sung thêm các yêu cầu đặc biệt cho bài giảng</small>
+                    </div>
+
+                    <!-- Reference Documents / Examples -->
+                    <div class="mb-4">
+                      <h6 class="mb-3"><i class="ti ti-file-text me-1"></i>Tài liệu tham khảo / Ví dụ minh họa</h6>
+                      <small class="text-muted d-block mb-2">Tải lên tài liệu để làm ví dụ minh họa cho cấu trúc bài giảng</small>
+                      
+                      <!-- Tab Navigation -->
+                      <ul class="nav nav-pills mb-3" id="documentSourceTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                          <button class="nav-link active" id="file-tab" data-bs-toggle="pill" data-bs-target="#file-content" type="button" role="tab">
+                            <i class="ti ti-file-upload me-1"></i>Tải file
+                          </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                          <button class="nav-link" id="url-tab" data-bs-toggle="pill" data-bs-target="#url-content" type="button" role="tab">
+                            <i class="ti ti-world me-1"></i>Từ URL
+                          </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                          <button class="nav-link" id="server-docs-tab" data-bs-toggle="pill" data-bs-target="#server-docs" type="button" role="tab" onclick="loadServerDocuments()">
+                            <i class="ti ti-server me-1"></i>Từ server
+                          </button>
+                        </li>
+                      </ul>
+                      
+                      <!-- Tab Content -->
+                      <div class="tab-content" id="documentSourceContent">
+                        <!-- File Upload Tab -->
+                        <div class="tab-pane fade show active" id="file-content" role="tabpanel">
+                          <div class="file-upload-area" id="fileUploadArea">
+                            <i class="ti ti-upload" style="font-size: 2rem; color: #6c757d;"></i>
+                            <p class="mb-2 mt-2">Kéo thả file tài liệu tham khảo hoặc click để chọn</p>
+                            <p class="text-muted small">Hỗ trợ: .txt, .doc, .docx (tối đa 10MB)</p>
+                            <input type="file" id="documentFile" accept=".txt,.doc,.docx" style="display: none;">
+                          </div>
+                          <div class="uploaded-file" id="uploadedFile">
+                            <div class="d-flex justify-content-between align-items-center">
+                              <span id="fileName"></span>
+                              <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
+                                <i class="ti ti-x"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- URL Input Tab -->
+                        <div class="tab-pane fade" id="url-content" role="tabpanel">
+                          <div class="url-input-area">
+                            <div class="input-group mb-2">
+                              <span class="input-group-text"><i class="ti ti-world"></i></span>
+                              <input type="url" id="documentUrl" class="form-control" placeholder="Nhập URL tài liệu tham khảo (VD: Google Docs, Wikipedia, trang tin tức)" />
+                              <button class="btn btn-primary" type="button" onclick="loadFromUrl()">
+                                <i class="ti ti-download me-1"></i>Tải nội dung
+                              </button>
+                            </div>
+                            <div class="url-help mb-2">
+                              <small class="text-muted">
+                                <i class="ti ti-info-circle me-1"></i>
+                                <strong>Hỗ trợ:</strong> Google Docs (public), Wikipedia, tin tức, blog. Nhấn Enter để tải nhanh.
+                              </small>
+                              <div class="mt-1">
+                                <small class="text-warning">
+                                  <i class="ti ti-alert-triangle me-1"></i>
+                                  <strong>Google Docs:</strong> Đảm bảo chia sẻ công khai ("Anyone with the link can view")
+                                </small>
+                              </div>
+                              <div class="mt-1">
+                                <small class="text-primary">
+                                  <i class="ti ti-bulb me-1"></i>
+                                  Thử ngay: 
+                                  <a href="#" onclick="document.getElementById('documentUrl').value='https://vi.wikipedia.org/wiki/Tr%C3%AD_tu%E1%BB%87_nh%C3%A2n_t%E1%BA%A1o'; return false;" 
+                                     class="text-decoration-none">
+                                    Wikipedia AI
+                                  </a>
+                                </small>
+                              </div>
+                            </div>
+                            <div class="url-loading" id="urlLoading" style="display: none;">
+                              <div class="d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                <span>Đang tải nội dung từ URL...</span>
+                              </div>
+                            </div>
+                            <div class="url-success" id="urlSuccess" style="display: none;">
+                              <div class="alert alert-success d-flex justify-content-between align-items-center mb-0">
+                                <div>
+                                  <i class="ti ti-check me-2"></i>
+                                  <span id="urlSourceName">Đã tải thành công từ URL</span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeUrl()">
+                                  <i class="ti ti-x"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Server Documents Tab -->
+                        <div class="tab-pane fade" id="server-docs" role="tabpanel">
+                          <div class="server-docs-area">
+                            <!-- Loading State -->
+                            <div id="serverDocsLoading" class="text-center py-4" style="display: none;">
+                              <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                              </div>
+                              <p class="mt-2 text-muted">Đang tải danh sách tài liệu từ server...</p>
+                            </div>
+                            
+                            <!-- Error State -->
+                            <div id="serverDocsError" class="alert alert-danger" style="display: none;">
+                              <i class="ti ti-alert-circle me-2"></i>
+                              <span id="serverDocsErrorMessage">Lỗi khi tải danh sách tài liệu</span>
+                              <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="loadServerDocuments()">
+                                <i class="ti ti-refresh me-1"></i>Thử lại
+                              </button>
+                            </div>
+                            
+                            <!-- Documents List -->
+                            <div id="serverDocsList" style="display: none;">
+                              <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0"><i class="ti ti-files me-1"></i>Tài liệu có sẵn trên server</h6>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="loadServerDocuments()">
+                                  <i class="ti ti-refresh me-1"></i>Làm mới
+                                </button>
+                              </div>
+                              <div id="documentsContainer" class="documents-list">
+                                <!-- Documents will be loaded here -->
+                              </div>
+                            </div>
+                            
+                            <!-- Success State -->
+                            <div id="serverDocSuccess" class="alert alert-success" style="display: none;">
+                              <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                  <i class="ti ti-check me-2"></i>
+                                  <span id="serverDocSourceName">Đã tải thành công từ server</span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearServerDocSelection()">
+                                  <i class="ti ti-x"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                  </div>
+                </div>
               </div>
               
               <button type="button" id="generateBtn" class="btn btn-primary btn-lg w-100" disabled>
@@ -789,11 +820,11 @@
         
         <!-- [ Extracted Content Editor ] start -->
         <div class="col-md-6">
-          <!-- Extracted Text Editor -->
+          <!-- Reference Document Viewer -->
           <div class="card mb-3" id="extractedTextCard" style="display: none;">
             <div class="card-header">
-              <h5><i class="ti ti-file-edit me-2"></i>Nội dung đã trích xuất</h5>
-              <small class="text-muted">Chỉnh sửa nội dung tài liệu trước khi tạo bài giảng</small>
+              <h5><i class="ti ti-file-text me-2"></i>Tài liệu tham khảo / Ví dụ minh họa</h5>
+              <small class="text-muted">Nội dung này sẽ được sử dụng làm ví dụ minh họa cho cấu trúc bài giảng (chỉ xem)</small>
             </div>
             <div class="card-body">
               <textarea id="extractedTextEditor" class="form-control"></textarea>
@@ -816,11 +847,8 @@
               <!-- Main Content Display Area -->
               <div id="contentDisplayArea" style="display: none;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h5><i class="ti ti-sparkles me-2"></i>Nội dung bài giảng</h5>
+                  <h5><i class="ti ti-sparkles me-2"></i>Nội dung bài giảng (Chỉ xem)</h5>
                   <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleEditor()">
-                      <i class="ti ti-edit me-1"></i>Chế độ chỉnh sửa
-                    </button>
                     <button type="button" class="btn btn-sm btn-outline-success" onclick="exportToWord()">
                       <i class="ti ti-file-text me-1"></i>Xuất Word
                     </button>
@@ -830,27 +858,9 @@
                   </div>
                 </div>
                 
-                <!-- Content Preview Mode -->
+                <!-- Content Preview Mode (View Only) -->
                 <div id="contentPreview" class="content-preview-area">
                   <!-- AI generated content will appear here -->
-                </div>
-                
-                <!-- Rich Text Editor Mode -->
-                <div id="editorMode" style="display: none;">
-                  <div class="mb-3">
-                    <label class="form-label">Tiêu đề bài giảng</label>
-                    <input type="text" id="lessonTitle" class="form-control" placeholder="Nhập tiêu đề bài giảng...">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Nội dung bài giảng</label>
-                    <textarea id="richTextEditor" class="form-control">
-                      <!-- Content will be loaded here -->
-                    </textarea>
-                  </div>
-                  <div class="text-end">
-                    <button type="button" class="btn btn-secondary me-2" onclick="cancelEdit()">Hủy</button>
-                    <button type="button" class="btn btn-primary" onclick="saveEditedContent()">Lưu thay đổi</button>
-                  </div>
                 </div>
               </div>
               
@@ -915,104 +925,76 @@
   <script>font_change("Public-Sans");</script>
 
   <script>
-    // Sample document structure data
-    const documentStructure = {
-      "Trí tuệ nhân tạo": {
-        "Lớp 1": ["Robot và máy tính xung quanh ta", "Máy tính có thể làm gì?", "Trò chơi với robot đơn giản"],
-        "Lớp 2": ["Thuật toán đơn giản trong cuộc sống", "Hướng dẫn robot di chuyển", "Nhận dạng hình dạng và màu sắc"],
-        "Lớp 3": ["Máy tính học như thế nào?", "Trò chơi đoán số với máy tính", "Tạo ra câu chuyện với AI"],
-        "Lớp 4": ["Giọng nói và máy tính", "Chatbot đơn giản", "AI trong trò chơi"],
-        "Lớp 5": ["Nhận dạng hình ảnh", "Dự đoán thời tiết với AI", "Tạo ra nghệ thuật với máy tính"],
-        "Lớp 6": [
-          {
-            "url": "https://docs.google.com/document/d/1U3GiUzKEAgYTs8NzTOJpZZgrqUW3AzXf/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
-            "title": "Lớp 1"
-          },
-          {
-            "url": "https://docs.google.com/document/d/1I1O0ZC8Z_kt3dzaeUjOG7kQh0dXa3qoo/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
-            "title": "Lớp 2"
-          },
-          {
-            "url": "https://docs.google.com/document/d/1Q9GspYikgV_H8tsYzwSaV56VoG0RQwF6/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
-            "title": "Lớp 3"
-          },
-          {
-            "url": "",
-            "title": "Lớp 4"
-          },
-          {
-            "url": "https://docs.google.com/document/d/1L28xtteSCWZ146KmDFDjzDE0i3ne7XO_/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
-            "title": "Lớp 5"
-          },
-          {
-            "url": "https://docs.google.com/document/d/1N5r1tR-c3F5OVsp4856pZF7AxvcBdj8t/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
-            "title": "Lớp 6"
-          },
-          {
-            "url": "https://docs.google.com/document/d/1uEEoGIdMaQmYc04OVkEDQh5kRJUjZyWQ/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
-            "title": "Lớp 7"
-          },
-          {
-            "url": "https://docs.google.com/document/d/1fnSS2Hr7pguT1GlUH9hMmmlzcEyyMH8g/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
-            "title": "Lớp 8"
-          },
-          {
-            "url": "https://docs.google.com/document/d/1e_92X0ZF56dUbcBGoM5eUkaWOrYzFETI/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
-            "title": "Lớp 9"
-          },
-          {
-            "url": "",
-            "title": "Lớp 10"
-          },
-          {
-            "url": "https://docs.google.com/document/d/1OizdNd13GSGv1D7soa4WnbkqjEnLI70J/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
-            "title": "Lớp 11"
-          },
-          {
-            "url": "https://docs.google.com/document/d/1fyikXNlnEJeh2iESLVlHdC9sGSnUbXGa/edit?usp=sharing&ouid=106038844123502608596&rtpof=true&sd=true",
-            "title": "Lớp 12"
-          }
-        ],
-        "Lớp 7": ["Xử lý ngôn ngữ tự nhiên", "Computer Vision", "Chatbot và trợ lý ảo"],
-        "Lớp 8": ["Neural Networks đơn giản", "Big Data và AI", "AI trong cuộc sống hàng ngày"],
-        "Lớp 9": ["Deep Learning cơ bản", "AI Ethics và đạo đức", "Tương lai của AI"],
-        "Lớp 10": ["Lịch sử và phát triển AI", "Các loại thuật toán ML", "Python cho AI"],
-        "Lớp 11": ["Supervised Learning", "Unsupervised Learning", "Reinforcement Learning"],
-        "Lớp 12": ["AI trong nghiên cứu khoa học", "Startup và AI", "Dự án AI thực tế"]
-      },
-      "Toán học": {
-        "Lớp 6": ["Tập hợp số tự nhiên", "Phép cộng và phép trừ", "Phép nhân và phép chia"],
-        "Lớp 7": ["Số hữu tỉ", "Số thực", "Đại lượng tỉ lệ"],
-        "Lớp 8": ["Phép nhân đa thức", "Phân thức đại số", "Phương trình bậc nhất"]
-      },
-      "Vật lý": {
-        "Lớp 6": ["Chuyển động cơ học", "Lực và áp suất", "Nhiệt học"],
-        "Lớp 7": ["Quang học", "Âm học", "Điện học cơ bản"],
-        "Lớp 8": ["Cơ học", "Nhiệt học nâng cao", "Điện học"]
-      },
-      "Hóa học": {
-        "Lớp 8": ["Chất và sự biến đổi chất", "Nguyên tử và phân tử", "Phản ứng hóa học"],
-        "Lớp 9": ["Dung dịch", "Axit - Bazơ - Muối", "Kim loại"]
-      },
-      "Sinh học": {
-        "Lớp 6": ["Bài 1: Cơ thể sống", "Bài 2: Cơ quan và hệ cơ quan", "Bài 3: Dinh dưỡng"],
-        "Lớp 7": ["Bài 1: Vi sinh vật", "Bài 2: Thực vật", "Bài 3: Động vật"],
-        "Lớp 8": ["Bài 1: Cơ thể người", "Bài 2: Hệ tuần hoàn", "Bài 3: Hệ hô hấp"]
-      }
-    };
-
+    // Global variables for form data
     let selectedDocument = {
       subject: null,
       grade: null,
       lesson: null
     };
 
-    let extractedDocumentText = '';
+    let extractedDocumentText = '';  // For reference documents (files/URLs)
     let extractedFileName = '';
+    let selectedDocumentContent = '';  // For selected document from backend API
+
+    // Function to convert Vietnamese text to ASCII-safe filename
+    function createSafeFilename(text) {
+      // Vietnamese to ASCII mapping
+      const vietnameseMap = {
+        'à': 'a', 'á': 'a', 'ạ': 'a', 'ả': 'a', 'ã': 'a',
+        'â': 'a', 'ầ': 'a', 'ấ': 'a', 'ậ': 'a', 'ẩ': 'a', 'ẫ': 'a',
+        'ă': 'a', 'ằ': 'a', 'ắ': 'a', 'ặ': 'a', 'ẳ': 'a', 'ẵ': 'a',
+        'è': 'e', 'é': 'e', 'ẹ': 'e', 'ẻ': 'e', 'ẽ': 'e',
+        'ê': 'e', 'ề': 'e', 'ế': 'e', 'ệ': 'e', 'ể': 'e', 'ễ': 'e',
+        'ì': 'i', 'í': 'i', 'ị': 'i', 'ỉ': 'i', 'ĩ': 'i',
+        'ò': 'o', 'ó': 'o', 'ọ': 'o', 'ỏ': 'o', 'õ': 'o',
+        'ô': 'o', 'ồ': 'o', 'ố': 'o', 'ộ': 'o', 'ổ': 'o', 'ỗ': 'o',
+        'ơ': 'o', 'ờ': 'o', 'ớ': 'o', 'ợ': 'o', 'ở': 'o', 'ỡ': 'o',
+        'ù': 'u', 'ú': 'u', 'ụ': 'u', 'ủ': 'u', 'ũ': 'u',
+        'ư': 'u', 'ừ': 'u', 'ứ': 'u', 'ự': 'u', 'ử': 'u', 'ữ': 'u',
+        'ỳ': 'y', 'ý': 'y', 'ỵ': 'y', 'ỷ': 'y', 'ỹ': 'y',
+        'đ': 'd',
+        // Uppercase
+        'À': 'A', 'Á': 'A', 'Ạ': 'A', 'Ả': 'A', 'Ã': 'A',
+        'Â': 'A', 'Ầ': 'A', 'Ấ': 'A', 'Ậ': 'A', 'Ẩ': 'A', 'Ẫ': 'A',
+        'Ă': 'A', 'Ằ': 'A', 'Ắ': 'A', 'Ặ': 'A', 'Ẳ': 'A', 'Ẵ': 'A',
+        'È': 'E', 'É': 'E', 'Ẹ': 'E', 'Ẻ': 'E', 'Ẽ': 'E',
+        'Ê': 'E', 'Ề': 'E', 'Ế': 'E', 'Ệ': 'E', 'Ể': 'E', 'Ễ': 'E',
+        'Ì': 'I', 'Í': 'I', 'Ị': 'I', 'Ỉ': 'I', 'Ĩ': 'I',
+        'Ò': 'O', 'Ó': 'O', 'Ọ': 'O', 'Ỏ': 'O', 'Õ': 'O',
+        'Ô': 'O', 'Ồ': 'O', 'Ố': 'O', 'Ộ': 'O', 'Ổ': 'O', 'Ỗ': 'O',
+        'Ơ': 'O', 'Ờ': 'O', 'Ớ': 'O', 'Ợ': 'O', 'Ở': 'O', 'Ỡ': 'O',
+        'Ù': 'U', 'Ú': 'U', 'Ụ': 'U', 'Ủ': 'U', 'Ũ': 'U',
+        'Ư': 'U', 'Ừ': 'U', 'Ứ': 'U', 'Ự': 'U', 'Ử': 'U', 'Ữ': 'U',
+        'Ỳ': 'Y', 'Ý': 'Y', 'Ỵ': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y',
+        'Đ': 'D'
+      };
+
+      // Convert Vietnamese characters to ASCII
+      let result = text;
+      for (const [vietnamese, ascii] of Object.entries(vietnameseMap)) {
+        result = result.replace(new RegExp(vietnamese, 'g'), ascii);
+      }
+      
+      // Keep only ASCII letters, numbers, spaces, hyphens, and underscores
+      result = result.replace(/[^a-zA-Z0-9\s\-_]/g, '');
+      
+      // Replace spaces with underscores and collapse multiple separators
+      result = result.replace(/\s+/g, '_').replace(/[_\-]+/g, '_');
+      
+      // Remove leading/trailing separators
+      result = result.replace(/^[_\-]+|[_\-]+$/g, '');
+      
+      // Limit length and ensure it's not empty
+      result = result.substring(0, 50);
+      if (!result) {
+        result = 'lesson_plan';
+      }
+      
+      return result;
+    }
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', function() {
-      populateDocumentTree();
       setupFileUpload();
       initializeTinyMCE();
       
@@ -1027,46 +1009,258 @@
       });
     });
 
+    // Subject selection change handler
+    async function onSubjectChange() {
+      const subjectSelect = document.getElementById('subjectSelect');
+      const gradeSelect = document.getElementById('gradeSelect');
+      const lessonSelect = document.getElementById('lessonSelect');
+      
+      // Clear and disable dependent dropdowns
+      gradeSelect.innerHTML = '<option value="">Chọn lớp</option>';
+      lessonSelect.innerHTML = '<option value="">Chọn bài học</option>';
+      gradeSelect.disabled = true;
+      lessonSelect.disabled = true;
+      
+      // Hide document preview
+      document.getElementById('documentContentPreview').style.display = 'none';
+      selectedDocumentContent = '';
+      
+      // Update selected document
+      selectedDocument.subject = subjectSelect.value;
+      selectedDocument.grade = null;
+      selectedDocument.lesson = null;
+      
+      // Disable generate button until lesson is selected
+      document.getElementById('generateBtn').disabled = true;
+      
+      if (subjectSelect.value) {
+        // Populate grades based on subject
+        populateGrades(subjectSelect.value);
+        gradeSelect.disabled = false;
+      }
+    }
+
+    // Grade selection change handler
+    function onGradeChange() {
+      const gradeSelect = document.getElementById('gradeSelect');
+      const lessonSelect = document.getElementById('lessonSelect');
+      
+      // Clear and disable lesson dropdown
+      lessonSelect.innerHTML = '<option value="">Chọn bài học</option>';
+      lessonSelect.disabled = true;
+      
+      // Hide document preview
+      document.getElementById('documentContentPreview').style.display = 'none';
+      selectedDocumentContent = '';
+      
+      // Update selected document
+      selectedDocument.grade = gradeSelect.value;
+      selectedDocument.lesson = null;
+      
+      // Disable generate button until lesson is selected
+      document.getElementById('generateBtn').disabled = true;
+      
+      if (gradeSelect.value) {
+        // Populate lessons based on grade
+        populateLessons(selectedDocument.subject, gradeSelect.value);
+        lessonSelect.disabled = false;
+      }
+    }
+
+    // Lesson selection change handler
+    async function onLessonChange() {
+      const lessonSelect = document.getElementById('lessonSelect');
+      
+      // Update selected document
+      selectedDocument.lesson = lessonSelect.value;
+      
+      if (lessonSelect.value) {
+        // Load document content from backend
+        await loadDocumentContent(selectedDocument.subject, selectedDocument.grade, selectedDocument.lesson);
+        
+        // Enable generate button
+        document.getElementById('generateBtn').disabled = false;
+      } else {
+        // Hide document preview
+        document.getElementById('documentContentPreview').style.display = 'none';
+        selectedDocumentContent = '';
+        
+        // Disable generate button
+        document.getElementById('generateBtn').disabled = true;
+      }
+    }
+
+    // Populate grades dropdown based on subject
+    function populateGrades(subject) {
+      const gradeSelect = document.getElementById('gradeSelect');
+      let grades = [];
+      
+      // Define available grades for each subject
+      switch(subject) {
+        case 'AI-01':
+          grades = ['Lớp 1', 'Lớp 2', 'Lớp 3', 'Lớp 4', 'Lớp 5', 'Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10', 'Lớp 11', 'Lớp 12'];
+          break;
+        case 'TOAN':
+          grades = ['Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10', 'Lớp 11', 'Lớp 12'];
+          break;
+        case 'VATLY':
+          grades = ['Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10', 'Lớp 11', 'Lớp 12'];
+          break;
+        case 'HOAHOC':
+          grades = ['Lớp 8', 'Lớp 9', 'Lớp 10', 'Lớp 11', 'Lớp 12'];
+          break;
+        case 'SINHHOC':
+          grades = ['Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10', 'Lớp 11', 'Lớp 12'];
+          break;
+        default:
+          grades = [];
+      }
+      
+      grades.forEach(grade => {
+        const option = document.createElement('option');
+        option.value = grade;
+        option.textContent = grade;
+        gradeSelect.appendChild(option);
+      });
+    }
+
+    // Populate lessons dropdown based on grade
+    function populateLessons(subject, grade) {
+      const lessonSelect = document.getElementById('lessonSelect');
+      
+      // Generate lessons (Bài 1 to Bài 12 for most subjects)
+      const lessonCount = 12;
+      for (let i = 1; i <= lessonCount; i++) {
+        const option = document.createElement('option');
+        option.value = `Bài ${i}`;
+        option.textContent = `Bài ${i}`;
+        lessonSelect.appendChild(option);
+      }
+    }
+
+    // Load document content from backend API
+    async function loadDocumentContent(subject, grade, lesson) {
+      try {
+        // Show loading state
+        document.getElementById('documentContentPreview').style.display = 'block';
+        document.getElementById('selectedDocumentInfo').innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>Đang tải...';
+        
+        // Prepare API request URL with parameters
+        // Special formatting for AI subject
+        let apiMon, apiLop, apiBai;
+        
+        if (subject === 'AI-01') {
+          // For AI subject: mon="AI", send only numbers for lop and bai
+          apiMon = 'AI';
+          apiLop = grade.replace('Lớp ', ''); // Extract number: "Lớp 11" → "11"
+          apiBai = lesson.replace('Bài ', ''); // Extract number: "Bài 11" → "11"
+        } else {
+          // For other subjects: use original values
+          apiMon = subject;
+          apiLop = grade;
+          apiBai = lesson;
+        }
+        
+        const params = new URLSearchParams({
+          mon: apiMon,
+          lop: apiLop,
+          bai: apiBai
+        });
+        const apiUrl = `https://aimarketingvn.com/webhook/list-by-subject?${params.toString()}`;
+        
+        console.log('Loading document content:', { subject, grade, lesson });
+        console.log('API parameters:', { mon: apiMon, lop: apiLop, bai: apiBai });
+        console.log('API URL:', apiUrl);
+        
+        // Call the backend API with GET method
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + (localStorage.getItem('access_token') || 'demo-token')
+          }
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('API Response:', result);
+          
+          // Extract content from response
+          let documentContent = '';
+          if (result && result.noi_dung) {
+            documentContent = result.noi_dung;
+          } else if (Array.isArray(result) && result.length > 0 && result[0].noi_dung) {
+            documentContent = result[0].noi_dung;
+          } else {
+            documentContent = 'Nội dung tài liệu đang được cập nhật.';
+          }
+          
+          // Store the content
+          selectedDocumentContent = documentContent;
+          
+          // Update UI
+          document.getElementById('selectedDocumentInfo').textContent = `${subject} - ${grade} - ${lesson}`;
+          document.getElementById('documentContentText').textContent = documentContent.substring(0, 500) + (documentContent.length > 500 ? '...' : '');
+          
+          console.log('Document content loaded successfully:', documentContent.substring(0, 100) + '...');
+          
+        } else {
+          throw new Error(`API Error: ${response.status} - ${response.statusText}`);
+        }
+        
+      } catch (error) {
+        console.error('Error loading document content:', error);
+        
+        // Show fallback content
+        selectedDocumentContent = `Nội dung cho ${subject} - ${grade} - ${lesson} đang được cập nhật.`;
+        document.getElementById('selectedDocumentInfo').textContent = `${subject} - ${grade} - ${lesson} (Nội dung mẫu)`;
+        document.getElementById('documentContentText').textContent = selectedDocumentContent;
+        
+        console.warn('Using fallback content due to error:', error.message);
+      }
+    }
+
+    // Toggle document content visibility
+    function toggleDocumentContent() {
+      const details = document.getElementById('documentContentDetails');
+      const button = details.previousElementSibling.querySelector('button');
+      
+      if (details.style.display === 'none') {
+        details.style.display = 'block';
+        button.innerHTML = '<i class="ti ti-eye-off me-1"></i>Ẩn nội dung';
+      } else {
+        details.style.display = 'none';
+        button.innerHTML = '<i class="ti ti-eye me-1"></i>Xem nội dung';
+      }
+    }
+
     function initializeTinyMCE() {
-      // Initialize main content editor
+      // Initialize main content editor (VIEW-ONLY MODE)
       tinymce.init({
         selector: '#richTextEditor',
         height: 400,
         menubar: false,
-        plugins: [
-          'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-          'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-          'insertdatetime', 'media', 'table', 'help', 'wordcount'
-        ],
-        toolbar: 'undo redo | blocks | ' +
-          'bold italic forecolor | alignleft aligncenter ' +
-          'alignright alignjustify | bullist numlist outdent indent | ' +
-          'removeformat | help',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 16px; line-height: 1.6; }',
+        toolbar: false,
+        readonly: true,
+        plugins: ['visualblocks', 'fullscreen'],
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 16px; line-height: 1.6; background-color: #f8f9fa; }',
         language: 'vi',
         branding: false,
         statusbar: false
       });
 
-      // Initialize extracted text editor
+      // Initialize extracted text editor (VIEW-ONLY MODE)
       tinymce.init({
         selector: '#extractedTextEditor',
         height: 400,
         menubar: false,
-        plugins: [
-          'advlist', 'autolink', 'lists', 'link', 'charmap',
-          'searchreplace', 'visualblocks', 'code', 'fullscreen',
-          'insertdatetime', 'table', 'help', 'wordcount'
-        ],
-        toolbar: 'undo redo | blocks | ' +
-          'bold italic forecolor | alignleft aligncenter ' +
-          'alignright alignjustify | bullist numlist outdent indent | ' +
-          'removeformat | fullscreen',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 16px; line-height: 1.6; padding: 15px; }',
+        toolbar: false,
+        readonly: true,
+        plugins: ['visualblocks', 'fullscreen'],
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 16px; line-height: 1.6; padding: 15px; background-color: #f8f9fa; }',
         language: 'vi',
         branding: false,
         statusbar: true,
-        placeholder: 'Nội dung được trích xuất từ file sẽ hiển thị ở đây. Bạn có thể chỉnh sửa trước khi tạo bài giảng...'
+        placeholder: 'Tài liệu tham khảo / Ví dụ minh họa sẽ hiển thị ở đây (chỉ xem, không thể chỉnh sửa)...'
       });
 
       // Initialize document editing editor
@@ -1167,7 +1361,7 @@
 
         extractedDocumentText = text;
         
-        // Show extracted text in TinyMCE editor
+        // Show reference document text in TinyMCE editor
         const setExtractedContent = () => {
           const editor = tinymce.get('extractedTextEditor');
           if (editor) {
@@ -1437,228 +1631,7 @@
       }
     }
 
-    // Extract document title from Google Docs (using EXACT same method as working "Từ URL")
-    async function loadGoogleDocsTitle(lessonObj, lessonDiv, subject, grade, index) {
-      try {
-        // Use EXACT same URL handling as working loadFromUrl function
-        let url = lessonObj.url;
-        url = convertToAccessibleUrl(url);
-        let htmlContent = '';
-        
-        try {
-          // Method 1: Try direct fetch (EXACT same as loadFromUrl)
-          const response = await fetch(url, {
-            method: 'GET',
-            mode: 'cors',
-            headers: {
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.1'
-            }
-          });
-          
-          if (response.ok) {
-            htmlContent = await response.text();
-          } else {
-            throw new Error('Không thể truy cập URL');
-          }
-        } catch (corsError) {
-          // Method 2: Use a CORS proxy (EXACT same as loadFromUrl)
-          console.warn('Direct fetch failed, trying proxy method:', corsError);
-          
-          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-          const proxyResponse = await fetch(proxyUrl);
-          
-          if (proxyResponse.ok) {
-            const data = await proxyResponse.json();
-            htmlContent = data.contents;
-          } else {
-            throw new Error('Không thể tải nội dung từ URL. URL có thể bị chặn hoặc không khả dụng.');
-          }
-        }
-        
-        // Extract title from HTML (enhanced title extraction)
-        let title = 'Đang cập nhật';
-        
-        // Try multiple methods to extract title
-        const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
-        if (titleMatch && titleMatch[1]) {
-          title = titleMatch[1].trim();
-          // Remove common Google Docs suffixes
-          title = title.replace(/\s*-\s*Google\s*Docs$/i, '');
-          title = title.replace(/\s*-\s*Tài liệu Google$/i, '');
-          title = title.replace(/\s*-\s*Google\s*Drive$/i, '');
-        }
-        
-        // If title is still generic, try to extract from content
-        if (title === 'Đang cập nhật' || title.includes('Google Docs') || title.length < 3) {
-          // Try to extract from first heading in content
-          const headingMatch = htmlContent.match(/<h[1-6][^>]*>([^<]+)<\/h[1-6]>/i);
-          if (headingMatch && headingMatch[1] && headingMatch[1].trim().length > 3) {
-            title = headingMatch[1].trim();
-          }
-        }
-        
-        // Update the lesson object in documentStructure
-        documentStructure[subject][grade][index].title = title;
-        
-        // Update the visual element
-        lessonDiv.innerHTML = `<i class="ti ti-file-text me-2"></i>${title}`;
-        lessonDiv.classList.remove('loading-lesson');
-        
-        console.log(`✅ Đã tải tiêu đề: ${title}`);
-        
-      } catch (error) {
-        console.warn('Error loading Google Docs title:', error);
-        
-        // Update with fallback title
-        const fallbackTitle = 'Đang cập nhật';
-        documentStructure[subject][grade][index].title = fallbackTitle;
-        lessonDiv.innerHTML = `<i class="ti ti-alert-circle me-2"></i>${fallbackTitle}`;
-        lessonDiv.classList.remove('loading-lesson');
-        lessonDiv.classList.add('error-lesson');
-        
-        console.warn(`⚠️ Lỗi tải tiêu đề: ${error.message}`);
-      }
-    }
 
-    // Google Docs Content Loading Function (using EXACT same method as working "Từ URL")
-    async function loadGoogleDocsContent(lessonObj) {
-      try {
-        // Show loading state in the extracted text card
-        document.getElementById('extractedTextCard').style.display = 'block';
-        
-        // Show loading message in TinyMCE editor
-        const setLoadingContent = () => {
-          const editor = tinymce.get('extractedTextEditor');
-          if (editor) {
-            editor.setContent(`
-              <div style="text-align: center; padding: 20px; color: #6c757d;">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2">Đang tải nội dung từ "${lessonObj.title}"...</p>
-              </div>
-            `);
-          } else {
-            setTimeout(setLoadingContent, 100);
-          }
-        };
-        setLoadingContent();
-        
-        // Use EXACT same implementation as working loadFromUrl function
-        let url = lessonObj.url;
-        url = convertToAccessibleUrl(url);
-        
-        let text = '';
-        let sourceName = '';
-        
-        try {
-          // Method 1: Try direct fetch (EXACT same as loadFromUrl)
-          const response = await fetch(url, {
-            method: 'GET',
-            mode: 'cors',
-            headers: {
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.1'
-            }
-          });
-          
-          if (response.ok) {
-            const contentType = response.headers.get('content-type');
-            const content = await response.text();
-            
-            if (contentType && contentType.includes('text/html')) {
-              // Extract text from HTML
-              text = extractTextFromHTML(content);
-            } else {
-              // Plain text content
-              text = content;
-            }
-            
-            sourceName = new URL(url).hostname;
-          } else {
-            throw new Error('Không thể truy cập URL');
-          }
-        } catch (corsError) {
-          // Method 2: Use a CORS proxy (EXACT same as loadFromUrl)
-          console.warn('Direct fetch failed, trying proxy method:', corsError);
-          
-          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-          const proxyResponse = await fetch(proxyUrl);
-          
-          if (proxyResponse.ok) {
-            const data = await proxyResponse.json();
-            text = extractTextFromHTML(data.contents);
-            sourceName = new URL(url).hostname;
-          } else {
-            throw new Error('Không thể tải nội dung từ URL. URL có thể bị chặn hoặc không khả dụng.');
-          }
-        }
-        
-        if (!text || text.trim().length < 10) {
-          throw new Error('Không thể trích xuất nội dung text từ URL này');
-        }
-        
-        // Store the extracted content (EXACT same as loadFromUrl)
-        extractedDocumentText = text;
-        extractedFileName = `content-from-${sourceName}`;
-        
-        // Display in TinyMCE editor (EXACT same as loadFromUrl)
-        const setExtractedContent = () => {
-          const editor = tinymce.get('extractedTextEditor');
-          if (editor) {
-            const htmlContent = text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-            editor.setContent(`<p>${htmlContent}</p>`);
-          } else {
-            setTimeout(setExtractedContent, 100);
-          }
-        };
-        setExtractedContent();
-        
-        // Show success state (same as loadFromUrl)
-        document.getElementById('extractedTextCard').style.display = 'block';
-        
-        // Enable generate button (same as loadFromUrl)
-        if (selectedDocument && selectedDocument.lesson) {
-          document.getElementById('generateBtn').disabled = false;
-        }
-        
-        console.log(`✅ Đã tải thành công nội dung: ${lessonObj.title} từ ${sourceName}`);
-        
-      } catch (error) {
-        console.error('Error loading Google Docs content:', error);
-        
-        // Show "đang cập nhật" message (only if all methods fail)
-        const setUpdateContent = () => {
-          const editor = tinymce.get('extractedTextEditor');
-          if (editor) {
-            editor.setContent(`
-              <div style="text-align: center; padding: 40px; color: #dc3545; border: 2px dashed #dc3545; border-radius: 8px; background: #fff5f5;">
-                <h5 style="color: #dc3545; margin-bottom: 15px;">
-                  <i class="ti ti-alert-circle" style="font-size: 1.5rem;"></i><br>
-                  Đang cập nhật
-                </h5>
-                <p style="color: #6c757d; margin: 0;">
-                  Nội dung "${lessonObj.title}" đang được cập nhật.<br>
-                  Vui lòng thử lại sau hoặc sử dụng tài liệu khác.<br><br>
-                  <small>Lỗi: ${error.message}</small>
-                </p>
-              </div>
-            `);
-            
-            // Store update message
-            extractedDocumentText = `Nội dung "${lessonObj.title}" đang được cập nhật. Vui lòng thử lại sau.`;
-            extractedFileName = `${lessonObj.title}-updating`;
-          } else {
-            setTimeout(setUpdateContent, 100);
-          }
-        };
-        setUpdateContent();
-        
-        // Enable generate button with update message
-        document.getElementById('generateBtn').disabled = false;
-        
-        console.warn(`⚠️ Nội dung "${lessonObj.title}" đang cập nhật - Lỗi: ${error.message}`);
-      }
-    }
 
     // Server Documents Functions
     async function loadServerDocuments() {
@@ -1897,112 +1870,11 @@
       return text;
     }
 
-    function populateDocumentTree() {
-      const container = document.getElementById('documentTree');
-      container.innerHTML = '';
 
-      Object.keys(documentStructure).forEach(subject => {
-        const subjectDiv = createTreeItem(subject, 'subject', subject);
-        container.appendChild(subjectDiv);
-
-        const subjectLevel = document.createElement('div');
-        subjectLevel.className = 'tree-level';
-        subjectLevel.style.display = 'none';
-
-        Object.keys(documentStructure[subject]).forEach(grade => {
-          const gradeDiv = createTreeItem(grade, 'grade', subject, grade);
-          subjectLevel.appendChild(gradeDiv);
-
-          const gradeLevel = document.createElement('div');
-          gradeLevel.className = 'tree-level';
-          gradeLevel.style.display = 'none';
-
-          documentStructure[subject][grade].forEach((lesson, index) => {
-            // Handle both string lessons and object lessons (with Google Docs links)
-            const lessonTitle = typeof lesson === 'object' ? lesson.title : lesson;
-            const lessonDiv = createTreeItem(lessonTitle, 'lesson', subject, grade, lesson);
-            
-            // Add loading indicator for Google Docs lessons
-            if (typeof lesson === 'object' && lesson.url && lesson.title === 'Đang tải...') {
-              lessonDiv.classList.add('loading-lesson');
-              // Load actual file name asynchronously
-              loadGoogleDocsTitle(lesson, lessonDiv, subject, grade, index);
-            }
-            
-            gradeLevel.appendChild(lessonDiv);
-          });
-
-          gradeDiv.appendChild(gradeLevel);
-        });
-
-        subjectDiv.appendChild(subjectLevel);
-      });
-    }
-
-    function createTreeItem(text, type, subject, grade = null, lesson = null) {
-      const div = document.createElement('div');
-      div.className = 'tree-item';
-      div.innerHTML = `<i class="ti ti-${getIcon(type)} me-2"></i>${text}`;
-      
-      div.addEventListener('click', function(e) {
-        e.stopPropagation();
-        
-        if (type === 'subject') {
-          toggleTreeLevel(this);
-          selectedDocument.subject = subject;
-          selectedDocument.grade = null;
-          selectedDocument.lesson = null;
-        } else if (type === 'grade') {
-          toggleTreeLevel(this);
-          selectedDocument.subject = subject;
-          selectedDocument.grade = grade;
-          selectedDocument.lesson = null;
-        } else if (type === 'lesson') {
-          // Clear all selections
-          document.querySelectorAll('.tree-item').forEach(item => item.classList.remove('selected'));
-          this.classList.add('selected');
-          
-          selectedDocument.subject = subject;
-          selectedDocument.grade = grade;
-          selectedDocument.lesson = lesson;
-          
-          // Check if this is a Google Docs lesson (object with URL)
-          if (typeof lesson === 'object' && lesson.url) {
-            loadGoogleDocsContent(lesson);
-          } else {
-            // For regular lessons, enable generate button only if we have document uploaded
-            document.getElementById('generateBtn').disabled = !extractedDocumentText;
-          }
-        }
-      });
-
-      return div;
-    }
-
-    function getIcon(type) {
-      switch(type) {
-        case 'subject': return 'book';
-        case 'grade': return 'school';
-        case 'lesson': return 'file-text';
-        default: return 'circle';
-      }
-    }
-
-    function toggleTreeLevel(element) {
-      const level = element.querySelector('.tree-level');
-      if (level) {
-        level.style.display = level.style.display === 'none' ? 'block' : 'none';
-      }
-    }
 
     async function generateLessonContent() {
       if (!selectedDocument.lesson) {
         alert('Vui lòng chọn bài học cụ thể');
-        return;
-      }
-
-      if (!extractedDocumentText) {
-        alert('Vui lòng tải lên tài liệu tham khảo');
         return;
       }
 
@@ -2013,25 +1885,50 @@
       document.getElementById('loadingSpinner').style.display = 'block';
       document.getElementById('generateBtn').disabled = true;
 
-      // Get document text from TinyMCE editor if available, otherwise use stored text
-      let documentText = extractedDocumentText;
+      // Get document text from selected document from backend API
+      let documentText = selectedDocumentContent;
+      
+      // If no selected document content, use basic lesson info
+      if (!documentText && selectedDocument.lesson) {
+        documentText = `Môn học: ${selectedDocument.subject}\nLớp: ${selectedDocument.grade}\nBài học: ${selectedDocument.lesson}`;
+      }
+
+      // Get reference document text from TinyMCE editor if available, otherwise use stored text
+      let referenceDocumentText = extractedDocumentText;
       const extractedEditor = tinymce.get('extractedTextEditor');
       if (extractedEditor) {
         // Convert HTML back to plain text for API
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = extractedEditor.getContent();
-        documentText = tempDiv.textContent || tempDiv.innerText || extractedDocumentText;
+        referenceDocumentText = tempDiv.textContent || tempDiv.innerText || extractedDocumentText;
       }
+
+      // Get advanced config
+      const numberOfPeriods = document.getElementById('numberOfPeriods').value;
+      const minutesPerPeriod = document.getElementById('minutesPerPeriod').value;
 
       // Prepare request data for the webhook
       const requestData = {
         subject: selectedDocument.subject,
         grade: selectedDocument.grade,
         lesson: selectedDocument.lesson,
-        documentText: documentText,
-        specialRequirements: requirements,
+        documentText: documentText || 'Không có',
+        specialRequirements: requirements || 'Không có',
+        example: referenceDocumentText || 'Không có',
+        numberOfPeriods: numberOfPeriods || 3,
+        minutesPerPeriod: minutesPerPeriod || 35,
         timestamp: new Date().toISOString()
       };
+
+      console.log('Request data:', {
+        subject: selectedDocument.subject,
+        grade: selectedDocument.grade,
+        lesson: selectedDocument.lesson,
+        documentText: documentText ? documentText.substring(0, 100) + '...' : 'Không có',
+        example: referenceDocumentText ? referenceDocumentText.substring(0, 100) + '...' : 'Không có',
+        selectedDocumentContent: selectedDocumentContent ? selectedDocumentContent.substring(0, 100) + '...' : 'Không có',
+        extractedDocumentText: extractedDocumentText ? extractedDocumentText.substring(0, 100) + '...' : 'Không có'
+      });
 
       try {
         // Send to the specified webhook endpoint
@@ -2062,23 +1959,16 @@
          let formattedContent = '';
          let outputContent = '';
          
-         // Debug: Log the raw result
-         console.log('API Response received:', result);
-         
          if (Array.isArray(result) && result.length > 0 && result[0].output) {
            // Extract output from first element of array
            outputContent = result[0].output;
-           console.log('Extracted output content (length):', outputContent.length);
-           console.log('First 200 chars:', outputContent.substring(0, 200));
            formattedContent = formatAIOutput(outputContent);
          } else if (result.output) {
            // Handle direct object format as fallback
            outputContent = result.output;
-           console.log('Direct output content (length):', outputContent.length);
            formattedContent = formatAIOutput(outputContent);
          } else {
            // Fallback if expected format is not found
-           console.log('Unexpected format, showing raw response');
            formattedContent = `
              <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
                <h5>📄 Phản hồi từ API:</h5>
@@ -2090,7 +1980,7 @@
            `;
          }
          
-         console.log('Formatted content (length):', formattedContent.length);
+
 
          // Display the formatted API response
          const contentToDisplay = {
@@ -2107,11 +1997,7 @@
            }
          };
          
-         console.log('About to display content:', {
-           title: contentToDisplay.title,
-           contentLength: contentToDisplay.content.length,
-           outputLength: outputContent.length
-         });
+
          
          displayGeneratedContent(contentToDisplay);
          
@@ -2122,13 +2008,12 @@
            const emptyState = document.getElementById('emptyState');
            
            if (contentDisplayArea && contentDisplayArea.style.display === 'none') {
-             console.log('Fallback: Force displaying content area');
+
              emptyState.style.display = 'none';
              contentDisplayArea.style.display = 'block';
            }
            
            if (preview && (!preview.innerHTML || preview.innerHTML.trim() === '')) {
-             console.log('Fallback: Force displaying content');
              preview.innerHTML = `
                <div style="background: #fff3cd; padding: 20px; border: 1px solid #ffc107; border-radius: 8px;">
                  <h5><i class="ti ti-alert-triangle me-2"></i>Nội dung bài giảng (Hiển thị dự phòng)</h5>
@@ -2158,10 +2043,10 @@
     }
 
     function formatAIOutput(output) {
-      console.log('formatAIOutput called with:', output ? `${output.length} characters` : 'null/undefined');
+
       
       if (!output || output.trim() === '') {
-        console.log('Empty output detected');
+        
         return `
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
             <p style="color: #666; margin: 0;">Không có nội dung để hiển thị</p>
@@ -2171,7 +2056,7 @@
 
       // If the output is already HTML, return as is
       if (output.includes('<h') || output.includes('<p') || output.includes('<div')) {
-        console.log('HTML content detected');
+
         return `
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 25px; color: white; margin: 20px 0;">
             <h4 style="color: white; margin-bottom: 20px;">
@@ -2184,7 +2069,7 @@
         `;
       }
 
-      console.log('Processing plain text content');
+      
       
       // Convert plain text to formatted HTML
       let formattedOutput = output
@@ -2219,7 +2104,7 @@
         </div>
       `;
       
-      console.log('formatAIOutput result length:', result.length);
+      
       return result;
     }
 
@@ -2240,43 +2125,43 @@
           <p><strong>Giáo viên:</strong> Giáo án, bảng phụ, máy chiếu, tài liệu tham khảo</p>
           <p><strong>Học sinh:</strong> Sách giáo khoa ${requestData.subject} ${requestData.grade}, vở ghi</p>
           
-          <h3>III. Nội dung tài liệu tham khảo</h3>
+          <h3>III. Nội dung tài liệu từ backend</h3>
           <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 10px 0;">
-            <p><strong>Tóm tắt nội dung:</strong></p>
+            <p><strong>Nội dung bài học từ database:</strong></p>
             <p style="font-style: italic;">${documentSummary}</p>
           </div>
           
-          <h3>IV. Tiến trình dạy học</h3>
+          <h3>IV. Tiến trình dạy học (${requestData.numberOfPeriods || 3} tiết - ${requestData.minutesPerPeriod || 35} phút/tiết)</h3>
           
           <h4>1. Hoạt động khởi động (5 phút)</h4>
           <p>- Ôn tập kiến thức đã học từ tài liệu</p>
-          <p>- Đặt vấn đề dẫn dắt vào bài mới dựa trên nội dung tài liệu</p>
+          <p>- Đặt vấn đề dẫn dắt vào bài mới dựa trên nội dung ${requestData.lesson}</p>
           
           <h4>2. Hoạt động hình thành kiến thức (25 phút)</h4>
-          <p><strong>Hoạt động 1:</strong> Phân tích nội dung tài liệu</p>
-          <p>- Giáo viên hướng dẫn học sinh đọc hiểu tài liệu</p>
-          <p>- Học sinh thảo luận nhóm về các điểm chính trong tài liệu</p>
+          <p><strong>Hoạt động 1:</strong> Phân tích nội dung bài học</p>
+          <p>- Giáo viên hướng dẫn học sinh đọc hiểu tài liệu từ database</p>
+          <p>- Học sinh thảo luận nhóm về các điểm chính trong ${requestData.lesson}</p>
           
           <p><strong>Hoạt động 2:</strong> Liên kết với kiến thức đã học</p>
-          <p>- Kết hợp nội dung tài liệu với chương trình học</p>
+          <p>- Kết hợp nội dung bài học với chương trình ${requestData.subject} ${requestData.grade}</p>
           <p>- Học sinh thực hành ứng dụng kiến thức từ tài liệu</p>
           
           <h4>3. Hoạt động luyện tập (10 phút)</h4>
-          <p>- Bài tập dựa trên nội dung tài liệu</p>
+          <p>- Bài tập dựa trên nội dung ${requestData.lesson}</p>
           <p>- Thảo luận và giải quyết vấn đề</p>
           
           <h4>4. Hoạt động vận dụng (5 phút)</h4>
-          <p>- Áp dụng kiến thức từ tài liệu vào thực tế</p>
+          <p>- Áp dụng kiến thức từ ${requestData.lesson} vào thực tế</p>
           <p>- Tổng kết và dặn dò học sinh nghiên cứu thêm</p>
           
           ${requestData.specialRequirements ? `<h3>V. Yêu cầu đặc biệt</h3><p>${requestData.specialRequirements}</p>` : ''}
           
           <h3>VI. Đánh giá</h3>
           <p>- Đánh giá quá trình: Quan sát thái độ học tập và khả năng phân tích tài liệu</p>
-          <p>- Đánh giá kết quả: Kiểm tra việc hiểu và vận dụng nội dung tài liệu</p>
+          <p>- Đánh giá kết quả: Kiểm tra việc hiểu và vận dụng nội dung ${requestData.lesson}</p>
           
           <div style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-top: 15px;">
-            <p><strong>Lưu ý:</strong> Đây là nội dung mẫu được tạo tự động. Nội dung thực tế sẽ được AI tạo ra dựa trên tài liệu bạn tải lên.</p>
+            <p><strong>Lưu ý:</strong> Đây là nội dung mẫu được tạo tự động từ backend API. Nội dung thực tế sẽ được AI tạo ra dựa trên dữ liệu từ database và tài liệu tham khảo bạn tải lên.</p>
           </div>
         `,
         metadata: {
@@ -2290,11 +2175,7 @@
     }
 
     function displayGeneratedContent(response) {
-      console.log('displayGeneratedContent called with:', {
-        hasContent: !!response.content,
-        contentLength: response.content ? response.content.length : 0,
-        isAPIResponse: response.metadata?.apiResponse
-      });
+
       
       // Hide empty state and show content display area
       const emptyState = document.getElementById('emptyState');
@@ -2328,7 +2209,7 @@
         }
         
         contentPreview.innerHTML = displayContent;
-        console.log('Content displayed successfully');
+
       } else {
         console.error('contentPreview element not found!');
       }
@@ -2336,20 +2217,46 @@
       // Store the response for export/save functions
       window.currentLessonContent = response;
       
-      // Set lesson title if available
-      const lessonTitle = document.getElementById('lessonTitle');
-      if (lessonTitle && response.title) {
-        lessonTitle.value = response.title;
+      
+    }
+
+    async function downloadFormattedDoc(textToFormat, fileName = "My_Custom_Lesson_Plan.docx") {
+      const requestBody = {
+          raw_text: textToFormat,
+          file_name: fileName
+      };
+
+      try {
+          const response = await fetch('https://api.aagents.vn/api/v1/docx/format-and-download', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestBody),
+          });
+
+          if (!response.ok) {
+              throw new Error(`Server responded with status: ${response.status}`);
+          }
+
+          // The download logic from the previous answer remains the same
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          // Use the filename from the request for consistency
+          a.download = requestBody.file_name;
+          document.body.appendChild(a);
+          a.click();
+          
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+      } catch (error) {
+          console.error("Failed to download document:", error);
+          alert('❌ Có lỗi khi tải tài liệu: ' + error.message);
       }
-      
-      // Auto-switch to TinyMCE editor mode after API response
-      setTimeout(() => {
-        if (response.metadata?.apiResponse) {
-          toggleEditor();
-        }
-      }, 1000);
-      
-      console.log('Content display completed');
     }
 
     async function exportToWord() {
@@ -2359,13 +2266,6 @@
       }
 
       try {
-        // Check if docx library is available
-        if (typeof docx === 'undefined') {
-          console.warn('Docx library not available, using HTML fallback');
-          exportToWordHTML();
-          return;
-        }
-
         const content = window.currentLessonContent;
         
         // Get clean text content (without HTML tags)
@@ -2379,83 +2279,51 @@
           cleanText = tempDiv.textContent || tempDiv.innerText || '';
         }
 
-        // Create paragraphs from text
-        const paragraphs = cleanText.split('\n\n').filter(p => p.trim());
-        const docParagraphs = paragraphs.map(paragraph => {
-          return new docx.Paragraph({
-            children: [new docx.TextRun({
-              text: paragraph.replace(/\n/g, ' ').trim(),
-              size: 24, // 12pt font
-              font: "Times New Roman"
-            })],
-            spacing: {
-              after: 200,
-            }
-          });
-        });
-
-        // Create the document
-        const doc = new docx.Document({
-          sections: [{
-            properties: {},
-            children: [
-              // Title
-              new docx.Paragraph({
-                children: [new docx.TextRun({
-                  text: content.title || 'Bài giảng được tạo bởi AI',
-                  bold: true,
-                  size: 32, // 16pt font
-                  font: "Times New Roman"
-                })],
-                heading: docx.HeadingLevel.TITLE,
-                alignment: docx.AlignmentType.CENTER,
-                spacing: {
-                  after: 400,
-                }
-              }),
-              
-              // Content paragraphs
-              ...docParagraphs,
-              
-              // Footer
-              new docx.Paragraph({
-                children: [new docx.TextRun({
-                  text: `\nTài liệu được tạo bởi AI vào ${new Date().toLocaleString('vi-VN')}`,
-                  italics: true,
-                  size: 20, // 10pt font
-                  font: "Times New Roman"
-                })],
-                spacing: {
-                  before: 400,
-                }
-              })
-            ]
-          }]
-        });
-
-        // Generate and save the document
-        const blob = await docx.Packer.toBlob(doc);
-        const fileName = `${(content.title || 'Bai-giang-AI').replace(/[^a-zA-Z0-9\u00C0-\u1EF9\s]/g, '')}.docx`;
+        // Create formatted text with title and content
+        const title = content.title || 'Bài giảng được tạo bởi AI';
+        const formattedText = `# ${title}\n\n${cleanText}\n\n---\n\n*Tài liệu được tạo bởi AI vào ${new Date().toLocaleString('vi-VN')}*`;
         
-        if (window.saveAs) {
-          saveAs(blob, fileName);
-        } else {
-          // Fallback method
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+        // Generate ASCII-safe filename
+        const fileName = createSafeFilename(title) + '.docx';
+        
+        // Use the new API method
+        const requestBody = {
+          raw_text: formattedText,
+          file_name: fileName
+        };
+
+        const response = await fetch('https://api.aagents.vn/api/v1/docx/format-and-download', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
         }
+
+        // Download the formatted document
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
         
         alert('✅ Đã xuất file Word (.docx) thành công!');
         
       } catch (error) {
         console.error('Error exporting to Word:', error);
-        alert('❌ Có lỗi khi xuất file Word. Sử dụng chế độ dự phòng...');
+        alert('❌ Có lỗi khi xuất file Word: ' + error.message);
+        
+        // Fallback to HTML export
         exportToWordHTML();
       }
     }
@@ -2547,13 +2415,9 @@
       try {
         const content = window.currentLessonContent;
         
-        // Get clean content (either from editor or API response)
+        // Get clean content from API response (view-only mode)
         let cleanContent = '';
-        const editorMode = document.getElementById('editorMode');
-        if (tinymce.get('richTextEditor') && editorMode && editorMode.style.display !== 'none') {
-          // If editor is active, get content from TinyMCE
-          cleanContent = tinymce.get('richTextEditor').getContent();
-        } else if (content.metadata?.outputContent) {
+        if (content.metadata?.outputContent) {
           // Use API response content
           cleanContent = content.metadata.outputContent;
         } else {
@@ -2577,7 +2441,7 @@
           }
         };
 
-        console.log('Saving to server:', saveData);
+
 
         // Call the specified API endpoint
         const response = await fetch('https://aimarketingvn.com/webhook/save-text-to-mysql', {
@@ -2591,7 +2455,7 @@
 
         if (response.ok) {
           const result = await response.json();
-          console.log('Save response:', result);
+
           alert('✅ Đã lưu bài giảng lên server thành công!\n\n📋 Thông tin lưu:\n' +
                 `• Môn học: ${saveData.metadata.subject}\n` +
                 `• Lớp: ${saveData.metadata.grade}\n` +
@@ -2607,91 +2471,23 @@
       }
     }
 
-    function toggleEditor() {
-      const contentPreview = document.getElementById('contentPreview');
-      const editorMode = document.getElementById('editorMode');
-      const toggleBtn = event.target.closest('button');
-      
-      if (editorMode.style.display === 'none') {
-        // Switch to editor mode
-        contentPreview.style.display = 'none';
-        editorMode.style.display = 'block';
-        toggleBtn.innerHTML = '<i class="ti ti-eye me-1"></i>Xem trước';
-        toggleBtn.className = 'btn btn-sm btn-outline-secondary';
-        
-        // Load content into TinyMCE
-        if (window.currentLessonContent) {
-          const lessonTitle = document.getElementById('lessonTitle');
-          lessonTitle.value = window.currentLessonContent.title || '';
-          
-          let contentToEdit = '';
-          if (window.currentLessonContent.metadata?.outputContent) {
-            // Convert plain text to HTML for TinyMCE
-            contentToEdit = window.currentLessonContent.metadata.outputContent
-              .replace(/\n\s*\n/g, '</p><p>')
-              .replace(/\n/g, '<br>')
-              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-              .replace(/\*(.*?)\*/g, '<em>$1</em>');
-            
-            if (!contentToEdit.includes('<p>')) {
-              contentToEdit = `<p>${contentToEdit}</p>`;
-            }
-          } else {
-            contentToEdit = window.currentLessonContent.content || '';
-          }
-          
-          tinymce.get('richTextEditor').setContent(contentToEdit);
-        }
-      } else {
-        // Switch to preview mode
-        contentPreview.style.display = 'block';
-        editorMode.style.display = 'none';
-        toggleBtn.innerHTML = '<i class="ti ti-edit me-1"></i>Chế độ chỉnh sửa';
-        toggleBtn.className = 'btn btn-sm btn-outline-primary';
-      }
-    }
-
-    function cancelEdit() {
-      const contentPreview = document.getElementById('contentPreview');
-      const editorMode = document.getElementById('editorMode');
-      const toggleBtn = document.querySelector('button[onclick="toggleEditor()"]');
-      
-      contentPreview.style.display = 'block';
-      editorMode.style.display = 'none';
-      toggleBtn.innerHTML = '<i class="ti ti-edit me-1"></i>Chế độ chỉnh sửa';
-      toggleBtn.className = 'btn btn-sm btn-outline-primary';
-    }
-
-    function saveEditedContent() {
-      const title = document.getElementById('lessonTitle').value;
-      const content = tinymce.get('richTextEditor').getContent();
-      
-      if (window.currentLessonContent) {
-        window.currentLessonContent.title = title;
-        window.currentLessonContent.content = content;
-        
-        // Update the metadata
-        if (window.currentLessonContent.metadata) {
-          // Convert HTML back to plain text for outputContent
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = content;
-          window.currentLessonContent.metadata.outputContent = tempDiv.textContent || tempDiv.innerText || '';
-          window.currentLessonContent.metadata.lastEdited = new Date().toISOString();
-        }
-        
-        // Update the preview display
-        document.getElementById('contentPreview').innerHTML = content;
-        
-        // Switch back to preview mode
-        cancelEdit();
-        
-        alert('Đã cập nhật nội dung thành công!\n\nNội dung đã được lưu và sẵn sàng để xuất hoặc lưu lên server.');
-      }
-    }
-
-    // Legacy function for compatibility
+    // Legacy function for compatibility - removed since content is now view-only
     function editContent() {
-      toggleEditor();
+      alert('Nội dung bài giảng được tạo 100% chính xác và không thể chỉnh sửa.');
+    }
+
+    // Toggle advanced configuration visibility
+    function toggleAdvancedConfig() {
+      const advancedConfig = document.getElementById('advancedConfig');
+      const toggleText = document.getElementById('advancedToggleText');
+      
+      if (advancedConfig.style.display === 'none') {
+        advancedConfig.style.display = 'block';
+        toggleText.textContent = 'Ẩn cấu hình nâng cao';
+      } else {
+        advancedConfig.style.display = 'none';
+        toggleText.textContent = 'Hiện cấu hình nâng cao';
+      }
     }
 
     // ===== EXISTING DOCUMENTS FUNCTIONS =====
@@ -2866,34 +2662,66 @@
       }
     }
 
-    function exportEditedDocument() {
+    async function exportEditedDocument() {
       if (!currentEditingDocument) {
         alert('Không có tài liệu nào đang được chỉnh sửa');
         return;
       }
 
-      // Create a temporary content object for export
-      const title = document.getElementById('editLessonTitle').value;
-      const editor = tinymce.get('editDocumentEditor');
-      const content = editor ? editor.getContent() : '';
+      try {
+        // Get the edited content
+        const title = document.getElementById('editLessonTitle').value;
+        const editor = tinymce.get('editDocumentEditor');
+        const content = editor ? editor.getContent() : '';
 
-      // Convert HTML to plain text for export
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = content;
-      const plainText = tempDiv.textContent || tempDiv.innerText || '';
+        // Convert HTML to plain text for export
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        const plainText = tempDiv.textContent || tempDiv.innerText || '';
 
-      window.currentLessonContent = {
-        title: title,
-        content: content,
-        metadata: {
-          outputContent: plainText,
-          subject: currentEditingDocument.subject,
-          grade: currentEditingDocument.grade,
-          apiResponse: false
+                 // Create formatted text with title and content
+         const formattedText = `# ${title}\n\n${plainText}\n\n---\n\n*Tài liệu được chỉnh sửa vào ${new Date().toLocaleString('vi-VN')}*`;
+         
+         // Generate ASCII-safe filename
+         const fileName = createSafeFilename(title) + '.docx';
+        
+        // Use the new API method
+        const requestBody = {
+          raw_text: formattedText,
+          file_name: fileName
+        };
+
+        const response = await fetch('https://api.aagents.vn/api/v1/docx/format-and-download', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
         }
-      };
 
-      exportToWord();
+        // Download the formatted document
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        alert('✅ Đã xuất file Word (.docx) thành công!');
+        
+      } catch (error) {
+        console.error('Error exporting edited document:', error);
+        alert('❌ Có lỗi khi xuất file Word: ' + error.message);
+      }
     }
 
   </script>

@@ -333,12 +333,12 @@
           <div class="row align-items-center">
             <div class="col-md-12">
               <div class="page-header-title">
-                <h5 class="m-b-10">Sample Page</h5>
+                <h5 class="m-b-10" id="pageTitle">Làm bài tập</h5>
               </div>
               <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="../../dashboard/index.html">Home</a></li>
-                <li class="breadcrumb-item"><a href="javascript: void(0)">Other</a></li>
-                <li class="breadcrumb-item" aria-current="page">Sample Page</li>
+                <li class="breadcrumb-item"><a href="../../pages/exercises/list-quizz.html">Bài tập</a></li>
+                <li class="breadcrumb-item" aria-current="page">Làm bài tập</li>
               </ul>
             </div>
           </div>
@@ -351,20 +351,73 @@
         <!-- [ sample-page ] start -->
         <div class="col-sm-12">
           <div class="card">
-            <div class="card-header">
-              <h5>Làm bài tập</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 id="quizTitle" class="mb-0">Làm bài tập</h5>
+              <div id="timerDisplay" class="badge bg-warning text-dark" style="display: none;">
+                <i class="ti ti-clock me-1"></i>
+                <span id="timeRemaining">00:00</span>
+              </div>
             </div>
             <div class="card-body">
-                <div id="quizContainer"></div>
-
-                <div class="mt-4">
-                  <button id="submitBtn" class="btn btn-primary">Nộp bài</button>
+                <!-- Loading State -->
+                <div id="loadingState" class="text-center py-5">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <p class="mt-3 text-muted">Đang tải bài tập...</p>
                 </div>
-                <div class="mt-4">
-                  <button type="button" class="btn btn-secondary">Dừng làm</button>
+
+                <!-- Error State -->
+                <div id="errorState" class="alert alert-danger" style="display: none;">
+                  <i class="ti ti-alert-circle me-2"></i>
+                  <span id="errorMessage">Không thể tải bài tập</span>
+                  <br>
+                  <button class="btn btn-outline-danger btn-sm mt-2" onclick="window.location.href='../../pages/exercises/list-quizz.html'">
+                    <i class="ti ti-arrow-left me-1"></i>Quay lại danh sách
+                  </button>
+                </div>
+
+                <!-- Quiz Content -->
+                <div id="quizContent" style="display: none;">
+                  <!-- Quiz Info -->
+                  <div class="alert alert-info mb-4">
+                    <div class="row">
+                      <div class="col-md-8">
+                        <h6 class="alert-heading mb-2" id="quizInfoTitle">Thông tin bài tập</h6>
+                        <p class="mb-1" id="quizDescription">Mô tả bài tập...</p>
+                      </div>
+                      <div class="col-md-4 text-md-end">
+                        <div class="mb-1">
+                          <strong id="questionCount">0</strong> câu hỏi
+                        </div>
+                        <div class="mb-1">
+                          Tổng <strong id="totalPoints">0</strong> điểm
+                        </div>
+                        <div id="timeInfo">
+                          Thời gian: <strong id="timeLimit">Không giới hạn</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Quiz Form -->
+                  <form id="quizForm">
+                    <div id="questionsContainer"></div>
+                  </form>
+
+                  <!-- Submit Section -->
+                  <div class="mt-4 d-flex gap-2">
+                    <button type="button" id="submitBtn" class="btn btn-primary">
+                      <i class="ti ti-check me-1"></i>Nộp bài
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='../../pages/exercises/list-quizz.html'">
+                      <i class="ti ti-arrow-left me-1"></i>Quay lại
+                    </button>
+                  </div>
                 </div>
             
-                <div id="resultContainer" class="mt-5"></div>
+                <!-- Results Container -->
+                <div id="resultContainer" class="mt-5" style="display: none;"></div>
             </div>
           </div>
         </div>
@@ -389,6 +442,7 @@
     </div>
   </footer> <!-- Required Js -->
   <!--Hàm check login-->
+  <script src="../../assets/js/config.js"></script>
   <script src="../../assets/js/auth.js"></script>
     <script>
       requireAuth();
@@ -401,6 +455,12 @@
 <script src="../../assets/js/pcoded.js"></script>
 <script src="../../assets/js/plugins/feather.min.js"></script>
 <script src="../../assets/js/customer.js"></script>
+<script src="../../assets/js/include-layout.js"></script>
+<script>layout_change('light');</script>
+<script>change_box_container('false');</script>
+<script>layout_rtl_change('false');</script>
+<script>preset_change("preset-1");</script>
+<script>font_change("Public-Sans");</script>
 
 
 
@@ -423,123 +483,404 @@
 <script>font_change("Public-Sans");</script>
 
 <script>
-    const quizId = new URLSearchParams(window.location.search).get('id');
-    const token = localStorage.getItem('access_token');
-    const userId = 'test_user_456'; // Sửa theo tài khoản thật nếu cần
-    let quizData = null;
+    let quizId, currentUser, quizData = null;
+    let timer = null;
+    let timeRemaining = 0;
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Get quiz ID from URL
+        quizId = new URLSearchParams(window.location.search).get('id');
+        if (!quizId) {
+            showError('Không tìm thấy mã bài tập');
+            return;
+        }
+        
+        // Get current user
+        try {
+            currentUser = await getCurrentUser();
+            if (!currentUser) {
+                window.location.href = '../../pages/login.html';
+                return;
+            }
+        } catch (error) {
+            console.error('Authentication error:', error);
+            window.location.href = '../../pages/login.html';
+            return;
+        }
+        
+        // Load quiz
+        await fetchQuiz();
+    });
 
     async function fetchQuiz() {
-      try {
-        const res = await fetch(`https://api.aagents.vn/api/v1/quiz/${quizId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
+        const token = localStorage.getItem('access_token');
+        
+        try {
+            const response = await fetch(`${getApiUrl('QUIZ')}/${quizId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('access_token');
+                    window.location.href = '../../pages/login.html';
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-        });
-        const json = await res.json();
-        quizData = json.data;
-        renderQuiz(quizData);
-      } catch (err) {
-        console.error(err);
-        document.getElementById('quizContainer').innerHTML = '<div class="alert alert-danger">Không thể tải bài tập.</div>';
-      }
+            
+            const result = await response.json();
+            quizData = result.data;
+            renderQuiz(quizData);
+            
+        } catch (error) {
+            console.error('Error fetching quiz:', error);
+            showError('Lỗi khi tải bài tập: ' + error.message);
+        }
     }
 
     function renderQuiz(quiz) {
-      let html = `<h2>${quiz.title}</h2><p>${quiz.description}</p><form id="quizForm">`;
-
-      quiz.questions.forEach((q, index) => {
-        html += `<div class="card my-3">
-          <div class="card-body">
-            <h5 class="card-title">Câu ${index + 1}: ${q.question_text}</h5>`;
-
-        if (q.question_type === 'multiple_choice' && Array.isArray(q.options)) {
-          q.options.forEach(option => {
-            html += `
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="${q.question_id}" value="${option}" required>
-                <label class="form-check-label">${option}</label>
-              </div>`;
-          });
-        } else if (q.question_type === 'true_false') {
-          ['True', 'False'].forEach(val => {
-            html += `
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="${q.question_id}" value="${val}" required>
-                <label class="form-check-label">${val}</label>
-              </div>`;
-          });
-        } else if (q.question_type === 'text') {
-          html += `
-            <div class="mb-3">
-              <textarea name="${q.question_id}" class="form-control" rows="3" required></textarea>
-            </div>`;
+        // Hide loading, show content
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('quizContent').style.display = 'block';
+        
+        // Update page title and breadcrumb
+        const pageTitle = document.getElementById('pageTitle');
+        const quizTitle = document.getElementById('quizTitle');
+        const quizInfoTitle = document.getElementById('quizInfoTitle');
+        const quizDescription = document.getElementById('quizDescription');
+        const questionCount = document.getElementById('questionCount');
+        const totalPoints = document.getElementById('totalPoints');
+        
+        if (pageTitle) pageTitle.textContent = quiz.title;
+        if (quizTitle) quizTitle.textContent = quiz.title;
+        if (quizInfoTitle) quizInfoTitle.textContent = quiz.title;
+        if (quizDescription) quizDescription.textContent = quiz.description || 'Không có mô tả';
+        if (questionCount) questionCount.textContent = quiz.questions.length;
+        if (totalPoints) totalPoints.textContent = quiz.total_points;
+        
+        // Handle time limit
+        const timeLimit = document.getElementById('timeLimit');
+        const timerDisplay = document.getElementById('timerDisplay');
+        
+        if (quiz.time_limit && quiz.time_limit > 0) {
+            timeRemaining = quiz.time_limit;
+            if (timeLimit) timeLimit.textContent = formatTime(quiz.time_limit);
+            if (timerDisplay) timerDisplay.style.display = 'block';
+            startTimer();
+        } else {
+            if (timeLimit) timeLimit.textContent = 'Không giới hạn';
         }
-
-        html += `</div></div>`;
-      });
-
-      html += '</form>';
-      document.getElementById('quizContainer').innerHTML = html;
+        
+        // Render questions
+        const container = document.getElementById('questionsContainer');
+        let questionsHtml = '';
+        
+        quiz.questions.forEach((question, index) => {
+            questionsHtml += `
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3">
+                            <span class="badge bg-primary me-2">${index + 1}</span>
+                            ${question.question_text}
+                            <span class="badge bg-secondary ms-2">${question.points || 1} điểm</span>
+                        </h6>
+                        <div class="question-options">
+                            ${renderQuestionOptions(question)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = questionsHtml;
+        
+        // Setup submit button
+        document.getElementById('submitBtn').addEventListener('click', handleSubmit);
     }
 
-    document.getElementById('submitBtn').addEventListener('click', async () => {
-      const form = document.getElementById('quizForm');
-      if (!form.reportValidity()) return;
-
-      const answers = quizData.questions.map(q => {
-        let answerValue = '';
-        if (q.question_type === 'multiple_choice' || q.question_type === 'true_false') {
-          const selected = form.querySelector(`input[name="${q.question_id}"]:checked`);
-          answerValue = selected ? selected.value : '';
-        } else if (q.question_type === 'text') {
-          const input = form.querySelector(`input[name="${q.question_id}"]`);
-          answerValue = input ? input.value : '';
+    function renderQuestionOptions(question) {
+        let optionsHtml = '';
+        
+        if (question.question_type === 'multiple_choice' && Array.isArray(question.options)) {
+            question.options.forEach((option, optionIndex) => {
+                const optionLetter = String.fromCharCode(65 + optionIndex); // A, B, C, D
+                optionsHtml += `
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="${question.question_id}" 
+                               value="${option}" id="${question.question_id}_${optionIndex}" required>
+                        <label class="form-check-label" for="${question.question_id}_${optionIndex}">
+                            <strong>${optionLetter}.</strong> ${option}
+                        </label>
+                    </div>
+                `;
+            });
+        } else if (question.question_type === 'true_false') {
+            ['True', 'False'].forEach((value, index) => {
+                const label = value === 'True' ? 'Đúng' : 'Sai';
+                optionsHtml += `
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="${question.question_id}" 
+                               value="${value}" id="${question.question_id}_${index}" required>
+                        <label class="form-check-label" for="${question.question_id}_${index}">
+                            ${label}
+                        </label>
+                    </div>
+                `;
+            });
+        } else if (question.question_type === 'text') {
+            optionsHtml = `
+                <div class="mb-3">
+                    <textarea class="form-control" name="${question.question_id}" 
+                              id="${question.question_id}" rows="3" 
+                              placeholder="Nhập câu trả lời của bạn..." required></textarea>
+                </div>
+            `;
         }
-        return {
-          question_id: q.question_id,
-          answer: answerValue
-        };
-      });
+        
+        return optionsHtml;
+    }
 
-      const payload = {
-        quiz_id: quizId,
-        user_id: userId,
-        answers: answers
-      };
+    function startTimer() {
+        updateTimerDisplay();
+        
+        timer = setInterval(() => {
+            timeRemaining--;
+            updateTimerDisplay();
+            
+            if (timeRemaining <= 0) {
+                clearInterval(timer);
+                alert('Hết thời gian! Bài làm sẽ được tự động nộp.');
+                handleSubmit();
+            }
+        }, 1000);
+    }
 
-      try {
-        const res = await fetch('https://api.aagents.vn/api/v1/quiz/submit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const result = await res.json();
-        renderResult(result.data);
-      } catch (err) {
-        console.error(err);
-        alert('Lỗi khi nộp bài');
-      }
-    });
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        const timeRemainingElement = document.getElementById('timeRemaining');
+        const timerBadge = document.getElementById('timerDisplay');
+        
+        if (timeRemainingElement) {
+            timeRemainingElement.textContent = timeString;
+        }
+        
+        // Change color based on remaining time
+        if (timerBadge) {
+            if (timeRemaining <= 60) {
+                timerBadge.className = 'badge bg-danger text-white';
+            } else if (timeRemaining <= 300) {
+                timerBadge.className = 'badge bg-warning text-dark';
+            }
+        }
+    }
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes} phút ${remainingSeconds} giây`;
+    }
+
+    async function handleSubmit() {
+        if (timer) {
+            clearInterval(timer);
+        }
+        
+        const form = document.getElementById('quizForm');
+        if (!form.reportValidity()) {
+            alert('Vui lòng trả lời tất cả câu hỏi!');
+            return;
+        }
+        
+        // Disable submit button
+        const submitBtn = document.getElementById('submitBtn');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i>Đang nộp...';
+        submitBtn.disabled = true;
+        
+        try {
+            // Collect answers
+            const answers = quizData.questions.map(question => {
+                let answerValue = '';
+                
+                if (question.question_type === 'multiple_choice' || question.question_type === 'true_false') {
+                    const selected = form.querySelector(`input[name="${question.question_id}"]:checked`);
+                    answerValue = selected ? selected.value : '';
+                } else if (question.question_type === 'text') {
+                    const input = form.querySelector(`[name="${question.question_id}"]`);
+                    answerValue = input ? input.value.trim() : '';
+                }
+                
+                return {
+                    question_id: question.question_id,
+                    answer: answerValue
+                };
+            });
+            
+            const payload = {
+                quiz_id: quizId,
+                user_id: currentUser.id.toString(),
+                answers: answers
+            };
+            
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`${getApiUrl('QUIZ')}/submit`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('access_token');
+                    window.location.href = '../../pages/login.html';
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            renderResult(result.data);
+            
+        } catch (error) {
+            console.error('Error submitting quiz:', error);
+            alert('Lỗi khi nộp bài: ' + error.message);
+            
+            // Re-enable submit button
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        }
+    }
 
     function renderResult(data) {
-      let html = `<h4>Kết quả</h4>
-        <p>Điểm: ${data.earned_points} / ${data.total_points}</p>
-        <p>Tỷ lệ đúng: ${data.score_percentage}%</p>
-        <hr>`;
-
-      data.results.forEach((r, index) => {
-        html += `<div class="mb-3">
-          <strong>Câu ${index + 1}:</strong><br>
-          Trả lời của bạn: <span class="${r.is_correct ? 'text-success' : 'text-danger'}">${r.user_answer}</span><br>
-          Đáp án đúng: ${r.correct_answer ?? 'Không có'}
-        </div>`;
-      });
-
-      document.getElementById('resultContainer').innerHTML = html;
+        // Hide quiz content, show results
+        document.getElementById('quizContent').style.display = 'none';
+        document.getElementById('resultContainer').style.display = 'block';
+        
+        // Calculate grade
+        const percentage = data.score_percentage;
+        let grade = 'F';
+        let gradeClass = 'text-danger';
+        
+        if (percentage >= 90) {
+            grade = 'A';
+            gradeClass = 'text-success';
+        } else if (percentage >= 80) {
+            grade = 'B';
+            gradeClass = 'text-info';
+        } else if (percentage >= 70) {
+            grade = 'C';
+            gradeClass = 'text-warning';
+        } else if (percentage >= 60) {
+            grade = 'D';
+            gradeClass = 'text-warning';
+        }
+        
+        let resultsHtml = `
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="ti ti-check-circle me-2"></i>
+                        Kết quả bài làm
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-4">
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h3 class="${gradeClass} mb-1">${grade}</h3>
+                                <small class="text-muted">Xếp loại</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h3 class="text-primary mb-1">${data.earned_points}/${data.total_points}</h3>
+                                <small class="text-muted">Điểm</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h3 class="${gradeClass} mb-1">${percentage}%</h3>
+                                <small class="text-muted">Tỷ lệ đúng</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h3 class="text-info mb-1">${data.results.filter(r => r.is_correct).length}/${data.results.length}</h3>
+                                <small class="text-muted">Câu đúng</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h6 class="mb-3">Chi tiết câu trả lời:</h6>
+        `;
+        
+        data.results.forEach((result, index) => {
+            const iconClass = result.is_correct ? 'ti-check text-success' : 'ti-x text-danger';
+            const cardClass = result.is_correct ? 'border-success' : 'border-danger';
+            
+            resultsHtml += `
+                <div class="card mb-3 ${cardClass}">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <i class="ti ${iconClass} me-2 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2">Câu ${index + 1}</h6>
+                                <p class="mb-2"><strong>Câu trả lời của bạn:</strong> ${result.user_answer || 'Không trả lời'}</p>
+                                <p class="mb-0"><strong>Đáp án đúng:</strong> ${result.correct_answer || 'Không có'}</p>
+                                ${result.explanation ? `<small class="text-muted"><strong>Giải thích:</strong> ${result.explanation}</small>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        resultsHtml += `
+                    <div class="mt-4 d-flex gap-2">
+                        <button class="btn btn-primary" onclick="window.location.href='../../pages/exercises/list-quizz.html'">
+                            <i class="ti ti-arrow-left me-1"></i>Quay lại danh sách
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="window.location.reload()">
+                            <i class="ti ti-refresh me-1"></i>Làm lại
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('resultContainer').innerHTML = resultsHtml;
     }
 
-    fetchQuiz();
-  </script>
+    function showError(message) {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('errorState').style.display = 'block';
+        document.getElementById('errorMessage').textContent = message;
+    }
+
+    // Logout function (using the onclick attribute instead to avoid conflicts)
+    function logoutBtn() {
+        localStorage.removeItem('access_token');
+        window.location.href = '../../pages/login.html';
+    }
+
+    // Prevent accidental navigation away during quiz
+    window.addEventListener('beforeunload', function(e) {
+        if (quizData && document.getElementById('quizContent').style.display !== 'none') {
+            e.preventDefault();
+            e.returnValue = 'Bạn có chắc chắn muốn rời khỏi trang? Kết quả làm bài sẽ bị mất.';
+        }
+    });
+</script>
   
 </body>
 <!-- [Body] end -->

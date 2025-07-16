@@ -9,7 +9,7 @@ from datetime import datetime
 from agents import Agent, Runner
 from pydantic import BaseModel, Field
 
-from services.quiz_service import QuizService
+from services.mysql_quiz_service import MySQLQuizService
 from schemas.quiz_models import QuestionType, QuizQuestion as StandardQuizQuestion
 # ---------------------------------------------------------------------------
 # 1. Define the structured output of the agent using `pydantic`.
@@ -46,6 +46,7 @@ QUIZ_GENERATION_AGENT = Agent(
     instructions=(
         "You are an expert quiz generator. Your task is to create comprehensive, educational quizzes from provided documents.\n\n"
         "Guidelines:\n"
+        "Output should be in Vietnamese language.\n"
         "1. Read the document carefully and identify key concepts, facts, and learning objectives\n"
         "2. Create questions that test understanding at different levels (factual, conceptual, analytical)\n"
         "3. Ensure questions are clear, unambiguous, and have definitive correct answers\n"
@@ -77,7 +78,7 @@ class QuizGenerationAgent:
     def __init__(self):
         self.name = "QuizGenerationAgent"
         self.role = "AI-powered quiz generation from documents"
-        self.quiz_service = QuizService()
+        self.quiz_service = MySQLQuizService()
 
     async def process(self, input_data: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
         """Process quiz generation request"""

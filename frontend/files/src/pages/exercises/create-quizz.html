@@ -495,9 +495,29 @@
                       <label class="form-check-label" for="multipleAttempts">Cho phép làm lại nhiều lần</label>
                     </div>
               
-                    <div class="form-check form-switch mb-4">
+                    <div class="form-check form-switch mb-3">
                       <input class="form-check-input" type="checkbox" name="shuffle_questions" id="shuffleQuestions">
                       <label class="form-check-label" for="shuffleQuestions">Xáo trộn câu hỏi</label>
+                    </div>
+
+                    <div class="mb-4">
+                      <label class="form-label">Giao cho lớp (tùy chọn)</label>
+                      <select name="class_assignment" class="form-select">
+                        <option value="">-- Chọn lớp --</option>
+                        <option value="AI-01">AI-01</option>
+                        <option value="AI-02">AI-02</option>
+                        <option value="AI-03">AI-03</option>
+                        <option value="AI-04">AI-04</option>
+                        <option value="AI-05">AI-05</option>
+                        <option value="AI-06">AI-06</option>
+                        <option value="AI-07">AI-07</option>
+                        <option value="AI-08">AI-08</option>
+                        <option value="AI-09">AI-09</option>
+                        <option value="AI-10">AI-10</option>
+                        <option value="AI-11">AI-11</option>
+                        <option value="AI-12">AI-12</option>
+                      </select>
+                      <small class="text-muted">Chọn lớp để giao bài tập hoặc để trống nếu không muốn giao</small>
                     </div>
               
                     <h5 class="mb-3">Danh sách câu hỏi</h5>
@@ -597,9 +617,29 @@
                       <label class="form-check-label" for="aiMultipleAttempts">Cho phép làm lại nhiều lần</label>
                     </div>
 
-                    <div class="form-check form-switch mb-4">
+                    <div class="form-check form-switch mb-3">
                       <input class="form-check-input" type="checkbox" name="ai_shuffle_questions" id="aiShuffleQuestions" checked>
                       <label class="form-check-label" for="aiShuffleQuestions">Xáo trộn câu hỏi</label>
+                    </div>
+
+                    <div class="mb-4">
+                      <label class="form-label">Giao cho lớp (tùy chọn)</label>
+                      <select name="ai_class_assignment" class="form-select">
+                        <option value="">-- Chọn lớp --</option>
+                        <option value="AI-01">AI-01</option>
+                        <option value="AI-02">AI-02</option>
+                        <option value="AI-03">AI-03</option>
+                        <option value="AI-04">AI-04</option>
+                        <option value="AI-05">AI-05</option>
+                        <option value="AI-06">AI-06</option>
+                        <option value="AI-07">AI-07</option>
+                        <option value="AI-08">AI-08</option>
+                        <option value="AI-09">AI-09</option>
+                        <option value="AI-10">AI-10</option>
+                        <option value="AI-11">AI-11</option>
+                        <option value="AI-12">AI-12</option>
+                      </select>
+                      <small class="text-muted">Chọn lớp để giao bài tập hoặc để trống nếu không muốn giao</small>
                     </div>
 
                     <hr>
@@ -636,6 +676,7 @@
 
   <!-- Required Js -->
   <!--Hàm check login-->
+  <script src="../../assets/js/config.js"></script>
   <script src="../../assets/js/auth.js"></script>
   <script>
     requireAuth();
@@ -1316,7 +1357,7 @@
         data.questions.push(question);
       });
     
-      console.log('Sending manual quiz data to backend:', data);
+      
     
       // Show loading state
       const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -1324,16 +1365,44 @@
       submitBtn.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i>Đang tạo...';
       submitBtn.disabled = true;
     
-      fetch('https://api.aagents.vn/api/v1/quiz/create', {
+      fetch(getApiUrl('QUIZ') + '/create', {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(data)
-      }).then(res => {
+      }).then(async res => {
           if (res.ok) {
-            alert('✅ Tạo bài tập thành công!');
+            const result = await res.json();
+            const quizId = result.data?.quiz_id;
+            
+            // Check if class assignment is provided
+            const classAssignment = form.class_assignment.value;
+            if (classAssignment && quizId) {
+              // Assign to class after successful creation
+              try {
+                const assignResponse = await fetch(`${getApiUrl('QUIZ')}/assign/${quizId}/${classAssignment}`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  }
+                });
+                
+                if (assignResponse.ok) {
+                  alert(`✅ Tạo bài tập thành công và đã giao cho lớp ${classAssignment}!`);
+                } else {
+                  alert('✅ Tạo bài tập thành công nhưng không thể giao cho lớp. Bạn có thể giao sau trong danh sách bài tập.');
+                }
+              } catch (assignError) {
+                console.error('Assignment error:', assignError);
+                alert('✅ Tạo bài tập thành công nhưng không thể giao cho lớp. Bạn có thể giao sau trong danh sách bài tập.');
+              }
+            } else {
+              alert('✅ Tạo bài tập thành công!');
+            }
+            
             window.location.href = '../../pages/exercises/list-quizz.html';
           } else {
             throw new Error('Lỗi từ server');
@@ -1380,7 +1449,7 @@
         shuffle_questions: formData.has('ai_shuffle_questions')
       };
 
-      console.log('Sending AI quiz data to backend:', payload);
+      
 
       // Show loading state
       const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -1389,7 +1458,7 @@
       submitBtn.disabled = true;
 
       try {
-        const response = await fetch('https://api.aagents.vn/api/v1/quiz/generate', {
+        const response = await fetch(getApiUrl('QUIZ') + '/generate', {
           method: 'POST',
           headers: { 
               'Content-Type': 'application/json', 
@@ -1400,7 +1469,34 @@
 
         const result = await response.json();
         if (result.message === "Quiz generated successfully from document") {
-          alert('✅ Tạo bài tập với AI thành công!');
+          const quizId = result.quiz_id;
+          
+          // Check if class assignment is provided
+          const classAssignment = formData.get('ai_class_assignment');
+          if (classAssignment && quizId) {
+            // Assign to class after successful creation
+            try {
+              const assignResponse = await fetch(`https://api.aagents.vn/api/v1/quiz/assign/${quizId}/${classAssignment}`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              if (assignResponse.ok) {
+                alert(`✅ Tạo bài tập với AI thành công và đã giao cho lớp ${classAssignment}!`);
+              } else {
+                alert('✅ Tạo bài tập với AI thành công nhưng không thể giao cho lớp. Bạn có thể giao sau trong danh sách bài tập.');
+              }
+            } catch (assignError) {
+              console.error('Assignment error:', assignError);
+              alert('✅ Tạo bài tập với AI thành công nhưng không thể giao cho lớp. Bạn có thể giao sau trong danh sách bài tập.');
+            }
+          } else {
+            alert('✅ Tạo bài tập với AI thành công!');
+          }
+          
           window.location.href = '../../pages/exercises/list-quizz.html';
         } else {
           throw new Error(result.message || 'Không thể tạo bài tập với AI');
