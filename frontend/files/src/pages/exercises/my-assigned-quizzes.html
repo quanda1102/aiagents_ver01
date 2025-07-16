@@ -448,8 +448,9 @@
         document.getElementById('headerTitle').innerHTML = '<i class="ti ti-school me-2"></i>Lớp của bạn';
         document.getElementById('cardTitle').innerHTML = '<i class="ti ti-clipboard-list me-2"></i>Bài tập được giao cho lớp';
         if (currentUser.class_name) {
-          const classDisplayName = getClassDisplayName(currentUser.class_name);
-          document.getElementById('classInfo').textContent = `${classDisplayName} • ${currentUser.full_name || currentUser.email} • ${roleText}`;
+          const classList = Array.isArray(currentUser.class_name) ? currentUser.class_name : [currentUser.class_name];
+          const classDisplayNames = classList.map(getClassDisplayName).join(', ');
+          document.getElementById('classInfo').textContent = `${classDisplayNames} • ${currentUser.full_name || currentUser.email} • ${roleText}`;
         } else {
           document.getElementById('classInfo').innerHTML = `
             <span class="text-warning">
@@ -527,7 +528,7 @@
         }
 
         // Check if student has class assignment (only for students)
-        if (isStudent && !currentUser.class_name) {
+        if (isStudent && (!currentUser.class_name || (Array.isArray(currentUser.class_name) && currentUser.class_name.length === 0))) {
           showError('Bạn chưa được phân lớp. Vui lòng liên hệ với giáo viên để được phân lớp.');
           return;
         }
@@ -721,7 +722,7 @@
           <li><strong>User Role:</strong> ${roleDisplay}</li>
           <li><strong>Role Type:</strong> ${roleText}</li>
           <li><strong>Role Check:</strong> ${roleCheck ? 'PASS' : 'FAIL (Expected STUDENT, TEACHER, or ADMIN)'}</li>
-          <li><strong>Class Name:</strong> ${currentUser?.class_name || 'N/A'}</li>
+          <li><strong>Class Name:</strong> ${currentUser?.class_name ? (Array.isArray(currentUser.class_name) ? currentUser.class_name.join(', ') : currentUser.class_name) : 'N/A'}</li>
           <li><strong>User ID:</strong> ${currentUser?.id || 'N/A'}</li>
           <li><strong>Token Present:</strong> ${localStorage.getItem('access_token') ? 'Yes' : 'No'}</li>
           <li><strong>API Endpoint:</strong> ${getApiUrl('QUIZ')}/my-quizzes</li>

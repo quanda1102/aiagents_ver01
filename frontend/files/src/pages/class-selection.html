@@ -377,8 +377,9 @@
           document.getElementById('user-role').textContent = user.role;
           
           if (user.class_name) {
-            currentUserClass = user.class_name;
-            document.getElementById('current-class-display').textContent = getClassDisplayName(user.class_name);
+            currentUserClass = Array.isArray(user.class_name) ? user.class_name : [user.class_name];
+            const displayText = currentUserClass.map(getClassDisplayName).join(', ');
+            document.getElementById('current-class-display').textContent = displayText;
             document.getElementById('current-class-info').style.display = 'block';
           }
         }
@@ -395,7 +396,7 @@
 
     // Select a class
     async function selectClass(classCode, cardElement) {
-      if (currentUserClass === classCode) {
+      if (currentUserClass.includes && currentUserClass.includes(classCode)) {
         showMessage('Bạn đã ở trong lớp này rồi!', 'info');
         return;
       }
@@ -406,6 +407,8 @@
 
       try {
         const token = localStorage.getItem('access_token');
+        // Add class to existing classes (don't replace)
+        const newClassList = currentUserClass.includes ? [...currentUserClass, classCode] : [classCode];
         const response = await fetch('https://api.aagents.vn/api/v1/auth/me/class-name', {
           method: 'PUT',
           headers: {
@@ -413,7 +416,7 @@
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
-            class_name: classCode
+            class_name: newClassList
           })
         });
 

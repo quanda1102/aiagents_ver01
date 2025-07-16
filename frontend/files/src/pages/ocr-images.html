@@ -849,29 +849,73 @@
       processBtn.disabled = true;
       
       try {
-        const formData = new FormData();
-        selectedFiles.forEach(file => {
-          formData.append('files', file);
-        });
-        
-        // Get selected OCR method
         const ocrMethod = document.getElementById('ocrMethod').value;
-        const endpoint = ocrMethod === 'ai' 
-          ? 'https://api.aagents.vn/api/v1/ocr-ai/images'
-          : 'https://api.aagents.vn/api/v1/ocr/images';
         
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          body: formData
-        });
+        // Check if we have PDFs and images mixed
+        const pdfFiles = selectedFiles.filter(file => file.type === 'application/pdf');
+        const imageFiles = selectedFiles.filter(file => file.type.startsWith('image/'));
         
-        if (!response.ok) {
-          throw new Error('Lỗi xử lý OCR: ' + response.status);
+        let allResults = [];
+        
+        // Process PDF files individually
+        for (const pdfFile of pdfFiles) {
+          const formData = new FormData();
+          formData.append('file', pdfFile);
+          
+          const pdfEndpoint = ocrMethod === 'ai' 
+            ? 'https://api.aagents.vn/api/v1/ocr-ai/pdf'
+            : 'https://api.aagents.vn/api/v1/ocr/pdf';
+          
+          const response = await fetch(pdfEndpoint, {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Lỗi xử lý PDF ${pdfFile.name}: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          // Convert PDF result format to match image results
+          const pdfText = result.pages ? result.pages.map(page => page.text || page).join('\n\n') : '';
+          allResults.push({
+            filename: result.filename,
+            text: pdfText,
+            type: 'pdf',
+            pages: result.pages
+          });
         }
         
-        const results = await response.json();
-        displayResults(results);
-        showAlert(`Đã xử lý thành công ${results.length} tệp`);
+        // Process image files in batch
+        if (imageFiles.length > 0) {
+          const formData = new FormData();
+          imageFiles.forEach(file => {
+            formData.append('files', file);
+          });
+          
+          const imageEndpoint = ocrMethod === 'ai' 
+            ? 'https://api.aagents.vn/api/v1/ocr-ai/images'
+            : 'https://api.aagents.vn/api/v1/ocr/images';
+          
+          const response = await fetch(imageEndpoint, {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (!response.ok) {
+            throw new Error('Lỗi xử lý hình ảnh: ' + response.status);
+          }
+          
+          const imageResults = await response.json();
+          // Add type to image results
+          imageResults.forEach(result => {
+            result.type = 'image';
+            allResults.push(result);
+          });
+        }
+        
+        displayResults(allResults);
+        showAlert(`Đã xử lý thành công ${allResults.length} tệp`);
         
       } catch (error) {
         console.error('OCR processing error:', error);
