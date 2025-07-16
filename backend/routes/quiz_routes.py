@@ -112,6 +112,43 @@ async def health_check():
         logger.error(f"Health check failed: {e}")
         raise HTTPException(status_code=503, detail="Service unavailable")
 
+@router.get("/my-quizzes", response_model=QuizListResponse)
+async def get_my_quizzes(
+    limit: int = Query(default=50, ge=1, le=100),
+    current_user: User = Depends(get_current_user)
+):
+    """Get quizzes assigned to current user's class (students) or all quizzes (teachers/admins)"""
+    if not quiz_service:
+        raise HTTPException(status_code=503, detail="Quiz service unavailable")
+    
+    try:
+        # Import Role enum for comparison
+        from models.user import Role
+        
+        # Check user role and get appropriate quizzes
+        if current_user.role == Role.STUDENT.value:  # Student (3)
+            # Students see only quizzes assigned to their class
+            if not current_user.class_name:
+                # Student has no class assigned
+                return QuizListResponse(
+                    quizzes=[],
+                    total_count=0
+                )
+            quizzes = quiz_service.get_quizzes_for_user(current_user)
+        else:
+            # Teachers and admins see all quizzes
+            quizzes = quiz_service.list_quizzes(limit)
+        
+        quiz_summaries = [QuizSummary(**quiz) for quiz in quizzes[:limit]]
+        
+        return QuizListResponse(
+            quizzes=quiz_summaries,
+            total_count=len(quiz_summaries)
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting user quizzes: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/list", response_model=QuizListResponse)
@@ -135,50 +172,6 @@ async def list_quizzes(
     except Exception as e:
         logger.error(f"Error listing quizzes: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
-
-
-@router.get("/{quiz_id}", response_model=QuizResponse)
-async def get_quiz(
-    quiz_id: str, 
-    current_user: User = Depends(get_current_user)
-):
-    """Get quiz details for taking (questions without answers)"""
-    if not quiz_service:
-        raise HTTPException(status_code=503, detail="Quiz service unavailable")
-    
-    try:
-        quiz = quiz_service.get_quiz(quiz_id)
-        if not quiz:
-            raise HTTPException(status_code=404, detail="Quiz not found")
-        
-        # Get questions without correct answers
-        questions = quiz_service.get_quiz_questions(quiz_id)
-        if questions is None:
-            raise HTTPException(status_code=404, detail="Quiz questions not found")
-        
-        quiz_for_taking = QuizForTaking(
-            quiz_id=quiz["quiz_id"],
-            title=quiz["title"],
-            description=quiz.get("description"),
-            questions=questions,
-            total_points=sum(q.get("points", 1) for q in quiz["questions"]),
-            time_limit=quiz.get("time_limit"),
-            allow_multiple_attempts=quiz.get("allow_multiple_attempts", True),
-            shuffle_questions=quiz.get("shuffle_questions", False)
-        )
-        
-        return QuizResponse(
-            success=True,
-            message="Quiz retrieved successfully",
-            data=quiz_for_taking.model_dump()
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error retrieving quiz: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
 
 @router.post("/submit", response_model=QuizResponse)
 async def submit_quiz(
@@ -450,43 +443,6 @@ async def assign_quiz_to_class(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/my-quizzes", response_model=QuizListResponse)
-async def get_my_quizzes(
-    limit: int = Query(default=50, ge=1, le=100),
-    current_user: User = Depends(get_current_user)
-):
-    """Get quizzes assigned to current user's class (students) or all quizzes (teachers/admins)"""
-    if not quiz_service:
-        raise HTTPException(status_code=503, detail="Quiz service unavailable")
-    
-    try:
-        # Import Role enum for comparison
-        from models.user import Role
-        
-        # Check user role and get appropriate quizzes
-        if current_user.role == Role.STUDENT.value:  # Student (3)
-            # Students see only quizzes assigned to their class
-            if not current_user.class_name:
-                # Student has no class assigned
-                return QuizListResponse(
-                    quizzes=[],
-                    total_count=0
-                )
-            quizzes = quiz_service.get_quizzes_for_user(current_user)
-        else:
-            # Teachers and admins see all quizzes
-            quizzes = quiz_service.list_quizzes(limit)
-        
-        quiz_summaries = [QuizSummary(**quiz) for quiz in quizzes[:limit]]
-        
-        return QuizListResponse(
-            quizzes=quiz_summaries,
-            total_count=len(quiz_summaries)
-        )
-        
-    except Exception as e:
-        logger.error(f"Error getting user quizzes: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/my-attempts", response_model=QuizResponse)
@@ -551,6 +507,48 @@ async def get_my_attempts(
         logger.error(f"Error retrieving user attempts: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+
+@router.get("/{quiz_id}", response_model=QuizResponse)
+async def get_quiz(
+    quiz_id: str, 
+    current_user: User = Depends(get_current_user)
+):
+    """Get quiz details for taking (questions without answers)"""
+    if not quiz_service:
+        raise HTTPException(status_code=503, detail="Quiz service unavailable")
+    
+    try:
+        quiz = quiz_service.get_quiz(quiz_id)
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found")
+        
+        # Get questions without correct answers
+        questions = quiz_service.get_quiz_questions(quiz_id)
+        if questions is None:
+            raise HTTPException(status_code=404, detail="Quiz questions not found")
+        
+        quiz_for_taking = QuizForTaking(
+            quiz_id=quiz["quiz_id"],
+            title=quiz["title"],
+            description=quiz.get("description"),
+            questions=questions,
+            total_points=sum(q.get("points", 1) for q in quiz["questions"]),
+            time_limit=quiz.get("time_limit"),
+            allow_multiple_attempts=quiz.get("allow_multiple_attempts", True),
+            shuffle_questions=quiz.get("shuffle_questions", False)
+        )
+        
+        return QuizResponse(
+            success=True,
+            message="Quiz retrieved successfully",
+            data=quiz_for_taking.model_dump()
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving quiz: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 
