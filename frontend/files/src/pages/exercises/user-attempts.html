@@ -370,12 +370,15 @@
               <div class="col-md-6">
                 <h6 class="mb-1">
                   <i class="ti ti-clipboard-text me-2"></i>
-                  Quiz ID: ${attempt.quiz_id}
+                  ${attempt.quiz_title || `Quiz ID: ${attempt.quiz_id}`}
                 </h6>
-                <small class="text-muted">
-                  <i class="ti ti-calendar me-1"></i>
-                  ${date}
-                </small>
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">
+                    <i class="ti ti-calendar me-1"></i>
+                    ${date}
+                  </small>
+                  ${attempt.quiz_class_code ? `<span class="badge bg-info">${getClassDisplayName(attempt.quiz_class_code)}</span>` : ''}
+                </div>
               </div>
               <div class="col-md-3 text-center">
                 <div class="score-badge ${scoreClass}">
@@ -415,6 +418,25 @@
         return `${minutes}p ${remainingSeconds}s`;
       }
       return `${remainingSeconds}s`;
+    }
+
+    // Convert class code to display name
+    function getClassDisplayName(classCode) {
+      const classMap = {
+        'AI-01': 'Lớp AI 1',
+        'AI-02': 'Lớp AI 2',
+        'AI-03': 'Lớp AI 3',
+        'AI-04': 'Lớp AI 4',
+        'AI-05': 'Lớp AI 5',
+        'AI-06': 'Lớp AI 6',
+        'AI-07': 'Lớp AI 7',
+        'AI-08': 'Lớp AI 8',
+        'AI-09': 'Lớp AI 9',
+        'AI-10': 'Lớp AI 10',
+        'AI-11': 'Lớp AI 11',
+        'AI-12': 'Lớp AI 12'
+      };
+      return classMap[classCode] || classCode;
     }
 
     function showError(message) {

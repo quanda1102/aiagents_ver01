@@ -71,6 +71,7 @@ class QuizSummary(BaseModel):
     time_limit: Optional[int]
     allow_multiple_attempts: bool
     shuffle_questions: bool
+    class_code: Optional[str] = None
 
 
 class QuizForTaking(BaseModel):
@@ -120,6 +121,8 @@ class QuizResult(BaseModel):
 class QuizAttempt(BaseModel):
     attempt_id: str
     quiz_id: str
+    quiz_title: Optional[str] = None
+    quiz_class_code: Optional[str] = None
     user_id: str
     answers: List[QuizAnswer]
     results: List[QuizResult]

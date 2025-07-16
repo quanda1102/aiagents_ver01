@@ -275,16 +275,21 @@ class MySQLQuizService:
             db.close()
 
     def get_user_attempts(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get all quiz attempts for a specific user"""
+        """Get all quiz attempts for a specific user with quiz information"""
         db = self.get_db()
         try:
-            attempts = db.query(QuizAttempt).filter(QuizAttempt.user_id == user_id).all()
+            # Join QuizAttempt with Quiz to get quiz title and class_code
+            attempts_with_quiz = db.query(QuizAttempt, Quiz).join(
+                Quiz, QuizAttempt.quiz_id == Quiz.quiz_id
+            ).filter(QuizAttempt.user_id == user_id).all()
             
             attempt_data = []
-            for attempt in attempts:
+            for attempt, quiz in attempts_with_quiz:
                 attempt_dict = {
                     "attempt_id": attempt.attempt_id,
                     "quiz_id": attempt.quiz_id,
+                    "quiz_title": quiz.title,
+                    "quiz_class_code": quiz.class_code,
                     "user_id": attempt.user_id,
                     "submitted_at": attempt.submitted_at.isoformat(),
                     "earned_points": attempt.earned_points,
@@ -306,16 +311,21 @@ class MySQLQuizService:
             db.close()
             
     def get_all_attempts(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """Get all quiz attempts (for teachers/admins)"""
+        """Get all quiz attempts (for teachers/admins) with quiz information"""
         db = self.get_db()
         try:
-            attempts = db.query(QuizAttempt).order_by(QuizAttempt.submitted_at.desc()).limit(limit).all()
+            # Join QuizAttempt with Quiz to get quiz title and class_code
+            attempts_with_quiz = db.query(QuizAttempt, Quiz).join(
+                Quiz, QuizAttempt.quiz_id == Quiz.quiz_id
+            ).order_by(QuizAttempt.submitted_at.desc()).limit(limit).all()
             
             attempt_data = []
-            for attempt in attempts:
+            for attempt, quiz in attempts_with_quiz:
                 attempt_dict = {
                     "attempt_id": attempt.attempt_id,
                     "quiz_id": attempt.quiz_id,
+                    "quiz_title": quiz.title,
+                    "quiz_class_code": quiz.class_code,
                     "user_id": attempt.user_id,
                     "submitted_at": attempt.submitted_at.isoformat(),
                     "earned_points": attempt.earned_points,

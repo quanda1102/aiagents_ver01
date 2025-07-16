@@ -609,7 +609,10 @@
                   <h6 class="mb-1 fw-bold">${quiz.title}</h6>
                   <span class="quiz-difficulty difficulty-${difficulty.level}">${difficulty.label}</span>
                 </div>
-                <small class="text-muted">Tạo bởi: ${quiz.created_by}</small>
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">Tạo bởi: ${quiz.created_by}</small>
+                  ${quiz.class_code ? `<span class="badge bg-primary">${getClassDisplayName(quiz.class_code)}</span>` : ''}
+                </div>
               </div>
               <div class="card-body">
                 <p class="card-text text-muted mb-3">${quiz.description || 'Không có mô tả'}</p>
