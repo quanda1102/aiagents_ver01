@@ -55,7 +55,7 @@ async def ocr_bytes_with_gpt(image_bytes: bytes, content_type: str = "image/png"
         return f"Error: {str(e)}"
 
 
-async def ocr_pdf_with_gpt(file: UploadFile) -> List[dict]:
+async def ocr_pdf_with_gpt(file: UploadFile) -> List[str]:
     try:
         pdf_bytes = await file.read()
         images = convert_from_bytes(pdf_bytes, dpi=200)
@@ -67,9 +67,9 @@ async def ocr_pdf_with_gpt(file: UploadFile) -> List[dict]:
             image_bytes = buf.getvalue()
 
             text = await ocr_bytes_with_gpt(image_bytes)
-            results.append({"page": idx + 1, "text": text})
+            results.append(text)  # Return just the text string, not a dict
 
         return results
 
     except Exception as e:
-        return [{"page": 0, "text": f"Error: {str(e)}"}]
+        return [f"Error processing PDF: {str(e)}"]

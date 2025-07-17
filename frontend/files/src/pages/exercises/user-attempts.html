@@ -124,8 +124,7 @@
   
   <!-- [ Header Topbar ] start -->
   <header class="pc-header">
-    <div class="header-wrapper">
-      <!-- [Mobile Media Block] start -->
+    <div class="header-wrapper"> <!-- [Mobile Media Block] start -->
       <div class="me-auto pc-mob-drp">
         <ul class="list-unstyled">
           <!-- ======= Menu collapse Icon ===== -->
@@ -134,32 +133,217 @@
               <i class="ti ti-menu-2"></i>
             </a>
           </li>
+          <li class="pc-h-item pc-sidebar-popup">
+            <a href="#" class="pc-head-link ms-0" id="mobile-collapse">
+              <i class="ti ti-menu-2"></i>
+            </a>
+          </li>
+          <li class="dropdown pc-h-item d-inline-flex d-md-none">
+            <a
+                    class="pc-head-link dropdown-toggle arrow-none m-0"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    role="button"
+                    aria-haspopup="false"
+                    aria-expanded="false"
+            >
+              <i class="ti ti-search"></i>
+            </a>
+            <div class="dropdown-menu pc-h-dropdown drp-search">
+              <form class="px-3">
+                <div class="form-group mb-0 d-flex align-items-center">
+                  <i data-feather="search"></i>
+                  <input type="search" class="form-control border-0 shadow-none" placeholder="Search here. . .">
+                </div>
+              </form>
+            </div>
+          </li>
+          <li class="pc-h-item d-none d-md-inline-flex">
+            <form class="header-search">
+              <i data-feather="search" class="icon-search"></i>
+              <input type="search" class="form-control" placeholder="Search here. . .">
+            </form>
+          </li>
         </ul>
       </div>
       <!-- [Mobile Media Block end] -->
       <div class="ms-auto">
         <ul class="list-unstyled">
           <li class="dropdown pc-h-item">
-            <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
-              <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar wid-35">
+            <a
+                    class="pc-head-link dropdown-toggle arrow-none me-0"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    role="button"
+                    aria-haspopup="false"
+                    aria-expanded="false"
+            >
+              <i class="ti ti-mail"></i>
             </a>
-            <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
-              <div class="dropdown-header">
-                <h6 class="text-overflow m-0">Chào bạn!</h6>
+            <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
+              <div class="dropdown-header d-flex align-items-center justify-content-between">
+                <h5 class="m-0">Message</h5>
+                <a href="#!" class="pc-head-link bg-transparent"><i class="ti ti-x text-danger"></i></a>
               </div>
-              <a href="#!" class="dropdown-item">
-                <i class="ti ti-user"></i>
-                <span>Hồ sơ</span>
-              </a>
-              <a href="#!" class="dropdown-item">
-                <i class="ti ti-settings"></i>
-                <span>Cài đặt</span>
-              </a>
               <div class="dropdown-divider"></div>
-              <a href="#!" class="dropdown-item">
-                <i class="ti ti-power"></i>
-                <span>Đăng xuất</span>
-              </a>
+              <div class="dropdown-header px-0 text-wrap header-notification-scroll position-relative" style="max-height: calc(100vh - 215px)">
+                <div class="list-group list-group-flush w-100">
+                  <a class="list-group-item list-group-item-action">
+                    <div class="d-flex">
+                      <div class="flex-shrink-0">
+                        <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
+                      </div>
+                      <div class="flex-grow-1 ms-1">
+                        <span class="float-end text-muted">3:00 AM</span>
+                        <p class="text-body mb-1">It's <b>Cristina danny's</b> birthday today.</p>
+                        <span class="text-muted">2 min ago</span>
+                      </div>
+                    </div>
+                  </a>
+                  <a class="list-group-item list-group-item-action">
+                    <div class="d-flex">
+                      <div class="flex-shrink-0">
+                        <img src="../../assets/images/user/avatar-1.jpg" alt="user-image" class="user-avtar">
+                      </div>
+                      <div class="flex-grow-1 ms-1">
+                        <span class="float-end text-muted">6:00 PM</span>
+                        <p class="text-body mb-1"><b>Aida Burg</b> commented your post.</p>
+                        <span class="text-muted">5 August</span>
+                      </div>
+                    </div>
+                  </a>
+                  <a class="list-group-item list-group-item-action">
+                    <div class="d-flex">
+                      <div class="flex-shrink-0">
+                        <img src="../../assets/images/user/avatar-3.jpg" alt="user-image" class="user-avtar">
+                      </div>
+                      <div class="flex-grow-1 ms-1">
+                        <span class="float-end text-muted">2:45 PM</span>
+                        <p class="text-body mb-1"><b>There was a failure to your setup.</b></p>
+                        <span class="text-muted">7 hours ago</span>
+                      </div>
+                    </div>
+                  </a>
+                  <a class="list-group-item list-group-item-action">
+                    <div class="d-flex">
+                      <div class="flex-shrink-0">
+                        <img src="../../assets/images/user/avatar-4.jpg" alt="user-image" class="user-avtar">
+                      </div>
+                      <div class="flex-grow-1 ms-1">
+                        <span class="float-end text-muted">9:10 PM</span>
+                        <p class="text-body mb-1"><b>Cristina Danny </b> invited to join <b> Meeting.</b></p>
+                        <span class="text-muted">Daily scrum meeting time</span>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="text-center py-2">
+                <a href="#!" class="link-primary">View all</a>
+              </div>
+            </div>
+          </li>
+          <li class="dropdown pc-h-item header-user-profile">
+            <a
+                    class="pc-head-link dropdown-toggle arrow-none me-0"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    role="button"
+                    aria-haspopup="false"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false"
+            >
+              <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
+              <span class="user_name"></span>
+            </a>
+            <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
+              <div class="dropdown-header">
+                <div class="d-flex mb-1">
+                  <div class="flex-shrink-0">
+                    <img src="../../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar wid-35">
+                  </div>
+                  <div class="flex-grow-1 ms-3">
+                    <h6 class="mb-1 user_name"></h6>
+                    <span class="user_role"></span>
+                  </div>
+                  <button type="button" id="logoutBtn" class="pc-head-link bg-transparent" style="border: unset;" onclick="logoutBtn()"><i class="ti ti-power text-danger"></i></button>
+                </div>
+              </div>
+              <ul class="nav drp-tabs nav-fill nav-tabs" id="mydrpTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button
+                          class="nav-link active"
+                          id="drp-t1"
+                          data-bs-toggle="tab"
+                          data-bs-target="#drp-tab-1"
+                          type="button"
+                          role="tab"
+                          aria-controls="drp-tab-1"
+                          aria-selected="true"
+                  ><i class="ti ti-user"></i> Profile</button
+                  >
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button
+                          class="nav-link"
+                          id="drp-t2"
+                          data-bs-toggle="tab"
+                          data-bs-target="#drp-tab-2"
+                          type="button"
+                          role="tab"
+                          aria-controls="drp-tab-2"
+                          aria-selected="false"
+                  ><i class="ti ti-settings"></i> Setting</button
+                  >
+                </li>
+              </ul>
+              <div class="tab-content" id="mysrpTabContent">
+                <div class="tab-pane fade show active" id="drp-tab-1" role="tabpanel" aria-labelledby="drp-t1" tabindex="0">
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-edit-circle"></i>
+                    <span>Edit Profile</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-user"></i>
+                    <span>View Profile</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-clipboard-list"></i>
+                    <span>Social Profile</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-wallet"></i>
+                    <span>Billing</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-power"></i>
+                    <span onclick="logoutBtn()">Logout</span>
+                  </a>
+                </div>
+                <div class="tab-pane fade" id="drp-tab-2" role="tabpanel" aria-labelledby="drp-t2" tabindex="0">
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-help"></i>
+                    <span>Support</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-user"></i>
+                    <span>Account Settings</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-lock"></i>
+                    <span>Privacy Center</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-messages"></i>
+                    <span>Feedback</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-list"></i>
+                    <span>History</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </li>
         </ul>
@@ -184,7 +368,7 @@
             </div>
             <div class="col-md-12">
               <div class="page-header-title">
-                <h2 class="mb-0"><i class="ti ti-chart-bar me-2"></i>Kết quả bài làm của tôi</h2>
+                <h2 class="mb-0" id="pageTitle"><i class="ti ti-chart-bar me-2"></i>Kết quả bài làm</h2>
               </div>
             </div>
           </div>
@@ -213,7 +397,13 @@
               <div class="col-md-3">
                 <div class="stats-item">
                   <div class="stats-number" id="uniqueQuizzes">-</div>
-                  <div class="stats-label">Bài tập đã làm</div>
+                  <div class="stats-label" id="uniqueQuizzesLabel">Bài tập đã làm</div>
+                </div>
+              </div>
+              <div class="col-md-3" id="uniqueStudentsCol" style="display: none;">
+                <div class="stats-item">
+                  <div class="stats-number" id="uniqueStudents">-</div>
+                  <div class="stats-label">Học sinh tham gia</div>
                 </div>
               </div>
               <div class="col-md-3">
@@ -254,6 +444,7 @@
   <!-- [ Main Content ] end -->
 
   <!-- Required Js -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="../../assets/js/plugins/popper.min.js"></script>
   <script src="../../assets/js/plugins/simplebar.min.js"></script>
   <script src="../../assets/js/plugins/bootstrap.min.js"></script>
@@ -265,12 +456,32 @@
   <script src="../../assets/js/auth.js"></script>
   <script src="../../assets/js/config.js"></script>
   <script src="../../assets/js/include-layout.js"></script>
+  <script src="../../assets/js/customer.js"></script>
   
   <script>
     requireAuth();
     
+    let currentUser = null;
+    let isAdminOrTeacher = false;
+    
     // Initialize page
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+      currentUser = await getCurrentUser();
+      isAdminOrTeacher = currentUser && ['ADMIN', 'TEACHER'].includes(currentUser.role);
+      
+      // Update page title and UI based on role
+      if (isAdminOrTeacher) {
+        document.getElementById('pageTitle').innerHTML = '<i class="ti ti-chart-bar me-2"></i>Tất cả kết quả bài làm';
+        document.getElementById('uniqueStudentsCol').style.display = 'block';
+        document.getElementById('uniqueQuizzesLabel').textContent = 'Bài tập có kết quả';
+        // Adjust column layout for admin view
+        document.querySelectorAll('.stats-item').forEach((item, index) => {
+          item.parentElement.className = 'col-md-2';
+        });
+      } else {
+        document.getElementById('pageTitle').innerHTML = '<i class="ti ti-chart-bar me-2"></i>Kết quả bài làm của tôi';
+      }
+      
       loadAttempts();
     });
 
@@ -285,7 +496,11 @@
       refreshBtn.disabled = true;
       
       try {
-        const response = await fetch(`${getApiUrl('QUIZ')}/my-attempts?limit=50`, {
+        // Use different endpoints based on user role
+        const endpoint = isAdminOrTeacher ? 'all-attempts' : 'my-attempts';
+        const limit = isAdminOrTeacher ? 100 : 50;
+        
+        const response = await fetch(`${getApiUrl('QUIZ')}/${endpoint}?limit=${limit}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
@@ -297,8 +512,12 @@
           if (response.status === 401) {
             showError('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
             setTimeout(() => {
-              window.location.href = '../../pages/login.hml';
+              window.location.href = '../../pages/login.html';
             }, 3000);
+            return;
+          }
+          if (response.status === 403) {
+            showError('Bạn không có quyền xem thông tin này.');
             return;
           }
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -307,10 +526,10 @@
         const data = await response.json();
         
         // Update stats
-        updateStats(data.data);
+        updateStats(data.data, isAdminOrTeacher);
         
         // Display attempts
-        displayAttempts(data.data.recent_attempts || []);
+        displayAttempts(data.data.recent_attempts || [], isAdminOrTeacher);
         
       } catch (error) {
         console.error('Error loading attempts:', error);
@@ -331,25 +550,38 @@
       }
     }
 
-    function updateStats(data) {
+    function updateStats(data, isAdminView = false) {
       document.getElementById('totalAttempts').textContent = data.total_attempts || 0;
       document.getElementById('averageScore').textContent = data.average_score ? Math.round(data.average_score) : 0;
-      document.getElementById('uniqueQuizzes').textContent = data.quizzes_taken || 0;
       document.getElementById('bestScore').textContent = data.best_score ? Math.round(data.best_score) : 0;
+      
+      if (isAdminView) {
+        document.getElementById('uniqueQuizzes').textContent = data.unique_quizzes || 0;
+        document.getElementById('uniqueStudents').textContent = data.unique_students || 0;
+      } else {
+        document.getElementById('uniqueQuizzes').textContent = data.quizzes_taken || 0;
+      }
     }
 
-    function displayAttempts(attempts) {
+    function displayAttempts(attempts, isAdminView = false) {
       const attemptsList = document.getElementById('attemptsList');
       
       if (!attempts || attempts.length === 0) {
+        const emptyMessage = isAdminView 
+          ? 'Chưa có kết quả bài làm nào từ học sinh'
+          : 'Bạn chưa làm bài tập nào. Hãy vào phần "Bài tập được giao" để bắt đầu!';
+        const emptyAction = isAdminView 
+          ? '' 
+          : `<a href="./my-assigned-quizzes.html" class="btn btn-primary">
+               <i class="ti ti-clipboard-list me-1"></i>Xem bài tập được giao
+             </a>`;
+        
         attemptsList.innerHTML = `
           <div class="empty-state">
             <i class="ti ti-clipboard-off"></i>
             <h5>Chưa có kết quả bài làm</h5>
-            <p class="text-muted">Bạn chưa làm bài tập nào. Hãy vào phần "Bài tập được giao" để bắt đầu!</p>
-            <a href="./my-assigned-quizzes.html" class="btn btn-primary">
-              <i class="ti ti-clipboard-list me-1"></i>Xem bài tập được giao
-            </a>
+            <p class="text-muted">${emptyMessage}</p>
+            ${emptyAction}
           </div>
         `;
         return;
@@ -364,10 +596,20 @@
         const correctAnswers = attempt.results ? attempt.results.filter(r => r.is_correct).length : 0;
         const totalQuestions = attempt.results ? attempt.results.length : 0;
         
+        // Student info for admin view
+        const studentInfo = isAdminView ? `
+          <div class="d-flex justify-content-between align-items-center mt-1">
+            <small class="text-primary">
+              <i class="ti ti-user me-1"></i>
+              ${attempt.user_name || attempt.user_email}
+            </small>
+          </div>
+        ` : '';
+        
         return `
           <div class="attempt-card">
             <div class="row align-items-center">
-              <div class="col-md-6">
+              <div class="col-md-${isAdminView ? '5' : '6'}">
                 <h6 class="mb-1">
                   <i class="ti ti-clipboard-text me-2"></i>
                   ${attempt.quiz_title || `Quiz ID: ${attempt.quiz_id}`}
@@ -379,13 +621,14 @@
                   </small>
                   ${attempt.quiz_class_code ? `<span class="badge bg-info">${getClassDisplayName(attempt.quiz_class_code)}</span>` : ''}
                 </div>
+                ${studentInfo}
               </div>
               <div class="col-md-3 text-center">
                 <div class="score-badge ${scoreClass}">
                   ${Math.round(score)}%
                 </div>
               </div>
-              <div class="col-md-3 text-end">
+              <div class="col-md-${isAdminView ? '4' : '3'} text-end">
                 <small class="text-muted d-block">
                   ${correctAnswers}/${totalQuestions} đúng
                 </small>

@@ -329,150 +329,12 @@
   <!-- [ Pre-loader ] end -->
 
   <!-- [ Sidebar Menu ] start -->
-  <nav class="pc-sidebar">
-    <div class="navbar-wrapper">
-      <div class="m-header">
-        <a href="../dashboard/index.html" class="b-brand text-primary">
-          <!-- ========   Change your logo from here   ============ -->
-          <img src="../assets/images/logo_tma.png" class="img-fluid logo-lg" alt="logo">
-        </a>
-      </div>
-      <div class="navbar-content">
-        <div class="card pc-user-card">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="flex-shrink-0">
-                <img src="../assets/images/user/avatar-1.jpg" alt="user-image" class="user-avtar wid-45 rounded-circle">
-              </div>
-              <div class="flex-grow-1 ms-3 me-2">
-                <h6 class="mb-0">Jonh Smith</h6>
-                <small>Administrator</small>
-              </div>
-              <a class="btn btn-icon btn-link-secondary avtar" data-bs-toggle="collapse" href="#pc_sidebar_userlink">
-                <svg class="pc-icon">
-                  <use xlink:href="#custom-sort-outline"></use>
-                </svg>
-              </a>
-            </div>
-            <div class="collapse pc-user-links" id="pc_sidebar_userlink">
-              <div class="pt-3">
-                <a href="#!">
-                  <i class="ti ti-user"></i>
-                  <span>My Account</span>
-                </a>
-                <a href="#!">
-                  <i class="ti ti-settings"></i>
-                  <span>Settings</span>
-                </a>
-                <a href="#!">
-                  <i class="ti ti-lock"></i>
-                  <span>Lock Screen</span>
-                </a>
-                <a href="#!">
-                  <i class="ti ti-power"></i>
-                  <span>Logout</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <ul class="pc-navbar">
-          <li class="pc-item">
-            <a href="../dashboard/index.html" class="pc-link">
-              <span class="pc-micon"><i class="ti ti-dashboard"></i></span>
-              <span class="pc-mtext">Dashboard</span>
-            </a>
-          </li>
-
-          <!-- Người dùng -->
-          <li class="pc-item pc-caption">
-            <label>Người dùng</label>
-          </li>
-          <li class="pc-item">
-            <a href="users-list.html" class="pc-link">
-              <span class="pc-micon"><i class="ti ti-users"></i></span>
-              <span class="pc-mtext">Danh sách người dùng</span>
-            </a>
-          </li>
-          <li class="pc-item">
-            <a href="class-selection.html" class="pc-link">
-              <span class="pc-micon"><i class="ti ti-school"></i></span>
-              <span class="pc-mtext">Chọn lớp học</span>
-            </a>
-          </li>
-
-          <!-- AI tools -->
-          <li class="pc-item pc-caption">
-            <label>Công cụ AI</label>
-            <i class="ti ti-robot"></i>
-          </li>
-          <li class="pc-item">
-            <a href="ai-lesson-creator.html" class="pc-link">
-              <span class="pc-micon"><i class="ti ti-bulb"></i></span>
-              <span class="pc-mtext">Tạo bài giảng AI</span>
-            </a>
-          </li>
-          <li class="pc-item">
-            <a href="ocr-images.html" class="pc-link active">
-              <span class="pc-micon"><i class="ti ti-scan"></i></span>
-              <span class="pc-mtext">OCR hình ảnh</span>
-            </a>
-          </li>
-
-          <!-- Exercises submenu -->
-          <li class="pc-item pc-caption">
-            <label>Bài tập</label>
-            <i class="ti ti-news"></i>
-          </li>
-          <li class="pc-item pc-hasmenu">
-            <a href="#" class="pc-link"><span class="pc-micon"><i class="ti ti-menu"></i></span><span class="pc-mtext">Bài tập</span><span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
-            <ul class="pc-submenu">
-              <li class="pc-item"><a class="pc-link" href="exercises/create-quizz.html">Tạo bài tập</a></li>
-              <li class="pc-item"><a class="pc-link" href="exercises/list-quizz.html">Danh sách bài tập</a></li>
-              <li class="pc-item"><a class="pc-link" href="exercises/my-assigned-quizzes.html">Bài tập được giao</a></li>
-              <li class="pc-item"><a class="pc-link" href="exercises/user-attempts.html">Kết quả bài làm</a></li>
-            </ul>
-          </li>
-
-          <!-- Auth -->
-          <li class="pc-item pc-caption">
-            <label>Auth</label>
-            <i class="ti ti-lock"></i>
-          </li>
-          <li class="pc-item">
-            <a href="login.html" class="pc-link">
-              <span class="pc-micon"><i class="ti ti-lock"></i></span>
-              <span class="pc-mtext">Login</span>
-            </a>
-          </li>
-          <li class="pc-item">
-            <a href="register.html" class="pc-link">
-              <span class="pc-micon"><i class="ti ti-user-plus"></i></span>
-              <span class="pc-mtext">Register</span>
-            </a>
-          </li>
-
-          <!-- Other -->
-          <li class="pc-item pc-caption">
-            <label>Other</label>
-            <i class="ti ti-brand-chrome"></i>
-          </li>
-          <li class="pc-item">
-            <a href="../other/sample-page.html" class="pc-link">
-              <span class="pc-micon"><i class="ti ti-brand-chrome"></i></span>
-              <span class="pc-mtext">Sample page</span>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  <div data-include="../layouts/sidebar-pc.html"></div>
   <!-- [ Sidebar Menu ] end -->
 
   <!-- [ Header Topbar ] start -->
   <header class="pc-header">
-    <div class="header-wrapper">
+    <div class="header-wrapper"> <!-- [Mobile Media Block] start -->
       <div class="me-auto pc-mob-drp">
         <ul class="list-unstyled">
           <!-- ======= Menu collapse Icon ===== -->
@@ -486,91 +348,216 @@
               <i class="ti ti-menu-2"></i>
             </a>
           </li>
-          <li class="dropdown pc-h-item">
-            <a class="pc-head-link dropdown-toggle arrow-none m-0 trig-drp-search" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false">
-              <svg class="pc-icon">
-                <use xlink:href="#custom-search-normal-1"></use>
-              </svg>
+          <li class="dropdown pc-h-item d-inline-flex d-md-none">
+            <a
+                    class="pc-head-link dropdown-toggle arrow-none m-0"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    role="button"
+                    aria-haspopup="false"
+                    aria-expanded="false"
+            >
+              <i class="ti ti-search"></i>
             </a>
             <div class="dropdown-menu pc-h-dropdown drp-search">
-              <form class="px-3 py-2">
-                <input type="search" class="form-control border-0 shadow-none" placeholder="Search here. . .">
+              <form class="px-3">
+                <div class="form-group mb-0 d-flex align-items-center">
+                  <i data-feather="search"></i>
+                  <input type="search" class="form-control border-0 shadow-none" placeholder="Search here. . .">
+                </div>
               </form>
             </div>
           </li>
+          <li class="pc-h-item d-none d-md-inline-flex">
+            <form class="header-search">
+              <i data-feather="search" class="icon-search"></i>
+              <input type="search" class="form-control" placeholder="Search here. . .">
+            </form>
+          </li>
         </ul>
       </div>
-      <!-- [Header] end -->
-
-      <!-- [Header tools] start -->
+      <!-- [Mobile Media Block end] -->
       <div class="ms-auto">
         <ul class="list-unstyled">
           <li class="dropdown pc-h-item">
-            <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false">
-              <svg class="pc-icon">
-                <use xlink:href="#custom-sun-1"></use>
-              </svg>
+            <a
+                    class="pc-head-link dropdown-toggle arrow-none me-0"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    role="button"
+                    aria-haspopup="false"
+                    aria-expanded="false"
+            >
+              <i class="ti ti-mail"></i>
             </a>
-            <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
-              <a href="#!" class="dropdown-item" onclick="layout_change('dark')">
-                <svg class="pc-icon">
-                  <use xlink:href="#custom-moon"></use>
-                </svg>
-                <span>Dark</span>
-              </a>
-              <a href="#!" class="dropdown-item" onclick="layout_change('light')">
-                <svg class="pc-icon">
-                  <use xlink:href="#custom-sun-1"></use>
-                </svg>
-                <span>Light</span>
-              </a>
-              <a href="#!" class="dropdown-item" onclick="layout_change_default()">
-                <svg class="pc-icon">
-                  <use xlink:href="#custom-setting-2"></use>
-                </svg>
-                <span>Default</span>
-              </a>
+            <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
+              <div class="dropdown-header d-flex align-items-center justify-content-between">
+                <h5 class="m-0">Message</h5>
+                <a href="#!" class="pc-head-link bg-transparent"><i class="ti ti-x text-danger"></i></a>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-header px-0 text-wrap header-notification-scroll position-relative" style="max-height: calc(100vh - 215px)">
+                <div class="list-group list-group-flush w-100">
+                  <a class="list-group-item list-group-item-action">
+                    <div class="d-flex">
+                      <div class="flex-shrink-0">
+                        <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
+                      </div>
+                      <div class="flex-grow-1 ms-1">
+                        <span class="float-end text-muted">3:00 AM</span>
+                        <p class="text-body mb-1">It's <b>Cristina danny's</b> birthday today.</p>
+                        <span class="text-muted">2 min ago</span>
+                      </div>
+                    </div>
+                  </a>
+                  <a class="list-group-item list-group-item-action">
+                    <div class="d-flex">
+                      <div class="flex-shrink-0">
+                        <img src="../assets/images/user/avatar-1.jpg" alt="user-image" class="user-avtar">
+                      </div>
+                      <div class="flex-grow-1 ms-1">
+                        <span class="float-end text-muted">6:00 PM</span>
+                        <p class="text-body mb-1"><b>Aida Burg</b> commented your post.</p>
+                        <span class="text-muted">5 August</span>
+                      </div>
+                    </div>
+                  </a>
+                  <a class="list-group-item list-group-item-action">
+                    <div class="d-flex">
+                      <div class="flex-shrink-0">
+                        <img src="../assets/images/user/avatar-3.jpg" alt="user-image" class="user-avtar">
+                      </div>
+                      <div class="flex-grow-1 ms-1">
+                        <span class="float-end text-muted">2:45 PM</span>
+                        <p class="text-body mb-1"><b>There was a failure to your setup.</b></p>
+                        <span class="text-muted">7 hours ago</span>
+                      </div>
+                    </div>
+                  </a>
+                  <a class="list-group-item list-group-item-action">
+                    <div class="d-flex">
+                      <div class="flex-shrink-0">
+                        <img src="../assets/images/user/avatar-4.jpg" alt="user-image" class="user-avtar">
+                      </div>
+                      <div class="flex-grow-1 ms-1">
+                        <span class="float-end text-muted">9:10 PM</span>
+                        <p class="text-body mb-1"><b>Cristina Danny </b> invited to join <b> Meeting.</b></p>
+                        <span class="text-muted">Daily scrum meeting time</span>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="text-center py-2">
+                <a href="#!" class="link-primary">View all</a>
+              </div>
             </div>
           </li>
-          <li class="dropdown pc-h-item">
-            <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false">
-              <svg class="pc-icon">
-                <use xlink:href="#custom-setting-2"></use>
-              </svg>
+          <li class="dropdown pc-h-item header-user-profile">
+            <a
+                    class="pc-head-link dropdown-toggle arrow-none me-0"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    role="button"
+                    aria-haspopup="false"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false"
+            >
+              <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
+              <span class="user_name"></span>
             </a>
-            <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
-              <a href="#!" class="dropdown-item">
-                <i class="ti ti-user"></i>
-                <span>My Account</span>
-              </a>
-              <a href="#!" class="dropdown-item">
-                <i class="ti ti-settings"></i>
-                <span>Settings</span>
-              </a>
-              <a href="#!" class="dropdown-item">
-                <i class="ti ti-headset"></i>
-                <span>Support</span>
-              </a>
-              <a href="#!" class="dropdown-item">
-                <i class="ti ti-lock"></i>
-                <span>Lock Screen</span>
-              </a>
-              <a href="#!" class="dropdown-item">
-                <i class="ti ti-power"></i>
-                <span>Logout</span>
-              </a>
+            <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
+              <div class="dropdown-header">
+                <div class="d-flex mb-1">
+                  <div class="flex-shrink-0">
+                    <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar wid-35">
+                  </div>
+                  <div class="flex-grow-1 ms-3">
+                    <h6 class="mb-1 user_name"></h6>
+                    <span class="user_role"></span>
+                  </div>
+                  <button type="button" id="logoutBtn" class="pc-head-link bg-transparent" style="border: unset;" onclick="logoutBtn()"><i class="ti ti-power text-danger"></i></button>
+                </div>
+              </div>
+              <ul class="nav drp-tabs nav-fill nav-tabs" id="mydrpTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button
+                          class="nav-link active"
+                          id="drp-t1"
+                          data-bs-toggle="tab"
+                          data-bs-target="#drp-tab-1"
+                          type="button"
+                          role="tab"
+                          aria-controls="drp-tab-1"
+                          aria-selected="true"
+                  ><i class="ti ti-user"></i> Profile</button
+                  >
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button
+                          class="nav-link"
+                          id="drp-t2"
+                          data-bs-toggle="tab"
+                          data-bs-target="#drp-tab-2"
+                          type="button"
+                          role="tab"
+                          aria-controls="drp-tab-2"
+                          aria-selected="false"
+                  ><i class="ti ti-settings"></i> Setting</button
+                  >
+                </li>
+              </ul>
+              <div class="tab-content" id="mysrpTabContent">
+                <div class="tab-pane fade show active" id="drp-tab-1" role="tabpanel" aria-labelledby="drp-t1" tabindex="0">
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-edit-circle"></i>
+                    <span>Edit Profile</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-user"></i>
+                    <span>View Profile</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-clipboard-list"></i>
+                    <span>Social Profile</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-wallet"></i>
+                    <span>Billing</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-power"></i>
+                    <span onclick="logoutBtn()">Logout</span>
+                  </a>
+                </div>
+                <div class="tab-pane fade" id="drp-tab-2" role="tabpanel" aria-labelledby="drp-t2" tabindex="0">
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-help"></i>
+                    <span>Support</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-user"></i>
+                    <span>Account Settings</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-lock"></i>
+                    <span>Privacy Center</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-messages"></i>
+                    <span>Feedback</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-list"></i>
+                    <span>History</span>
+                  </a>
+                </div>
+              </div>
             </div>
-          </li>
-          <li class="pc-h-item">
-            <a class="pc-head-link me-0" href="#" data-bs-toggle="offcanvas" data-bs-target="#announcement" aria-controls="announcement">
-              <svg class="pc-icon">
-                <use xlink:href="#custom-flash"></use>
-              </svg>
-            </a>
           </li>
         </ul>
       </div>
-      <!-- [Header tools] end -->
     </div>
   </header>
   <!-- [ Header ] end -->
@@ -720,6 +707,7 @@
   <!-- [ footer ] end -->
 
   <!-- Required Js -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="../assets/js/plugins/popper.min.js"></script>
   <script src="../assets/js/plugins/simplebar.min.js"></script>
   <script src="../assets/js/plugins/bootstrap.min.js"></script>
@@ -727,11 +715,12 @@
   <script src="../assets/js/pcoded.js"></script>
   <script src="../assets/js/plugins/feather.min.js"></script>
   <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/include-layout.js"></script>
+  <script src="../assets/js/customer.js"></script>
   <script>
-    // Check authentication and role
+    // Check authentication only (all authenticated users can use OCR)
     document.addEventListener('DOMContentLoaded', async () => {
-      const ok = await checkRole(['STUDENT', 'TEACHER', 'ADMIN']);
-      if (!ok) return;
+      requireAuth();
     });
   </script>
 
