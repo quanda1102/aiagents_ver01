@@ -32,24 +32,31 @@ class ChatWidget {
   }
 
   /**
-   * Initialize or restore session ID from localStorage with expiration handling
+   * Initialize or restore session ID from sessionStorage with expiration handling
    */
   initializeSession() {
     try {
-      // Check for new format first
-      let sessionData = localStorage.getItem('chat_widget_session_data');
+      // Check for new format in sessionStorage first
+      let sessionData = sessionStorage.getItem('chat_widget_session_data');
       
-      // Migrate from old format if needed
+      // Migrate from localStorage if needed
       if (!sessionData) {
-        const oldSessionId = localStorage.getItem('chat_widget_session_id');
-        if (oldSessionId) {
-          console.log('🔄 Chat Widget - Migrating session from old format');
+        const localSessionData = localStorage.getItem('chat_widget_session_data');
+        const oldLocalSessionId = localStorage.getItem('chat_widget_session_id');
+        
+        if (localSessionData) {
+          console.log('🔄 Chat Widget - Migrating session from localStorage to sessionStorage');
+          sessionStorage.setItem('chat_widget_session_data', localSessionData);
+          localStorage.removeItem('chat_widget_session_data'); // Clean up localStorage
+          sessionData = localSessionData;
+        } else if (oldLocalSessionId) {
+          console.log('🔄 Chat Widget - Migrating session from old localStorage format');
           // Create new format with current timestamp (assume it's fresh)
           const migratedData = {
-            sessionId: oldSessionId,
+            sessionId: oldLocalSessionId,
             timestamp: new Date().getTime()
           };
-          localStorage.setItem('chat_widget_session_data', JSON.stringify(migratedData));
+          sessionStorage.setItem('chat_widget_session_data', JSON.stringify(migratedData));
           localStorage.removeItem('chat_widget_session_id'); // Clean up old format
           sessionData = JSON.stringify(migratedData);
         }
@@ -63,13 +70,13 @@ class ChatWidget {
         // Check if session has expired
         if (now - timestamp < expireTime) {
           this.sessionId = sessionId;
-          console.log('🔄 Chat Widget - Restored existing session:', sessionId);
+          console.log('🔄 Chat Widget - Restored existing session from sessionStorage:', sessionId);
         } else {
           console.log('⏰ Chat Widget - Session expired, will create new session');
           this.clearSession();
         }
       } else {
-        console.log('🆕 Chat Widget - No existing session found');
+        console.log('🆕 Chat Widget - No existing session found in sessionStorage');
       }
       
       // If no valid session, sessionId will be null and server will create new one
@@ -84,7 +91,7 @@ class ChatWidget {
   }
 
   /**
-   * Save session ID to localStorage with timestamp
+   * Save session ID to sessionStorage with timestamp
    */
   saveSession(sessionId) {
     try {
@@ -98,24 +105,33 @@ class ChatWidget {
         timestamp: new Date().getTime()
       };
       
-      localStorage.setItem('chat_widget_session_data', JSON.stringify(sessionData));
+      sessionStorage.setItem('chat_widget_session_data', JSON.stringify(sessionData));
       this.sessionId = sessionId;
-      console.log('💾 Chat Widget - Session saved:', sessionId);
+      console.log('💾 Chat Widget - Session saved to sessionStorage:', sessionId);
     } catch (error) {
-      console.error('❌ Chat Widget - Error saving session:', error);
+      console.error('❌ Chat Widget - Error saving session to sessionStorage:', error);
+      // Fallback: try localStorage if sessionStorage fails
+      try {
+        localStorage.setItem('chat_widget_session_data', JSON.stringify(sessionData));
+        this.sessionId = sessionId;
+        console.log('💾 Chat Widget - Session saved to localStorage (fallback):', sessionId);
+      } catch (fallbackError) {
+        console.error('❌ Chat Widget - Both sessionStorage and localStorage failed:', fallbackError);
+      }
     }
   }
 
   /**
-   * Clear session data from localStorage
+   * Clear session data from both sessionStorage and localStorage
    */
   clearSession() {
     try {
+      sessionStorage.removeItem('chat_widget_session_data');
       localStorage.removeItem('chat_widget_session_data');
       // Keep old key for backward compatibility cleanup
       localStorage.removeItem('chat_widget_session_id');
       this.sessionId = null;
-      console.log('🗑️ Chat Widget - Session cleared');
+      console.log('🗑️ Chat Widget - Session cleared from both storages');
     } catch (error) {
       console.error('❌ Chat Widget - Error clearing session:', error);
     }
@@ -123,6 +139,12 @@ class ChatWidget {
 
   init() {
     console.log('🚀 Chat Widget - Initializing...');
+    
+    // Test storage capabilities on init
+    setTimeout(() => {
+      this.checkStorageCapabilities();
+    }, 500);
+    
     this.createWidget();
     this.bindEvents();
     this.showNotificationBadge();
@@ -360,8 +382,8 @@ class ChatWidget {
     // Log session status before sending
     console.log('📤 Chat Widget - Sending message with session ID:', this.sessionId);
     
-    // Get auth token if available
-    const token = localStorage.getItem('access_token');
+    // Get auth token if available (check both storages)
+    const token = sessionStorage.getItem('access_token') || localStorage.getItem('access_token');
 
     // Get current user metadata from auth.js functions
     let userData = {
@@ -643,7 +665,15 @@ class ChatWidget {
 
   getSessionInfo() {
     try {
-      const sessionData = localStorage.getItem('chat_widget_session_data');
+      // Check sessionStorage first, then localStorage as fallback
+      let sessionData = sessionStorage.getItem('chat_widget_session_data');
+      let storageType = 'sessionStorage';
+      
+      if (!sessionData) {
+        sessionData = localStorage.getItem('chat_widget_session_data');
+        storageType = 'localStorage';
+      }
+      
       if (sessionData) {
         const { sessionId, timestamp } = JSON.parse(sessionData);
         const now = new Date().getTime();
@@ -654,13 +684,14 @@ class ChatWidget {
           sessionId: sessionId,
           ageMinutes: ageMinutes,
           expiresInMinutes: expireMinutes - ageMinutes,
-          isValid: ageMinutes < expireMinutes
+          isValid: ageMinutes < expireMinutes,
+          storageType: storageType
         };
       }
-      return { sessionId: null, isValid: false };
+      return { sessionId: null, isValid: false, storageType: 'none' };
     } catch (error) {
       console.error('❌ Chat Widget - Error getting session info:', error);
-      return { sessionId: null, isValid: false, error: error.message };
+      return { sessionId: null, isValid: false, error: error.message, storageType: 'error' };
     }
   }
   
@@ -690,6 +721,46 @@ class ChatWidget {
     });
     
     return rect;
+  }
+
+  // Storage debugging helper
+  checkStorageCapabilities() {
+    const testKey = 'chat_widget_storage_test';
+    const testValue = JSON.stringify({ test: true, timestamp: Date.now() });
+    
+    const result = {
+      localStorage: { available: false, error: null },
+      sessionStorage: { available: false, error: null }
+    };
+
+    // Test localStorage
+    try {
+      localStorage.setItem(testKey, testValue);
+      const retrieved = localStorage.getItem(testKey);
+      if (retrieved === testValue) {
+        result.localStorage.available = true;
+        localStorage.removeItem(testKey);
+      }
+    } catch (error) {
+      result.localStorage.error = error.message;
+    }
+
+    // Test sessionStorage
+    try {
+      sessionStorage.setItem(testKey, testValue);
+      const retrieved = sessionStorage.getItem(testKey);
+      if (retrieved === testValue) {
+        result.sessionStorage.available = true;
+        sessionStorage.removeItem(testKey);
+      }
+    } catch (error) {
+      result.sessionStorage.error = error.message;
+    }
+
+    console.log('💾 Chat Widget - Storage Capabilities:', result);
+    console.table(result);
+    
+    return result;
   }
 }
 
@@ -739,6 +810,7 @@ window.debugChatWidget = function() {
     console.log('- chatWidget.getCurrentSessionId() - Get current session ID');
     console.log('- chatWidget.getSessionInfo() - Get detailed session info');
     console.log('- chatWidget.resetSession() - Reset current session');
+    console.log('- chatWidget.checkStorageCapabilities() - Test storage availability');
     return window.chatWidget.checkVisibility();
   } else {
     console.error('❌ Chat widget not found! Check if it initialized properly.');
