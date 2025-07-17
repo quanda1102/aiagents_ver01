@@ -159,7 +159,7 @@ class ValidateAnswerResponse(BaseModel):
 
 
 class GenerateQuizRequest(BaseModel):
-    document_text: str = Field(..., min_length=50, max_length=50000)
+    document_text: str = Field(..., min_length=1, max_length=50000)
     quiz_title: Optional[str] = Field(default=None, max_length=200)
     number_of_questions: int = Field(default=5, ge=1, le=20)
     difficulty_level: str = Field(default="medium", pattern="^(easy|medium|hard)$")

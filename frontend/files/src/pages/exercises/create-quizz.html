@@ -1482,10 +1482,6 @@
         return;
       }
       
-      if (documentText.length < 50) {
-        alert('Nội dung văn bản phải có ít nhất 50 ký tự để tạo bài tập có chất lượng');
-        return;
-      }
       
       // Validate quiz title
       const quizTitle = formData.get('quiz_title').trim();
@@ -1500,11 +1496,10 @@
         number_of_questions: parseInt(formData.get('number_of_questions')),
         difficulty_level: formData.get('difficulty_level'),
         question_types: selectedTypes,
-        created_by: formData.get('created_by'),
-        time_limit: parseInt(formData.get('time_limit')),
-        allow_multiple_attempts: formData.has('ai_allow_multiple_attempts'),
-        shuffle_questions: formData.has('ai_shuffle_questions')
+        created_by: formData.get('created_by') || 'AI Assistant'
       };
+      
+      console.log('AI Quiz Payload:', payload);
 
       
 
@@ -1525,7 +1520,9 @@
         });
 
         const result = await response.json();
-        if (result.message === "Quiz generated successfully from document") {
+        console.log('API Response:', result);
+        
+        if (response.ok && result.message === "Quiz generated successfully from document") {
           const quizId = result.quiz_id;
           
           // Check if class assignment is provided
@@ -1556,7 +1553,22 @@
           
           window.location.href = '../../pages/exercises/list-quizz.html';
         } else {
-          throw new Error(result.message || 'Không thể tạo bài tập với AI');
+          // Log the full error details
+          console.error('API Error Response:', result);
+          console.error('Response Status:', response.status);
+          
+          let errorMessage = 'Không thể tạo bài tập với AI';
+          if (result.detail) {
+            if (typeof result.detail === 'string') {
+              errorMessage = result.detail;
+            } else if (Array.isArray(result.detail)) {
+              errorMessage = result.detail.map(err => `${err.loc?.join('.')}: ${err.msg}`).join('; ');
+            }
+          } else if (result.message) {
+            errorMessage = result.message;
+          }
+          
+          throw new Error(errorMessage);
         }
       } catch (err) {
         console.error('AI Quiz Generation Error:', err);
