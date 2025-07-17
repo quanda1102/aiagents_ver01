@@ -421,9 +421,14 @@
           <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h5 class="mb-0"><i class="ti ti-list me-2"></i>Lịch sử bài làm</h5>
-              <button class="btn btn-primary btn-sm" onclick="loadAttempts()" id="refreshBtn">
-                <i class="ti ti-refresh me-1"></i>Tải lại
-              </button>
+              <div>
+                <button class="btn btn-outline-secondary btn-sm me-1" onclick="debugApiEndpoint()" title="Debug API">
+                  <i class="ti ti-bug"></i>
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="loadAttempts()" id="refreshBtn">
+                  <i class="ti ti-refresh me-1"></i>Tải lại
+                </button>
+              </div>
             </div>
             <div class="card-body">
               <div id="loadingIndicator" class="text-center py-4" style="display: none;">
@@ -464,26 +469,74 @@
     let currentUser = null;
     let isAdminOrTeacher = false;
     
-    // Initialize page
+    // Initialize page with proper sequencing
     document.addEventListener('DOMContentLoaded', async function() {
-      currentUser = await getCurrentUser();
-      isAdminOrTeacher = currentUser && ['ADMIN', 'TEACHER'].includes(currentUser.role);
+      try {
+        // Wait for authentication to be fully ready
+        currentUser = await getCurrentUser();
+        
+        // Ensure we have a valid user and token
+        if (!currentUser || !localStorage.getItem('access_token')) {
+          showError('Không thể xác thực người dùng. Vui lòng đăng nhập lại.');
+          setTimeout(() => {
+            window.location.href = '../../pages/login.html';
+          }, 2000);
+          return;
+        }
+        
+        isAdminOrTeacher = currentUser && ['ADMIN', 'TEACHER'].includes(currentUser.role);
+        
+        // Update page title and UI based on role
+        if (isAdminOrTeacher) {
+          document.getElementById('pageTitle').innerHTML = '<i class="ti ti-chart-bar me-2"></i>Tất cả kết quả bài làm';
+          document.getElementById('uniqueStudentsCol').style.display = 'block';
+          document.getElementById('uniqueQuizzesLabel').textContent = 'Bài tập có kết quả';
+          // Adjust column layout for admin view
+          document.querySelectorAll('.stats-item').forEach((item, index) => {
+            item.parentElement.className = 'col-md-2';
+          });
+        } else {
+          document.getElementById('pageTitle').innerHTML = '<i class="ti ti-chart-bar me-2"></i>Kết quả bài làm của tôi';
+        }
+        
+        // Add small delay to ensure backend is ready, then load with retry
+        setTimeout(() => {
+          loadAttemptsWithRetry();
+        }, 500);
+        
+      } catch (error) {
+        console.error('Error during page initialization:', error);
+        showError('Có lỗi trong quá trình khởi tạo trang: ' + error.message);
+      }
+    });
+
+    // Load attempts with retry logic for initial load
+    async function loadAttemptsWithRetry(maxRetries = 3, delay = 1000) {
+      let lastError = null;
       
-      // Update page title and UI based on role
-      if (isAdminOrTeacher) {
-        document.getElementById('pageTitle').innerHTML = '<i class="ti ti-chart-bar me-2"></i>Tất cả kết quả bài làm';
-        document.getElementById('uniqueStudentsCol').style.display = 'block';
-        document.getElementById('uniqueQuizzesLabel').textContent = 'Bài tập có kết quả';
-        // Adjust column layout for admin view
-        document.querySelectorAll('.stats-item').forEach((item, index) => {
-          item.parentElement.className = 'col-md-2';
-        });
-      } else {
-        document.getElementById('pageTitle').innerHTML = '<i class="ti ti-chart-bar me-2"></i>Kết quả bài làm của tôi';
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          await loadAttempts();
+          return; // Success, exit retry loop
+        } catch (error) {
+          lastError = error;
+          console.warn(`Attempt ${attempt} failed:`, error.message);
+          
+          // If it's a 404 and not the last attempt, wait and retry
+          if (error.message.includes('404') && attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, delay * attempt));
+            continue;
+          }
+          
+          // If it's other errors or last attempt, break and show error
+          break;
+        }
       }
       
-      loadAttempts();
-    });
+      // All retries failed
+      console.error('All retry attempts failed:', lastError);
+      showError(`Không thể tải dữ liệu sau ${maxRetries} lần thử. Vui lòng nhấn "Tải lại".`);
+    }
 
     async function loadAttempts() {
       const loadingIndicator = document.getElementById('loadingIndicator');
@@ -496,14 +549,21 @@
       refreshBtn.disabled = true;
       
       try {
+        // Verify token exists before making request
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          throw new Error('Token không tồn tại');
+        }
+        
         // Use different endpoints based on user role
         const endpoint = isAdminOrTeacher ? 'all-attempts' : 'my-attempts';
         const limit = isAdminOrTeacher ? 100 : 50;
+        const apiUrl = `${getApiUrl('QUIZ')}/${endpoint}?limit=${limit}`;
         
-        const response = await fetch(`${getApiUrl('QUIZ')}/${endpoint}?limit=${limit}`, {
+        const response = await fetch(apiUrl, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
@@ -520,6 +580,9 @@
             showError('Bạn không có quyền xem thông tin này.');
             return;
           }
+          if (response.status === 404) {
+            throw new Error(`Endpoint không tồn tại (404): ${endpoint}`);
+          }
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
@@ -533,6 +596,12 @@
         
       } catch (error) {
         console.error('Error loading attempts:', error);
+        
+        // Re-throw for retry logic to catch
+        if (error.message.includes('404')) {
+          throw error;
+        }
+        
         showError('Không thể tải kết quả bài làm: ' + error.message);
         
         // Show empty state
@@ -683,9 +752,34 @@
     }
 
     function showError(message) {
-      // You could implement a toast notification here
-      console.error(message);
-      alert(message); // Simple fallback
+      console.error('User Attempts Error:', message);
+      
+      // Try to use SweetAlert2 if available
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Có lỗi xảy ra',
+          text: message,
+          confirmButtonText: 'Đã hiểu',
+          confirmButtonColor: '#dc3545'
+        });
+      } else {
+        // Fallback to alert if SweetAlert2 is not available
+        alert('Lỗi: ' + message);
+      }
+    }
+    
+    // Debug function to check API endpoint availability
+    async function debugApiEndpoint() {
+      const endpoint = isAdminOrTeacher ? 'all-attempts' : 'my-attempts';
+      const apiUrl = `${getApiUrl('QUIZ')}/${endpoint}`;
+      console.log('Debug API Info:', {
+        endpoint: endpoint,
+        fullUrl: apiUrl,
+        isAdminOrTeacher: isAdminOrTeacher,
+        currentUser: currentUser,
+        token: localStorage.getItem('access_token') ? 'Present' : 'Missing'
+      });
     }
   </script>
 </body>
