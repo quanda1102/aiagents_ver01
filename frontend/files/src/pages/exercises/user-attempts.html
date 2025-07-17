@@ -184,7 +184,7 @@
             </div>
             <div class="col-md-12">
               <div class="page-header-title">
-                <h2 class="mb-0"><i class="ti ti-chart-bar me-2"></i>Kết quả bài làm của tôi</h2>
+                <h2 class="mb-0" id="pageTitle"><i class="ti ti-chart-bar me-2"></i>Kết quả bài làm</h2>
               </div>
             </div>
           </div>
@@ -213,7 +213,13 @@
               <div class="col-md-3">
                 <div class="stats-item">
                   <div class="stats-number" id="uniqueQuizzes">-</div>
-                  <div class="stats-label">Bài tập đã làm</div>
+                  <div class="stats-label" id="uniqueQuizzesLabel">Bài tập đã làm</div>
+                </div>
+              </div>
+              <div class="col-md-3" id="uniqueStudentsCol" style="display: none;">
+                <div class="stats-item">
+                  <div class="stats-number" id="uniqueStudents">-</div>
+                  <div class="stats-label">Học sinh tham gia</div>
                 </div>
               </div>
               <div class="col-md-3">
@@ -269,8 +275,27 @@
   <script>
     requireAuth();
     
+    let currentUser = null;
+    let isAdminOrTeacher = false;
+    
     // Initialize page
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+      currentUser = await getCurrentUser();
+      isAdminOrTeacher = currentUser && ['ADMIN', 'TEACHER'].includes(currentUser.role);
+      
+      // Update page title and UI based on role
+      if (isAdminOrTeacher) {
+        document.getElementById('pageTitle').innerHTML = '<i class="ti ti-chart-bar me-2"></i>Tất cả kết quả bài làm';
+        document.getElementById('uniqueStudentsCol').style.display = 'block';
+        document.getElementById('uniqueQuizzesLabel').textContent = 'Bài tập có kết quả';
+        // Adjust column layout for admin view
+        document.querySelectorAll('.stats-item').forEach((item, index) => {
+          item.parentElement.className = 'col-md-2';
+        });
+      } else {
+        document.getElementById('pageTitle').innerHTML = '<i class="ti ti-chart-bar me-2"></i>Kết quả bài làm của tôi';
+      }
+      
       loadAttempts();
     });
 
@@ -285,7 +310,11 @@
       refreshBtn.disabled = true;
       
       try {
-        const response = await fetch(`${getApiUrl('QUIZ')}/my-attempts?limit=50`, {
+        // Use different endpoints based on user role
+        const endpoint = isAdminOrTeacher ? 'all-attempts' : 'my-attempts';
+        const limit = isAdminOrTeacher ? 100 : 50;
+        
+        const response = await fetch(`${getApiUrl('QUIZ')}/${endpoint}?limit=${limit}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
@@ -297,8 +326,12 @@
           if (response.status === 401) {
             showError('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
             setTimeout(() => {
-              window.location.href = '../../pages/login.hml';
+              window.location.href = '../../pages/login.html';
             }, 3000);
+            return;
+          }
+          if (response.status === 403) {
+            showError('Bạn không có quyền xem thông tin này.');
             return;
           }
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -307,10 +340,10 @@
         const data = await response.json();
         
         // Update stats
-        updateStats(data.data);
+        updateStats(data.data, isAdminOrTeacher);
         
         // Display attempts
-        displayAttempts(data.data.recent_attempts || []);
+        displayAttempts(data.data.recent_attempts || [], isAdminOrTeacher);
         
       } catch (error) {
         console.error('Error loading attempts:', error);
@@ -331,25 +364,38 @@
       }
     }
 
-    function updateStats(data) {
+    function updateStats(data, isAdminView = false) {
       document.getElementById('totalAttempts').textContent = data.total_attempts || 0;
       document.getElementById('averageScore').textContent = data.average_score ? Math.round(data.average_score) : 0;
-      document.getElementById('uniqueQuizzes').textContent = data.quizzes_taken || 0;
       document.getElementById('bestScore').textContent = data.best_score ? Math.round(data.best_score) : 0;
+      
+      if (isAdminView) {
+        document.getElementById('uniqueQuizzes').textContent = data.unique_quizzes || 0;
+        document.getElementById('uniqueStudents').textContent = data.unique_students || 0;
+      } else {
+        document.getElementById('uniqueQuizzes').textContent = data.quizzes_taken || 0;
+      }
     }
 
-    function displayAttempts(attempts) {
+    function displayAttempts(attempts, isAdminView = false) {
       const attemptsList = document.getElementById('attemptsList');
       
       if (!attempts || attempts.length === 0) {
+        const emptyMessage = isAdminView 
+          ? 'Chưa có kết quả bài làm nào từ học sinh'
+          : 'Bạn chưa làm bài tập nào. Hãy vào phần "Bài tập được giao" để bắt đầu!';
+        const emptyAction = isAdminView 
+          ? '' 
+          : `<a href="./my-assigned-quizzes.html" class="btn btn-primary">
+               <i class="ti ti-clipboard-list me-1"></i>Xem bài tập được giao
+             </a>`;
+        
         attemptsList.innerHTML = `
           <div class="empty-state">
             <i class="ti ti-clipboard-off"></i>
             <h5>Chưa có kết quả bài làm</h5>
-            <p class="text-muted">Bạn chưa làm bài tập nào. Hãy vào phần "Bài tập được giao" để bắt đầu!</p>
-            <a href="./my-assigned-quizzes.html" class="btn btn-primary">
-              <i class="ti ti-clipboard-list me-1"></i>Xem bài tập được giao
-            </a>
+            <p class="text-muted">${emptyMessage}</p>
+            ${emptyAction}
           </div>
         `;
         return;
@@ -364,10 +410,20 @@
         const correctAnswers = attempt.results ? attempt.results.filter(r => r.is_correct).length : 0;
         const totalQuestions = attempt.results ? attempt.results.length : 0;
         
+        // Student info for admin view
+        const studentInfo = isAdminView ? `
+          <div class="d-flex justify-content-between align-items-center mt-1">
+            <small class="text-primary">
+              <i class="ti ti-user me-1"></i>
+              ${attempt.user_name || attempt.user_email}
+            </small>
+          </div>
+        ` : '';
+        
         return `
           <div class="attempt-card">
             <div class="row align-items-center">
-              <div class="col-md-6">
+              <div class="col-md-${isAdminView ? '5' : '6'}">
                 <h6 class="mb-1">
                   <i class="ti ti-clipboard-text me-2"></i>
                   ${attempt.quiz_title || `Quiz ID: ${attempt.quiz_id}`}
@@ -379,13 +435,14 @@
                   </small>
                   ${attempt.quiz_class_code ? `<span class="badge bg-info">${getClassDisplayName(attempt.quiz_class_code)}</span>` : ''}
                 </div>
+                ${studentInfo}
               </div>
               <div class="col-md-3 text-center">
                 <div class="score-badge ${scoreClass}">
                   ${Math.round(score)}%
                 </div>
               </div>
-              <div class="col-md-3 text-end">
+              <div class="col-md-${isAdminView ? '4' : '3'} text-end">
                 <small class="text-muted d-block">
                   ${correctAnswers}/${totalQuestions} đúng
                 </small>

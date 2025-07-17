@@ -343,12 +343,13 @@ class MySQLQuizService:
                     "quiz_id": attempt.quiz_id,
                     "quiz_title": quiz.title,
                     "quiz_class_code": quiz.class_code,
-                    "user_id": attempt.user_id,
+                    "user_id": str(attempt.user_id),  # Convert to string for consistency
                     "submitted_at": attempt.submitted_at.isoformat(),
                     "earned_points": attempt.earned_points,
                     "total_points": attempt.total_points,
                     "score_percentage": round((attempt.earned_points / attempt.total_points * 100), 2) if attempt.total_points > 0 else 0,
-                    "results": attempt.results
+                    "results": attempt.results,
+                    "answers": attempt.answers  # Add answers field for consistency
                 }
                 attempt_data.append(attempt_dict)
                 
@@ -356,6 +357,44 @@ class MySQLQuizService:
             
         except Exception as e:
             logger.error(f"Error retrieving all attempts: {e}")
+            return []
+        finally:
+            db.close()
+            
+    def get_all_attempts_with_student_info(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Get all quiz attempts with student information (for teachers/admins)"""
+        db = self.get_db()
+        try:
+            # Join QuizAttempt with Quiz and User to get complete information
+            attempts_with_info = db.query(QuizAttempt, Quiz, User).join(
+                Quiz, QuizAttempt.quiz_id == Quiz.quiz_id
+            ).join(
+                User, QuizAttempt.user_id == User.id
+            ).order_by(QuizAttempt.submitted_at.desc()).limit(limit).all()
+            
+            attempt_data = []
+            for attempt, quiz, user in attempts_with_info:
+                attempt_dict = {
+                    "attempt_id": attempt.attempt_id,
+                    "quiz_id": attempt.quiz_id,
+                    "quiz_title": quiz.title,
+                    "quiz_class_code": quiz.class_code,
+                    "user_id": str(attempt.user_id),
+                    "user_name": user.full_name,
+                    "user_email": user.email,
+                    "submitted_at": attempt.submitted_at.isoformat(),
+                    "earned_points": attempt.earned_points,
+                    "total_points": attempt.total_points,
+                    "score_percentage": round((attempt.earned_points / attempt.total_points * 100), 2) if attempt.total_points > 0 else 0,
+                    "results": attempt.results,
+                    "answers": attempt.answers
+                }
+                attempt_data.append(attempt_dict)
+                
+            return attempt_data
+            
+        except Exception as e:
+            logger.error(f"Error retrieving all attempts with student info: {e}")
             return []
         finally:
             db.close()
