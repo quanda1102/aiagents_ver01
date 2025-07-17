@@ -463,20 +463,13 @@ async def get_my_attempts(
     limit: int = Query(default=10, ge=1, le=50),
     current_user: User = Depends(get_current_user)
 ):
-    """Get quiz attempts for current user (students) or all attempts (teachers/admins)"""
+    """Get quiz attempts for current user only"""
     if not quiz_service:
         raise HTTPException(status_code=503, detail="Quiz service unavailable")
     
     try:
-        # Import Role enum for comparison
-        from models.user import Role
-        
-        if current_user.role == Role.STUDENT.value:  # Student (3)
-            # Students see only their own attempts
-            attempts = quiz_service.get_user_attempts(str(current_user.id))
-        else:
-            # Teachers and admins see all attempts
-            attempts = quiz_service.get_all_attempts(limit)
+        # Get only current user's attempts
+        attempts = quiz_service.get_user_attempts(str(current_user.id))
         
         # Limit results
         limited_attempts = attempts[:limit]
@@ -518,6 +511,65 @@ async def get_my_attempts(
         
     except Exception as e:
         logger.error(f"Error retrieving user attempts: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/all-attempts", response_model=QuizResponse)
+async def get_all_attempts(
+    limit: int = Query(default=50, ge=1, le=100),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all quiz attempts with student information (Admin/Teacher only)"""
+    if not quiz_service:
+        raise HTTPException(status_code=503, detail="Quiz service unavailable")
+    
+    # Check if user has permission to view all attempts
+    from models.user import Role
+    user_role = Role(current_user.role) if isinstance(current_user.role, int) else current_user.role
+    if user_role not in [Role.TEACHER, Role.ADMIN]:
+        raise HTTPException(status_code=403, detail="Access denied. Teachers and Admins only.")
+    
+    try:
+        # Get all attempts with enhanced student information
+        attempts_with_students = quiz_service.get_all_attempts_with_student_info(limit)
+        
+        # Calculate overall stats
+        if attempts_with_students:
+            total_attempts = len(attempts_with_students)
+            scores = [attempt.get("score_percentage", 0) for attempt in attempts_with_students]
+            average_score = sum(scores) / len(scores) if scores else 0
+            best_score = max(scores) if scores else 0
+            
+            # Count unique students and quizzes
+            unique_students = set(attempt.get("user_id") for attempt in attempts_with_students)
+            unique_quizzes = set(attempt.get("quiz_id") for attempt in attempts_with_students)
+            
+            stats = {
+                "total_attempts": total_attempts,
+                "average_score": round(average_score, 2),
+                "best_score": round(best_score, 2),
+                "unique_students": len(unique_students),
+                "unique_quizzes": len(unique_quizzes),
+                "recent_attempts": attempts_with_students
+            }
+        else:
+            stats = {
+                "total_attempts": 0,
+                "average_score": 0.0,
+                "best_score": 0.0,
+                "unique_students": 0,
+                "unique_quizzes": 0,
+                "recent_attempts": []
+            }
+        
+        return QuizResponse(
+            success=True,
+            message="All attempts retrieved successfully",
+            data=stats
+        )
+        
+    except Exception as e:
+        logger.error(f"Error retrieving all attempts: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
