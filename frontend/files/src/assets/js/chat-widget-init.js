@@ -89,10 +89,16 @@
         setTimeout(() => {
           try {
             if (typeof ChatWidget !== 'undefined') {
+              // Check if we're in development mode for testing
+              const isDevelopment = window.location.hostname === 'localhost' || 
+                                   window.location.hostname === '127.0.0.1' ||
+                                   window.location.search.includes('test=true');
+              
               // Initialize chat widget with default options
               window.chatWidget = new ChatWidget({
                 apiUrl: 'https://api.aagents.vn/api/v1/chat',
-                sessionExpireHours: 24
+                sessionExpireHours: 24,
+                testMode: isDevelopment // Enable test mode in development
               });
               window.chatWidget.init();
             } else {
