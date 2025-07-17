@@ -462,10 +462,22 @@ class ChatWidget {
     const data = await response.json();
     
     // Extract session_id from response and save it
-    const extractedSessionId = data.session_id || data.sessionId || 
-                              (data.metadata && data.metadata.session_id);
+    // Handle both direct object and array response formats
+    let extractedSessionId = null;
+    
+    if (Array.isArray(data) && data.length > 0) {
+      // Array format: [{ output: "...", session_id: "..." }]
+      const firstItem = data[0];
+      extractedSessionId = firstItem.session_id || firstItem.sessionId || 
+                          (firstItem.metadata && firstItem.metadata.session_id);
+    } else {
+      // Direct object format: { response: "...", session_id: "..." }
+      extractedSessionId = data.session_id || data.sessionId || 
+                          (data.metadata && data.metadata.session_id);
+    }
     
     if (extractedSessionId && extractedSessionId !== this.sessionId) {
+      console.log(`💾 Chat Widget - Saving new session ID: ${extractedSessionId}`);
       this.saveSessionId(extractedSessionId);
     }
 
