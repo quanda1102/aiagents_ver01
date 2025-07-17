@@ -11,6 +11,36 @@
     });
   }
 
+  // +++ HÀM ĐÃ ĐƯỢC CẬP NHẬT LOGIC +++
+  function highlightActiveMenuItem() {
+    const currentPath = window.location.pathname;
+    const allLinks = document.querySelectorAll('.pc-sidebar .pc-link');
+
+    allLinks.forEach(link => {
+      // *** THAY ĐỔI QUAN TRỌNG: Bỏ qua các link chỉ dùng để trigger dropdown ***
+      if (link.getAttribute('href') === '#') {
+        return; // Chuyển sang xử lý link tiếp theo
+      }
+
+      const linkPath = new URL(link.href).pathname;
+
+      if (linkPath === currentPath) {
+        // 1. Kích hoạt thẻ <li> chứa link này
+        const listItem = link.closest('.pc-item');
+        if (listItem) {
+          listItem.classList.add('active');
+        }
+
+        // 2. Tìm menu cha (nếu có) và kích hoạt nó để mở ra
+        const parentMenu = link.closest('.pc-hasmenu');
+        if (parentMenu) {
+          parentMenu.classList.add('active');
+          parentMenu.classList.add('pc-trigger'); // Class này thường dùng để mở menu
+        }
+      }
+    });
+  }
+
   async function loadIncludes() {
     const placeholders = Array.from(document.querySelectorAll('[data-include]'));
     await Promise.all(placeholders.map(async (el) => {
@@ -20,7 +50,6 @@
         try {
           html = await fetchFragment(url);
         } catch (err) {
-          // fallback: try root-relative /layouts/{file}
           const fileName = url.split('/').pop();
           const fallbackUrl = `/layouts/${fileName}`;
           console.warn(`Include failed for ${url}, trying ${fallbackUrl}`);
@@ -32,7 +61,9 @@
       }
     }));
 
-    // Reinitialize PCoded menu if available (sidebar was added after its first run)
+    // Gọi hàm đánh dấu active sau khi include xong
+    highlightActiveMenuItem();
+
     if (typeof add_scroller === 'function') {
       try {
         add_scroller();
@@ -47,4 +78,4 @@
   } else {
     loadIncludes();
   }
-})(); 
+})();
