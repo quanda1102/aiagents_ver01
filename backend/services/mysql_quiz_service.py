@@ -535,6 +535,75 @@ class MySQLQuizService:
             return self.list_quizzes(user=user)
         else:
             return self.list_quizzes()
+    
+    def get_assigned_quizzes_with_status(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get quizzes assigned to user with completion status"""
+        db = self.get_db()
+        try:
+            # Get user info
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user:
+                return []
+            
+            # Get quizzes assigned to user's class(es)
+            query = db.query(Quiz)
+            if user.role == 3:  # STUDENT
+                if user.class_name:
+                    # Handle both string and list class_name
+                    if isinstance(user.class_name, str):
+                        class_list = [user.class_name]
+                    else:
+                        class_list = user.class_name
+                    query = query.filter(Quiz.class_code.in_(class_list))
+                else:
+                    return []
+            
+            quizzes = query.order_by(Quiz.created_at.desc()).all()
+            
+            result = []
+            for quiz in quizzes:
+                # Check if user has completed this quiz
+                attempts = db.query(QuizAttempt).filter(
+                    QuizAttempt.quiz_id == quiz.quiz_id,
+                    QuizAttempt.user_id == user_id
+                ).order_by(QuizAttempt.submitted_at.desc()).all()
+                
+                completed = len(attempts) > 0
+                best_score = 0
+                last_attempt = None
+                attempt_count = len(attempts)
+                
+                if attempts:
+                    best_score = max(attempt.score_percentage for attempt in attempts)
+                    last_attempt = attempts[0].submitted_at
+                
+                quiz_data = {
+                    "quiz_id": quiz.quiz_id,
+                    "title": quiz.title,
+                    "description": quiz.description,
+                    "created_at": quiz.created_at,
+                    "created_by": quiz.created_by,
+                    "class_code": quiz.class_code,
+                    "time_limit": quiz.time_limit,
+                    "allow_multiple_attempts": quiz.allow_multiple_attempts,
+                    "question_count": len(quiz.questions) if quiz.questions else 0,
+                    "total_points": sum(q.get("points", 1) for q in quiz.questions) if quiz.questions else 0,
+                    "completed": completed,
+                    "attempt_count": attempt_count,
+                    "best_score": best_score,
+                    "last_attempt": last_attempt,
+                    "status": "completed" if completed else "pending"
+                }
+                
+                result.append(quiz_data)
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error getting assigned quizzes: {e}")
+            return []
+        finally:
+            db.close()
 
 
 
