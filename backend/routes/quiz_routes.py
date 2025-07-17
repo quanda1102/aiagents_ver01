@@ -572,6 +572,45 @@ async def get_all_attempts(
         logger.error(f"Error retrieving all attempts: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+@router.get("/assigned-quizzes", response_model=QuizResponse)
+async def get_assigned_quizzes(
+    current_user: User = Depends(get_current_user)
+):
+    """Get quizzes assigned to current user with completion status"""
+    if not quiz_service:
+        raise HTTPException(status_code=503, detail="Quiz service unavailable")
+    
+    try:
+        # Get assigned quizzes for current user
+        assigned_quizzes = quiz_service.get_assigned_quizzes_with_status(str(current_user.id))
+        
+        # Calculate stats
+        total_assigned = len(assigned_quizzes)
+        completed = sum(1 for q in assigned_quizzes if q.get("completed", False))
+        pending = total_assigned - completed
+        
+        # Calculate average score for completed quizzes
+        completed_quizzes = [q for q in assigned_quizzes if q.get("completed", False) and q.get("best_score") is not None]
+        average_score = sum(q.get("best_score", 0) for q in completed_quizzes) / len(completed_quizzes) if completed_quizzes else 0
+        
+        stats = {
+            "total_assigned": total_assigned,
+            "completed": completed,
+            "pending": pending,
+            "average_score": round(average_score, 2),
+            "assigned_quizzes": assigned_quizzes
+        }
+        
+        return QuizResponse(
+            success=True,
+            message="Assigned quizzes retrieved successfully",
+            data=stats
+        )
+        
+    except Exception as e:
+        logger.error(f"Error retrieving assigned quizzes: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 @router.get("/{quiz_id}", response_model=QuizResponse)
 async def get_quiz(
@@ -614,46 +653,6 @@ async def get_quiz(
     except Exception as e:
         logger.error(f"Error retrieving quiz: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
-
-@router.get("/assigned-quizzes", response_model=QuizResponse)
-async def get_assigned_quizzes(
-    current_user: User = Depends(get_current_user)
-):
-    """Get quizzes assigned to current user with completion status"""
-    if not quiz_service:
-        raise HTTPException(status_code=503, detail="Quiz service unavailable")
-    
-    try:
-        # Get assigned quizzes for current user
-        assigned_quizzes = quiz_service.get_assigned_quizzes_with_status(str(current_user.id))
-        
-        # Calculate stats
-        total_assigned = len(assigned_quizzes)
-        completed = sum(1 for q in assigned_quizzes if q.get("completed", False))
-        pending = total_assigned - completed
-        
-        # Calculate average score for completed quizzes
-        completed_quizzes = [q for q in assigned_quizzes if q.get("completed", False) and q.get("best_score") is not None]
-        average_score = sum(q.get("best_score", 0) for q in completed_quizzes) / len(completed_quizzes) if completed_quizzes else 0
-        
-        stats = {
-            "total_assigned": total_assigned,
-            "completed": completed,
-            "pending": pending,
-            "average_score": round(average_score, 2),
-            "assigned_quizzes": assigned_quizzes
-        }
-        
-        return QuizResponse(
-            success=True,
-            message="Assigned quizzes retrieved successfully",
-            data=stats
-        )
-        
-    except Exception as e:
-        logger.error(f"Error retrieving assigned quizzes: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
 
 @router.delete("/{quiz_id}", response_model=QuizResponse)
 async def delete_quiz(
