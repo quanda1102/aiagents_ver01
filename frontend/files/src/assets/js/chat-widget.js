@@ -548,28 +548,6 @@ class ChatWidget {
   }
 }
 
-// Auto-initialization
-document.addEventListener('DOMContentLoaded', function() {
-  // Check if we're on an auth page (login/register)
-  const currentPath = window.location.pathname.toLowerCase();
-  const isAuthPage = currentPath.includes('login') || 
-                    currentPath.includes('register') || 
-                    currentPath.includes('auth');
-
-  if (!isAuthPage) {
-    try {
-      // Initialize chat widget with default options
-      window.chatWidget = new ChatWidget({
-        apiUrl: 'https://api.aagents.vn/api/v1/chat',
-        sessionExpireHours: 24
-      });
-      window.chatWidget.init();
-    } catch (error) {
-      console.error('❌ Chat Widget - Initialization failed:', error);
-    }
-  }
-});
-
 // Debug tools (only available in development)
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   window.addEventListener('load', function() {
