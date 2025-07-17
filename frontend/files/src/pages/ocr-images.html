@@ -698,10 +698,9 @@
   <script src="../assets/js/plugins/feather.min.js"></script>
   <script src="../assets/js/auth.js"></script>
   <script>
-    // Check authentication and role
+    // Check authentication only (all authenticated users can use OCR)
     document.addEventListener('DOMContentLoaded', async () => {
-      const ok = await checkRole(['TEACHER', 'ADMIN']);
-      if (!ok) return;
+      requireAuth();
     });
   </script>
 
