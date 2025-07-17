@@ -462,39 +462,60 @@
                 });
             
                 if (res.status === 403) {
-                  alert('Bạn không có quyền xem danh sách người dùng.');
+                  Swal.fire('Không có quyền!', 'Bạn không có quyền xem danh sách người dùng.', 'warning');
+                  return;
+                }
+                
+                if (res.status === 401) {
+                  Swal.fire('Phiên đăng nhập hết hạn!', 'Vui lòng đăng nhập lại.', 'warning');
+                  localStorage.removeItem('access_token');
+                  window.location.href = '../pages/login.html';
                   return;
                 }
             
                 if (!res.ok) {
-                  alert(`Lỗi: ${res.status} - ${res.statusText}`);
+                  const errorData = await res.json().catch(() => ({}));
+                  const errorMessage = errorData.detail || errorData.response || `HTTP ${res.status}: ${res.statusText}`;
+                  Swal.fire('Lỗi!', `Không thể tải danh sách: ${errorMessage}`, 'error');
                   return;
                 }
             
                 const data = await res.json();
+                console.log('Users loaded:', data); // Debug log
+                
                 const tableBody = document.getElementById('userTableBody');
                 tableBody.innerHTML = '';
+                
+                if (!Array.isArray(data) || data.length === 0) {
+                  tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Không có người dùng nào.</td></tr>';
+                  return;
+                }
             
                 data.forEach((user, i) => {
+                  // Handle class_name as array - join multiple classes or show single value
+                  const displayClassName = Array.isArray(user.class_name) 
+                    ? user.class_name.join(', ') 
+                    : (user.class_name || '-');
+                  
                   tableBody.innerHTML += `
                     <tr>
                       <td>${i + 1}</td>
                       <td>${user.email}</td>
-                      <td>${user.full_name}</td>
-                      <td>${user.age}</td>
-                      <td>${user.gender}</td>
-                      <td>${user.class_name || '-'}</td>
+                      <td>${user.full_name || '-'}</td>
+                      <td>${user.age || '-'}</td>
+                      <td>${user.gender || '-'}</td>
+                      <td>${displayClassName}</td>
                       <td>${user.role}</td>
                       <td>
-                        <button type="button" class="btn btn-primary btn-sm ms-2" data-role-allowed="ADMIN">Chỉnh sửa</button>
-                        <button type="button" class="btn btn-danger btn-sm ms-2" data-role-allowed="ADMIN">Xóa</button>
+                        <button type="button" class="btn btn-primary btn-sm ms-2" onclick="editUser(${user.id})" data-role-allowed="ADMIN">Chỉnh sửa</button>
+                        <button type="button" class="btn btn-danger btn-sm ms-2" onclick="deleteUser(${user.id})" data-role-allowed="ADMIN">Xóa</button>
                       </td>
                     </tr>`;
                 });
             
               } catch (err) {
-                alert('Lỗi khi tải danh sách người dùng.');
-                console.error(err);
+                console.error('Load users error:', err);
+                Swal.fire('Lỗi!', 'Lỗi kết nối khi tải danh sách người dùng.', 'error');
               }
             }
         
@@ -505,6 +526,13 @@
               const form = e.target;
               const formData = new FormData(form);
               const payload = Object.fromEntries(formData.entries());
+              
+              // Convert class_name to array format that backend expects
+              if (payload.class_name && payload.class_name.trim()) {
+                payload.class_name = [payload.class_name.trim()];
+              } else {
+                payload.class_name = null;
+              }
         
               try {
                 const apiUrl = getApiUrl('USERS') + '/';
@@ -514,18 +542,25 @@
                   body: JSON.stringify(payload)
                 });
         
-                const json = await res.json();
-                if (json && json.id) {
-                  alert('Tạo người dùng thành công!');
-                  form.reset();
-                  document.querySelector('#createUserModal .btn-close').click();
-                  loadUsers();
+                if (res.ok) {
+                  const json = await res.json();
+                  if (json && json.id) {
+                    Swal.fire('Thành công!', 'Tạo người dùng thành công!', 'success');
+                    form.reset();
+                    document.querySelector('#createUserModal .btn-close').click();
+                    loadUsers();
+                  } else {
+                    Swal.fire('Lỗi!', 'Không thể tạo người dùng!', 'error');
+                  }
                 } else {
-                  alert('Tạo thất bại!');
+                  const errorData = await res.json().catch(() => ({}));
+                  const errorMessage = errorData.detail || errorData.response || `HTTP ${res.status}: ${res.statusText}`;
+                  console.error('Create user error:', errorData);
+                  Swal.fire('Lỗi!', `Không thể tạo người dùng: ${errorMessage}`, 'error');
                 }
               } catch (err) {
-                console.error(err);
-                alert('Lỗi tạo người dùng.');
+                console.error('Network error:', err);
+                Swal.fire('Lỗi!', 'Lỗi kết nối. Vui lòng thử lại.', 'error');
               }
             });
         
@@ -534,20 +569,72 @@
               const random = Math.random().toString(36).slice(-10) + Math.floor(Math.random() * 100);
               document.getElementById('passwordInput').value = random;
             }
-            // 4. Kiểm tra login
-            if (token) {
-              loadUsers();
-            }
+            
+            // 4. Copy password function
             function copyPassword() {
               const password = document.getElementById('passwordInput').value;
               if (!password) {
-                alert('Chưa có mật khẩu để sao chép!');
+                Swal.fire('Lỗi!', 'Chưa có mật khẩu để sao chép!', 'warning');
                 return;
               }
             
               navigator.clipboard.writeText(password)
-                .then(() => alert('Đã sao chép mật khẩu!'))
-                .catch(err => alert('Không thể sao chép: ' + err));
+                .then(() => Swal.fire('Thành công!', 'Đã sao chép mật khẩu!', 'success'))
+                .catch(err => Swal.fire('Lỗi!', 'Không thể sao chép: ' + err, 'error'));
+            }
+            
+            // 5. Edit user function (placeholder - would need edit modal)
+            function editUser(userId) {
+              Swal.fire('Thông báo', 'Chức năng chỉnh sửa đang được phát triển!', 'info');
+              console.log('Edit user:', userId);
+              // TODO: Implement edit user modal and update functionality
+            }
+            
+            // 6. Delete user function
+            async function deleteUser(userId) {
+              const result = await Swal.fire({
+                title: 'Xác nhận xóa',
+                text: 'Bạn có chắc chắn muốn xóa người dùng này?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+              });
+              
+              if (!result.isConfirmed) return;
+              
+              try {
+                const apiUrl = getApiUrl('USERS') + '/' + userId;
+                const res = await fetch(apiUrl, {
+                  method: 'DELETE',
+                  headers
+                });
+                
+                if (res.ok) {
+                  Swal.fire('Thành công!', 'Đã xóa người dùng!', 'success');
+                  loadUsers(); // Reload the list
+                } else {
+                  const errorData = await res.json().catch(() => ({}));
+                  const errorMessage = errorData.detail || errorData.response || `HTTP ${res.status}: ${res.statusText}`;
+                  Swal.fire('Lỗi!', `Không thể xóa người dùng: ${errorMessage}`, 'error');
+                }
+              } catch (err) {
+                console.error('Delete user error:', err);
+                Swal.fire('Lỗi!', 'Lỗi kết nối khi xóa người dùng.', 'error');
+              }
+            }
+            
+            // Make functions globally accessible
+            window.generatePassword = generatePassword;
+            window.copyPassword = copyPassword;
+            window.editUser = editUser;
+            window.deleteUser = deleteUser;
+            
+            // 7. Initialize - load users if authenticated
+            if (token) {
+              loadUsers();
             }
 </script>
   
