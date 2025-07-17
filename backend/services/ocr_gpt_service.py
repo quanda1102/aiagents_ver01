@@ -37,9 +37,22 @@ async def ocr_bytes_with_gpt(image_bytes: bytes, content_type: str = "image/png"
             model="gpt-4o",
             messages=[
                 {
+                    "role": "system",
+                    "content": """You are an OCR system. Extract ALL text from the image exactly as written. Do not provide any commentary, explanations, or conversational responses. Return ONLY the extracted text content.
+
+Rules:
+- Extract text exactly as it appears
+- Preserve formatting and line breaks
+- Support Vietnamese diacritics (ă, â, ê, ô, ơ, ư, đ, tone marks)
+- Support English text
+- If no text is found, return: [NO TEXT DETECTED]
+- Do not add phrases like "I can help", "Here is the text", or any commentary
+- Output ONLY the raw extracted text"""
+                },
+                {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": "Trích xuất toàn bộ văn bản trong ảnh. Hỗ trợ tiếng Việt (với dấu) và tiếng Anh. Giữ nguyên định dạng và cấu trúc:"},
+                        {"type": "text", "text": "Extract all text:"},
                         {
                             "type": "image_url",
                             "image_url": {
@@ -51,6 +64,7 @@ async def ocr_bytes_with_gpt(image_bytes: bytes, content_type: str = "image/png"
                 }
             ],
             max_tokens=2048,
+            temperature=0.0,
         )
 
         return response.choices[0].message.content.strip()
@@ -71,24 +85,26 @@ async def ocr_bytes_with_gpt_optimized(image_bytes: bytes, page_number: int = 1,
             messages=[
                 {
                     "role": "system",
-                    "content": """You are an expert multilingual OCR assistant. Extract ALL text from the image with high accuracy.
-                    
-                    Instructions:
-                    1. Extract text exactly as it appears, maintaining formatting and structure
-                    2. Preserve line breaks, paragraphs, and spacing
-                    3. Handle Vietnamese text with proper diacritics (ă, â, ê, ô, ơ, ư, đ, and tone marks)
-                    4. Handle English text with proper capitalization and punctuation
-                    5. Support mixed language content (Vietnamese + English)
-                    6. If text is unclear, indicate with [UNCLEAR: partial_text]
-                    7. Maintain tables, lists, and document structure
-                    8. Return ONLY the extracted text, no language identification or commentary"""
+                    "content": """You are an OCR text extraction system. Extract ALL visible text from the image exactly as written. Do not provide explanations, commentary, or conversational responses.
+
+CRITICAL RULES:
+- Extract text exactly as it appears in the image
+- Preserve all formatting, line breaks, and spacing
+- Support Vietnamese diacritics: ă, â, ê, ô, ơ, ư, đ, and all tone marks
+- Support English text with proper capitalization
+- Handle mixed Vietnamese-English content
+- If text is unclear, use [UNCLEAR: approximate_text]
+- Maintain document structure (tables, lists, paragraphs)
+- If no text exists, return: [NO TEXT DETECTED]
+- NEVER respond with "I can help", "Here is the text", or similar phrases
+- Output ONLY the extracted text content, nothing else"""
                 },
                 {
                     "role": "user",
                     "content": [
                         {
                             "type": "text", 
-                            "text": f"Extract all text from this document page {page_number}. Maintain original formatting and structure:"
+                            "text": f"Page {page_number} - extract text:"
                         },
                         {
                             "type": "image_url",
@@ -101,7 +117,7 @@ async def ocr_bytes_with_gpt_optimized(image_bytes: bytes, page_number: int = 1,
                 }
             ],
             max_tokens=4096,  # Increased for longer documents
-            temperature=0.1,  # Lower temperature for more consistent OCR
+            temperature=0.0,  # Zero temperature for consistent OCR output
         )
 
         return response.choices[0].message.content.strip()
@@ -219,27 +235,30 @@ async def ocr_bytes_with_structured_output(image_bytes: bytes, page_number: int 
             messages=[
                 {
                     "role": "system",
-                    "content": """You are an advanced multilingual OCR system that extracts and structures document content.
-                    
-                    Extract all text and organize it into structured JSON format with:
-                    - raw_text: Complete extracted text (Vietnamese + English)
-                    - sections: Array of document sections with headers and content
-                    - tables: Array of any tables found
-                    - metadata: Document type, detected languages, quality assessment
-                    
-                    Language support:
-                    - Vietnamese: Preserve all diacritics (ă, â, ê, ô, ơ, ư, đ, and tone marks)
-                    - English: Maintain proper capitalization and punctuation
-                    - Mixed content: Handle both languages in same document
-                    
-                    Maintain accuracy and preserve formatting."""
+                    "content": """You are an OCR data extraction system. Extract text and output structured JSON. Do not provide explanations or commentary.
+
+REQUIRED JSON FORMAT:
+{
+  "raw_text": "complete extracted text",
+  "sections": [{"header": "section title", "content": "section text"}],
+  "tables": [{"rows": ["table data"]}],
+  "metadata": {"languages": ["vi", "en"], "quality": "high/medium/low"}
+}
+
+EXTRACTION RULES:
+- Extract ALL visible text exactly as written
+- Support Vietnamese diacritics: ă, â, ê, ô, ơ, ư, đ, tone marks
+- Support English text with proper formatting
+- Preserve document structure and formatting
+- If no text: {"raw_text": "[NO TEXT DETECTED]", "sections": [], "tables": [], "metadata": {"quality": "empty"}}
+- Output ONLY valid JSON, no conversational responses"""
                 },
                 {
                     "role": "user",
                     "content": [
                         {
                             "type": "text",
-                            "text": f"Extract and structure all content from page {page_number}. Return as JSON with raw_text, sections, tables, and metadata."
+                            "text": f"Page {page_number} JSON:"
                         },
                         {
                             "type": "image_url",
@@ -252,7 +271,7 @@ async def ocr_bytes_with_structured_output(image_bytes: bytes, page_number: int 
                 }
             ],
             max_tokens=4096,
-            temperature=0.1,
+            temperature=0.0,
             response_format={"type": "json_object"}
         )
 
@@ -581,27 +600,29 @@ async def ocr_vietnamese_optimized(image_bytes: bytes, content_type: str = "imag
             messages=[
                 {
                     "role": "system",
-                    "content": """You are a Vietnamese OCR specialist. Extract ALL text with perfect Vietnamese diacritics.
-                    
-                    Vietnamese diacritics rules:
-                    - Vowels: a, ă, â, e, ê, i, o, ô, ơ, u, ư, y
-                    - Consonant: đ (d with stroke)
-                    - Tone marks: ` (grave), ´ (acute), ˜ (tilde), ˆ (circumflex), ˇ (caron)
-                    - Combined: á, à, ả, ã, ạ, ắ, ằ, ẳ, ẵ, ặ, ấ, ầ, ẩ, ẫ, ậ, etc.
-                    
-                    Instructions:
-                    1. Extract text exactly as written
-                    2. Preserve ALL Vietnamese diacritics perfectly
-                    3. Handle both Vietnamese and English text
-                    4. Maintain original formatting and structure
-                    5. Return ONLY the extracted text"""
+                    "content": """You are a Vietnamese text extraction system. Extract ALL text with perfect Vietnamese diacritics. Do not provide explanations or conversational responses.
+
+VIETNAMESE DIACRITICS:
+- Base vowels: a, ă, â, e, ê, i, o, ô, ơ, u, ư, y
+- Special consonant: đ (d with stroke)
+- Tone marks: ` ´ ˜ ˆ ˇ (grave, acute, tilde, circumflex, caron)
+- Examples: á, à, ả, ã, ạ, ắ, ằ, ẳ, ẵ, ặ, ấ, ầ, ẩ, ẫ, ậ
+
+EXTRACTION RULES:
+- Extract text exactly as written in the image
+- Preserve ALL Vietnamese diacritics perfectly
+- Support Vietnamese + English mixed content
+- Maintain original formatting and line breaks
+- If no text: [NO TEXT DETECTED]
+- NEVER respond with "Tôi có thể giúp", explanations, or commentary
+- Output ONLY the extracted text content"""
                 },
                 {
                     "role": "user",
                     "content": [
                         {
                             "type": "text",
-                            "text": "Trích xuất toàn bộ văn bản trong ảnh với đầy đủ dấu tiếng Việt và văn bản tiếng Anh:"
+                            "text": "Extract text:"
                         },
                         {
                             "type": "image_url",
@@ -614,7 +635,7 @@ async def ocr_vietnamese_optimized(image_bytes: bytes, content_type: str = "imag
                 }
             ],
             max_tokens=4096,
-            temperature=0.05,  # Very low temperature for consistent diacritics
+            temperature=0.0,  # Zero temperature for consistent OCR output
         )
 
         return response.choices[0].message.content.strip()
