@@ -1059,7 +1059,7 @@
                 break;
             }
             
-            console.log(`📄 Processing PDF: ${pdfFile.name} using ${ocrMethod} (${processingMode})`);
+
             
             const response = await fetch(pdfEndpoint, {
               method: 'POST',
@@ -1153,7 +1153,7 @@
               ? 'https://api.aagents.vn/api/v1/ocr-ai/images-batch'
               : 'https://api.aagents.vn/api/v1/ocr-ai/images';
             
-            console.log(`🖼️ Processing ${imageFiles.length} image(s) using ${processingMode} mode`);
+
             
             const response = await fetch(imageEndpoint, {
               method: 'POST',
@@ -1200,11 +1200,11 @@
         const errorCount = allResults.length - successCount;
         
         if (errorCount === 0) {
-          showAlert(`✅ Đã xử lý thành công ${allResults.length} tệp`);
+          showAlert(` Đã xử lý thành công ${allResults.length} tệp`);
         } else if (successCount === 0) {
-          showAlert(`❌ Không thể xử lý ${errorCount} tệp. Vui lòng kiểm tra định dạng và thử lại.`, 'error');
+          showAlert(` Không thể xử lý ${errorCount} tệp. Vui lòng kiểm tra định dạng và thử lại.`, 'error');
         } else {
-          showAlert(`⚠️ Xử lý hoàn tất: ${successCount} thành công, ${errorCount} lỗi. Xem chi tiết bên dưới.`);
+          showAlert(` Xử lý hoàn tất: ${successCount} thành công, ${errorCount} lỗi. Xem chi tiết bên dưới.`);
         }
         
       } catch (error) {
@@ -1266,9 +1266,9 @@
         <div class="alert alert-info mb-3">
           <h6><i class="ti ti-info-circle me-2"></i>Kết quả xử lý</h6>
           <p class="mb-0">
-            ✅ Thành công: ${successCount} tệp | 
-            ❌ Lỗi: ${errorCount} tệp | 
-            📊 Tổng: ${results.length} tệp
+             Thành công: ${successCount} tệp | 
+             Lỗi: ${errorCount} tệp | 
+             Tổng: ${results.length} tệp
           </p>
         </div>
       `;

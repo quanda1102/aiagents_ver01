@@ -481,7 +481,6 @@
                 }
             
                 const data = await res.json();
-                console.log('Users loaded:', data); // Debug log
                 
                 const tableBody = document.getElementById('userTableBody');
                 tableBody.innerHTML = '';
@@ -586,7 +585,6 @@
             // 5. Edit user function (placeholder - would need edit modal)
             function editUser(userId) {
               Swal.fire('Thông báo', 'Chức năng chỉnh sửa đang được phát triển!', 'info');
-              console.log('Edit user:', userId);
               // TODO: Implement edit user modal and update functionality
             }
             

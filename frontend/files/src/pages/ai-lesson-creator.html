@@ -1168,9 +1168,7 @@
         });
         const apiUrl = `https://aimarketingvn.com/webhook/list-by-subject?${params.toString()}`;
         
-        console.log('Loading document content:', { subject, grade, lesson });
-        console.log('API parameters:', { mon: apiMon, lop: apiLop, bai: apiBai });
-        console.log('API URL:', apiUrl);
+
         
         // Call the backend API with GET method
         const response = await fetch(apiUrl, {
@@ -1182,7 +1180,6 @@
         
         if (response.ok) {
           const result = await response.json();
-          console.log('API Response:', result);
           
           // Extract content from response
           let documentContent = '';
@@ -1201,7 +1198,7 @@
           document.getElementById('selectedDocumentInfo').textContent = `${subject} - ${grade} - ${lesson}`;
           document.getElementById('documentContentText').textContent = documentContent.substring(0, 500) + (documentContent.length > 500 ? '...' : '');
           
-          console.log('Document content loaded successfully:', documentContent.substring(0, 100) + '...');
+
           
         } else {
           throw new Error(`API Error: ${response.status} - ${response.statusText}`);
@@ -1920,15 +1917,7 @@
         timestamp: new Date().toISOString()
       };
 
-      console.log('Request data:', {
-        subject: selectedDocument.subject,
-        grade: selectedDocument.grade,
-        lesson: selectedDocument.lesson,
-        documentText: documentText ? documentText.substring(0, 100) + '...' : 'Không có',
-        example: referenceDocumentText ? referenceDocumentText.substring(0, 100) + '...' : 'Không có',
-        selectedDocumentContent: selectedDocumentContent ? selectedDocumentContent.substring(0, 100) + '...' : 'Không có',
-        extractedDocumentText: extractedDocumentText ? extractedDocumentText.substring(0, 100) + '...' : 'Không có'
-      });
+
 
       try {
         // Send to the specified webhook endpoint

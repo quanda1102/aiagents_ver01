@@ -1498,10 +1498,6 @@
         question_types: selectedTypes,
         created_by: formData.get('created_by') || 'AI Assistant'
       };
-      
-      console.log('AI Quiz Payload:', payload);
-
-      
 
       // Show loading state
       const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -1520,7 +1516,6 @@
         });
 
         const result = await response.json();
-        console.log('API Response:', result);
         
         if (response.ok && result.message === "Quiz generated successfully from document") {
           const quizId = result.quiz_id;
