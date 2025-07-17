@@ -1336,26 +1336,71 @@
         return;
       }
       
-      questionBlocks.forEach(block => {
+      // Validate and build questions
+      let hasValidationError = false;
+      
+      for (let i = 0; i < questionBlocks.length; i++) {
+        const block = questionBlocks[i];
         const id = block.dataset.id;
         const type = form[`question_type_${id}`].value;
-        const question = {
-          question_text: form[`question_text_${id}`].value,
-          question_type: type,
-          correct_answer: parseCorrectAnswer(form[`correct_answer_${id}`].value, type),
-          points: Number(form[`points_${id}`].value),
-          explanation: form[`explanation_${id}`].value
-        };
-        if (type === 'multiple_choice') {
-          question.options = [
-            form[`option_0_${id}`].value,
-            form[`option_1_${id}`].value,
-            form[`option_2_${id}`].value,
-            form[`option_3_${id}`].value
-          ];
+        
+        // Validate question text
+        const questionText = form[`question_text_${id}`].value.trim();
+        if (!questionText) {
+          alert(`Vui lòng nhập nội dung câu hỏi ${i + 1}`);
+          hasValidationError = true;
+          break;
         }
+        
+        // Validate correct answer
+        const correctAnswer = form[`correct_answer_${id}`].value.trim();
+        if (!correctAnswer) {
+          alert(`Vui lòng nhập đáp án đúng cho câu hỏi ${i + 1}`);
+          hasValidationError = true;
+          break;
+        }
+        
+        const question = {
+          question_text: questionText,
+          question_type: type,
+          correct_answer: parseCorrectAnswer(correctAnswer, type),
+          points: Number(form[`points_${id}`].value) || 1,
+          explanation: form[`explanation_${id}`].value.trim() || null
+        };
+        
+        // Handle options for multiple choice questions
+        if (type === 'multiple_choice') {
+          const options = [
+            form[`option_0_${id}`].value.trim(),
+            form[`option_1_${id}`].value.trim(),
+            form[`option_2_${id}`].value.trim(),
+            form[`option_3_${id}`].value.trim()
+          ].filter(option => option !== ''); // Remove empty options
+          
+          if (options.length < 2) {
+            alert(`Câu hỏi trắc nghiệm ${i + 1} phải có ít nhất 2 đáp án`);
+            hasValidationError = true;
+            break;
+          }
+          
+          // Validate correct answer is in options
+          if (!options.includes(correctAnswer)) {
+            alert(`Đáp án đúng của câu hỏi ${i + 1} phải là một trong các lựa chọn A, B, C, D`);
+            hasValidationError = true;
+            break;
+          }
+          
+          question.options = options;
+        } else {
+          question.options = null;
+        }
+        
         data.questions.push(question);
-      });
+      }
+      
+      if (hasValidationError) {
+        return;
+      }
     
       
     
@@ -1436,10 +1481,22 @@
         alert('Vui lòng nhập nội dung văn bản hoặc tải nội dung từ file/URL');
         return;
       }
+      
+      if (documentText.length < 50) {
+        alert('Nội dung văn bản phải có ít nhất 50 ký tự để tạo bài tập có chất lượng');
+        return;
+      }
+      
+      // Validate quiz title
+      const quizTitle = formData.get('quiz_title').trim();
+      if (!quizTitle) {
+        alert('Vui lòng nhập tiêu đề bài tập');
+        return;
+      }
 
       const payload = {
         document_text: documentText,
-        quiz_title: formData.get('quiz_title'),
+        quiz_title: quizTitle,
         number_of_questions: parseInt(formData.get('number_of_questions')),
         difficulty_level: formData.get('difficulty_level'),
         question_types: selectedTypes,
@@ -1511,8 +1568,12 @@
     });
     
     function parseCorrectAnswer(value, type) {
-      if (type === 'true_false') return value.toLowerCase() === 'true';
-      return value;
+      if (type === 'true_false') {
+        // Handle various true/false formats
+        const lowerValue = value.toLowerCase().trim();
+        return lowerValue === 'true' || lowerValue === 'đúng' || lowerValue === '1';
+      }
+      return value.trim();
     }
 
     // Add initial question
