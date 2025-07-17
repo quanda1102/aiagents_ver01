@@ -76,8 +76,6 @@
         loadCSS(`${assetsPath}css/chat-widget.css`),
         loadJS(`${assetsPath}js/chat-widget.js`)
       ]);
-      
-      console.log('✅ Chat widget loaded successfully');
     } catch (error) {
       console.error('❌ Failed to load chat widget:', error);
     }

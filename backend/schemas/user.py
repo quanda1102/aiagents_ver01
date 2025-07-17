@@ -29,14 +29,33 @@ class UserOut(BaseModel):
 
     @staticmethod
     def from_orm_with_role_name(user):
+        try:
+            role_name = Role(user.role).name if isinstance(user.role, int) else str(user.role)
+        except ValueError:
+            role_name = "UNKNOWN"
+        
+        try:
+            gender_value = user.gender.value if isinstance(user.gender, Gender) else str(user.gender)
+        except Exception:
+            gender_value = "other"
+        
+        # Handle class_name - ensure it's always a list
+        if user.class_name is None:
+            class_name = []
+        elif isinstance(user.class_name, list):
+            class_name = user.class_name
+        else:
+            # Convert non-list values to string and wrap in list
+            class_name = [str(user.class_name)]
+        
         return UserOut(
             id=user.id,
             email=user.email,
-            role=Role(user.role).name if isinstance(user.role, int) else str(user.role),
+            role=role_name,
             full_name=user.full_name,
             age=user.age,
-            class_name=user.class_name,
-            gender=user.gender.value if isinstance(user.gender, Gender) else str(user.gender)
+            class_name=class_name,
+            gender=gender_value
         )
 
 class UserUpdate(BaseModel):

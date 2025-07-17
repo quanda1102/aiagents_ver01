@@ -269,6 +269,48 @@
       padding: 10px;
     }
     
+    .ai-powered-info {
+      background: linear-gradient(135deg, #f0f8ff 0%, #e8f5e8 100%);
+      border: 2px solid #4CAF50;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.1);
+    }
+    
+    .ai-powered-info .ai-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 20px;
+      font-size: 24px;
+      box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+    }
+
+    .features-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .feature-badge {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(76, 175, 80, 0.2);
+    }
+
     .ocr-method-info {
       background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
       border: 1px solid #bbdefb;
@@ -579,8 +621,14 @@
             </div>
             <div class="col-md-12">
               <div class="page-header-title">
-                <h2 class="mb-0">OCR hình ảnh</h2>
-                <p class="text-muted">Trích xuất văn bản từ hình ảnh và PDF bằng công nghệ OCR</p>
+                <h2 class="mb-0">
+                  <i class="ti ti-brain me-2" style="color: #4CAF50;"></i>
+                  OCR thông minh AI
+                </h2>
+                <p class="text-muted">
+                  <i class="ti ti-sparkles me-1" style="color: #FF6B35;"></i>
+                  Trích xuất văn bản từ hình ảnh và PDF bằng OpenAI GPT-4o Vision
+                </p>
               </div>
             </div>
           </div>
@@ -593,22 +641,80 @@
         <div class="col-12">
           <div class="card">
             <div class="card-header">
-              <h5><i class="ti ti-scan me-2"></i>Tải lên tệp để xử lý OCR</h5>
+              <h5>
+                <i class="ti ti-upload me-2"></i>Tải lên tệp để trích xuất văn bản
+                <span class="badge bg-success ms-2">
+                  <i class="ti ti-brain me-1"></i>AI-Powered
+                </span>
+              </h5>
             </div>
             <div class="card-body">
               
-              <!-- OCR Method Selection -->
+              <!-- AI-Powered OCR Info -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <div class="ai-powered-info">
+                    <div class="d-flex align-items-center">
+                      <div class="ai-icon">
+                        <i class="ti ti-brain"></i>
+                      </div>
+                      <div>
+                        <h6 class="mb-1">
+                          <i class="ti ti-sparkles me-2" style="color: #FF6B35;"></i>
+                          Được hỗ trợ bởi OpenAI GPT-4o Vision
+                        </h6>
+                        <p class="text-muted mb-2">
+                          Trích xuất văn bản thông minh với độ chính xác cao từ hình ảnh và PDF
+                        </p>
+                        <div class="features-list">
+                          <span class="feature-badge">
+                            <i class="ti ti-world me-1"></i>Tiếng Việt & Tiếng Anh
+                          </span>
+                          <span class="feature-badge">
+                            <i class="ti ti-zap me-1"></i>Xử lý nhanh
+                          </span>
+                          <span class="feature-badge">
+                            <i class="ti ti-eye me-1"></i>AI Vision
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Processing Method Selection -->
               <div class="row mb-4">
                 <div class="col-12">
                   <label for="ocrMethod" class="form-label fw-semibold">
-                    <i class="ti ti-settings me-2"></i>Phương thức OCR
+                    <i class="ti ti-settings me-2"></i>Phương thức xử lý PDF
                   </label>
                   <select class="form-select" id="ocrMethod">
-                    <option value="ai" selected>OCR thông minh với AI – trích xuất văn bản chính xác từ ảnh chụp và tài liệu</option>
+                    <option value="pypdfium2" selected>Chất lượng cao (Khuyến nghị)</option>
+                    <option value="pymupdf">Tốc độ nhanh nhất</option>
+                    <option value="original">Ổn định nhất</option>
                   </select>
                   <small class="text-muted">
                     <i class="ti ti-info-circle me-1"></i>
-                    Hiện tại chỉ hỗ trợ OCR AI. Phương thức Computer Vision sẽ được bổ sung sau.
+                    Chất lượng cao được khuyến nghị cho hầu hết các tài liệu.
+                  </small>
+                </div>
+              </div>
+
+              <!-- Processing Mode Selection -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <label for="processingMode" class="form-label fw-semibold">
+                    <i class="ti ti-cpu me-2"></i>Chế độ xử lý
+                  </label>
+                  <select class="form-select" id="processingMode">
+                    <option value="batch" selected>Xử lý nhanh (Nhiều trang cùng lúc)</option>
+                    <option value="sequential">Xử lý từng trang (Ổn định hơn)</option>
+                    <option value="structured">Đầu ra có cấu trúc (Dễ phân tích)</option>
+                  </select>
+                  <small class="text-muted">
+                    <i class="ti ti-zap me-1"></i>
+                    Xử lý nhanh được khuyến nghị cho tài liệu nhiều trang.
                   </small>
                 </div>
               </div>
@@ -623,11 +729,11 @@
                   <span class="format-tag">GIF</span>
                   <span class="format-tag">BMP</span>
                   <span class="format-tag">TIFF</span>
-                  <span class="format-tag" style="background: #ff9800;">PDF*</span>
+                  <span class="format-tag" style="background: #28a745;">PDF</span>
                 </div>
                 <small class="text-muted mt-2 d-block">
-                  <i class="ti ti-alert-triangle me-1" style="color: #ff9800;"></i>
-                  *PDF: Nếu gặp lỗi, hãy chuyển đổi PDF thành ảnh (PNG/JPG) để có kết quả tốt nhất
+                  <i class="ti ti-check-circle me-1" style="color: #28a745;"></i>
+                  Hỗ trợ đầy đủ các định dạng phổ biến với công nghệ AI Vision tiên tiến
                 </small>
               </div>
 
@@ -735,6 +841,7 @@
     const resultsSection = document.getElementById('resultsSection');
     const resultsContainer = document.getElementById('resultsContainer');
     const ocrMethodSelect = document.getElementById('ocrMethod');
+    const processingModeSelect = document.getElementById('processingMode');
     const processingTitle = document.getElementById('processingTitle');
     const processingSubtitle = document.getElementById('processingSubtitle');
 
@@ -830,13 +937,38 @@
 
     function updateProcessingText() {
       const ocrMethod = ocrMethodSelect.value;
-      if (ocrMethod === 'ai') {
-        processingTitle.textContent = 'Đang xử lý OCR với AI...';
-        processingSubtitle.textContent = 'Sử dụng trí tuệ nhân tạo để trích xuất văn bản chính xác';
-      } else {
-        processingTitle.textContent = 'Đang xử lý OCR với Computer Vision...';
-        processingSubtitle.textContent = 'Sử dụng thị giác máy tính để nhận diện văn bản';
+      const processingMode = document.getElementById('processingMode').value;
+      
+      let methodName = '';
+      switch(ocrMethod) {
+        case 'pypdfium2':
+          methodName = 'Chất lượng cao';
+          break;
+        case 'pymupdf':
+          methodName = 'Tốc độ nhanh';
+          break;
+        case 'original':
+          methodName = 'Ổn định';
+          break;
+        default:
+          methodName = 'AI OCR';
       }
+      
+      let modeText = '';
+      switch(processingMode) {
+        case 'batch':
+          modeText = 'với xử lý nhanh';
+          break;
+        case 'sequential':
+          modeText = 'với xử lý từng trang';
+          break;
+        case 'structured':
+          modeText = 'với đầu ra có cấu trúc';
+          break;
+      }
+      
+      processingTitle.textContent = `Đang xử lý với OpenAI GPT-4o Vision...`;
+      processingSubtitle.textContent = `Sử dụng chế độ ${methodName} ${modeText} để trích xuất văn bản chính xác`;
     }
 
     // Event listeners
@@ -866,6 +998,9 @@
 
     // OCR method change event
     ocrMethodSelect.addEventListener('change', updateProcessingText);
+    
+    // Processing mode change event
+    document.getElementById('processingMode').addEventListener('change', updateProcessingText);
 
     // Process OCR
     processBtn.addEventListener('click', async () => {
@@ -877,6 +1012,7 @@
       
       try {
         const ocrMethod = document.getElementById('ocrMethod').value;
+        const processingMode = document.getElementById('processingMode').value;
         
         // Check if we have PDFs and images mixed
         const pdfFiles = selectedFiles.filter(file => file.type === 'application/pdf');
@@ -890,10 +1026,40 @@
             const formData = new FormData();
             formData.append('file', pdfFile);
             
-            // Always use AI OCR for PDFs since CV OCR endpoint doesn't exist
-            const pdfEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/pdf';
+            // Determine PDF endpoint based on method and mode
+            let pdfEndpoint = '';
+            switch(ocrMethod) {
+              case 'pypdfium2':
+                if (processingMode === 'batch') {
+                  pdfEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/pdf-pypdfium2-batch';
+                } else if (processingMode === 'structured') {
+                  pdfEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/pdf-pypdfium2-structured';
+                } else {
+                  pdfEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/pdf-pypdfium2';
+                }
+                break;
+              case 'pymupdf':
+                if (processingMode === 'batch') {
+                  pdfEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/pdf-pymupdf-batch';
+                } else if (processingMode === 'structured') {
+                  pdfEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/pdf-pymupdf-structured';
+                } else {
+                  pdfEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/pdf-pymupdf';
+                }
+                break;
+              case 'original':
+              default:
+                if (processingMode === 'batch') {
+                  pdfEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/pdf-batch';
+                } else if (processingMode === 'structured') {
+                  pdfEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/pdf-structured';
+                } else {
+                  pdfEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/pdf';
+                }
+                break;
+            }
             
-            console.log(`📄 Processing PDF: ${pdfFile.name} using AI OCR`);
+
             
             const response = await fetch(pdfEndpoint, {
               method: 'POST',
@@ -904,9 +1070,9 @@
               const errorText = await response.text();
               console.error(`PDF processing error for ${pdfFile.name}:`, errorText);
               
-              // Handle specific poppler error
-              if (errorText.includes('poppler') || errorText.includes('Unable to get page count')) {
-                throw new Error(`PDF ${pdfFile.name}: Máy chủ chưa cài đặt công cụ xử lý PDF (poppler). Vui lòng thử với ảnh hoặc liên hệ quản trị viên.`);
+              // Handle specific poppler error for original method
+              if (ocrMethod === 'original' && (errorText.includes('poppler') || errorText.includes('Unable to get page count'))) {
+                throw new Error(`PDF ${pdfFile.name}: Máy chủ chưa cài đặt công cụ xử lý PDF (poppler). Vui lòng thử với pypdfium2 hoặc PyMuPDF.`);
               }
               
               throw new Error(`Lỗi xử lý PDF ${pdfFile.name}: ${response.status} - ${errorText}`);
@@ -914,29 +1080,52 @@
             
             const result = await response.json();
             
-            // Handle error in response body
-            if (result.pages && result.pages.length > 0 && result.pages[0].text && result.pages[0].text.startsWith('Error:')) {
-              const errorMsg = result.pages[0].text;
-              if (errorMsg.includes('poppler') || errorMsg.includes('Unable to get page count')) {
-                // Add user-friendly error message for poppler issue
+            // Handle different response formats
+            if (processingMode === 'structured') {
+              // Structured output format
+              if (result.error) {
                 allResults.push({
                   filename: result.filename,
-                  text: `❌ Lỗi: Máy chủ chưa cài đặt công cụ xử lý PDF (poppler).\n\n📋 Giải pháp:\n• Chuyển đổi PDF thành ảnh (PNG/JPG) trước khi tải lên\n• Sử dụng công cụ chụp màn hình cho từng trang\n• Liên hệ quản trị viên để cài đặt poppler\n\n🔧 Chi tiết lỗi: ${errorMsg}`,
+                  text: `❌ Lỗi: ${result.error}\n\n💡 Gợi ý:\n• Thử với phương thức khác (pypdfium2 thay vì ${ocrMethod})\n• Kiểm tra tệp PDF có hợp lệ không\n• Thử chuyển PDF thành ảnh`,
                   type: 'pdf-error',
                   error: true
                 });
-                continue;
+              } else {
+                // Format structured output for display
+                const structuredText = result.pages.map(page => {
+                  if (page.content.raw_text) {
+                    return `=== Trang ${page.page_number} ===\n${page.content.raw_text}`;
+                  }
+                  return `=== Trang ${page.page_number} ===\n${JSON.stringify(page.content, null, 2)}`;
+                }).join('\n\n');
+                
+                allResults.push({
+                  filename: result.filename,
+                  text: structuredText,
+                  type: 'pdf-structured',
+                  method: result.processing_method,
+                  pages: result.pages
+                });
+              }
+            } else {
+              // Regular output format
+              if (result.pages && result.pages.length > 0) {
+                const pdfText = result.pages.map((page, index) => {
+                  if (typeof page === 'string') {
+                    return `=== Trang ${index + 1} ===\n${page}`;
+                  }
+                  return `=== Trang ${index + 1} ===\n${page.text || page}`;
+                }).join('\n\n');
+                
+                allResults.push({
+                  filename: result.filename,
+                  text: pdfText,
+                  type: 'pdf',
+                  method: result.method,
+                  pages: result.pages
+                });
               }
             }
-            
-            // Convert PDF result format to match image results
-            const pdfText = result.pages ? result.pages.map(page => page.text || page).join('\n\n') : '';
-            allResults.push({
-              filename: result.filename,
-              text: pdfText,
-              type: 'pdf',
-              pages: result.pages
-            });
             
           } catch (pdfError) {
             console.error(`Error processing PDF ${pdfFile.name}:`, pdfError);
@@ -944,14 +1133,14 @@
             // Add error result instead of throwing
             allResults.push({
               filename: pdfFile.name,
-              text: `❌ Lỗi xử lý PDF: ${pdfError.message}\n\n💡 Thử nghiệm:\n• Chuyển PDF thành ảnh PNG/JPG\n• Chụp màn hình từng trang PDF\n• Sử dụng OCR với ảnh thay vì PDF`,
+              text: `❌ Lỗi xử lý PDF: ${pdfError.message}\n\n💡 Thử nghiệm:\n• Thử phương thức khác (pypdfium2 được khuyến nghị)\n• Chuyển PDF thành ảnh PNG/JPG\n• Sử dụng OCR với ảnh thay vì PDF`,
               type: 'pdf-error',
               error: true
             });
           }
         }
         
-        // Process image files in batch
+        // Process image files
         if (imageFiles.length > 0) {
           try {
             const formData = new FormData();
@@ -959,10 +1148,12 @@
               formData.append('files', file);
             });
             
-            // Always use AI OCR for images since CV OCR endpoint doesn't exist
-            const imageEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/images';
+            // Determine image endpoint based on processing mode
+            const imageEndpoint = processingMode === 'batch' || processingMode === 'structured' 
+              ? 'https://api.aagents.vn/api/v1/ocr-ai/images-batch'
+              : 'https://api.aagents.vn/api/v1/ocr-ai/images';
             
-            console.log(`🖼️ Processing ${imageFiles.length} image(s) using AI OCR`);
+
             
             const response = await fetch(imageEndpoint, {
               method: 'POST',
@@ -1009,11 +1200,11 @@
         const errorCount = allResults.length - successCount;
         
         if (errorCount === 0) {
-          showAlert(`✅ Đã xử lý thành công ${allResults.length} tệp`);
+          showAlert(` Đã xử lý thành công ${allResults.length} tệp`);
         } else if (successCount === 0) {
-          showAlert(`❌ Không thể xử lý ${errorCount} tệp. Vui lòng kiểm tra định dạng và thử lại.`, 'error');
+          showAlert(` Không thể xử lý ${errorCount} tệp. Vui lòng kiểm tra định dạng và thử lại.`, 'error');
         } else {
-          showAlert(`⚠️ Xử lý hoàn tất: ${successCount} thành công, ${errorCount} lỗi. Xem chi tiết bên dưới.`);
+          showAlert(` Xử lý hoàn tất: ${successCount} thành công, ${errorCount} lỗi. Xem chi tiết bên dưới.`);
         }
         
       } catch (error) {
@@ -1050,12 +1241,18 @@
           </button>
         `;
         
+        // Add AI badge for successful results
+        const aiBadge = !isError ? '<span class="badge bg-success ms-2"><i class="ti ti-brain me-1"></i>OpenAI</span>' : '';
+        const processingBadge = result.type?.includes('structured') ? '<span class="badge bg-info ms-2"><i class="ti ti-list me-1"></i>Có cấu trúc</span>' : '';
+        
         resultItem.innerHTML = `
           <div class="result-header">
             <div class="result-filename">
               <i class="ti ${iconClass} me-2"></i>
               ${result.filename}
               ${isError ? ' <span class="badge bg-danger ms-2">Lỗi</span>' : ''}
+              ${aiBadge}
+              ${processingBadge}
             </div>
             ${copyButtonHtml}
           </div>
@@ -1069,9 +1266,9 @@
         <div class="alert alert-info mb-3">
           <h6><i class="ti ti-info-circle me-2"></i>Kết quả xử lý</h6>
           <p class="mb-0">
-            ✅ Thành công: ${successCount} tệp | 
-            ❌ Lỗi: ${errorCount} tệp | 
-            📊 Tổng: ${results.length} tệp
+             Thành công: ${successCount} tệp | 
+             Lỗi: ${errorCount} tệp | 
+             Tổng: ${results.length} tệp
           </p>
         </div>
       `;

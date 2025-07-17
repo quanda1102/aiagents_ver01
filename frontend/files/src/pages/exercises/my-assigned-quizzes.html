@@ -415,7 +415,6 @@
     document.addEventListener('DOMContentLoaded', async () => {
       try {
         currentUser = await getCurrentUser();
-        console.log('Current user loaded:', currentUser);
         updateClassInfo();
         loadMyQuizzes();
       } catch (error) {
@@ -426,44 +425,19 @@
 
     // Update class information in header
     function updateClassInfo() {
-      console.log('Updating class info for user:', currentUser);
+      const studentInfoElement = document.getElementById('student-info');
+      const classNameElement = document.getElementById('class-name');
       
-      if (!currentUser) {
-        document.getElementById('classInfo').textContent = 'Chưa có thông tin người dùng';
-        return;
-      }
-
-      const isStudent = currentUser.role === 3 || currentUser.role === 'STUDENT';
-      const isTeacher = currentUser.role === 2 || currentUser.role === 'TEACHER'; 
-      const isAdmin = currentUser.role === 8686 || currentUser.role === 'ADMIN';
-      
-      let roleText = '';
-      if (isAdmin) roleText = 'Quản trị viên';
-      else if (isTeacher) roleText = 'Giáo viên';
-      else if (isStudent) roleText = 'Học sinh';
-      else roleText = `Role: ${currentUser.role}`;
-
-      if (isStudent) {
-        // For students, show class info
-        document.getElementById('headerTitle').innerHTML = '<i class="ti ti-school me-2"></i>Lớp của bạn';
-        document.getElementById('cardTitle').innerHTML = '<i class="ti ti-clipboard-list me-2"></i>Bài tập được giao cho lớp';
-        if (currentUser.class_name) {
-          const classList = Array.isArray(currentUser.class_name) ? currentUser.class_name : [currentUser.class_name];
-          const classDisplayNames = classList.map(getClassDisplayName).join(', ');
-          document.getElementById('classInfo').textContent = `${classDisplayNames} • ${currentUser.full_name || currentUser.email} • ${roleText}`;
+      if (currentUser) {
+        studentInfoElement.textContent = currentUser.full_name || 'N/A';
+        
+        if (currentUser.class_name && Array.isArray(currentUser.class_name)) {
+          classNameElement.textContent = currentUser.class_name.join(', ');
+        } else if (currentUser.class_name) {
+          classNameElement.textContent = currentUser.class_name;
         } else {
-          document.getElementById('classInfo').innerHTML = `
-            <span class="text-warning">
-              <i class="ti ti-alert-triangle me-1"></i>
-              ${currentUser.full_name || currentUser.email} (${roleText}) - Chưa có lớp - <a href="../class-selection.html" class="text-white text-decoration-underline">Chọn lớp ngay</a>
-            </span>
-          `;
+          classNameElement.textContent = 'Chưa có lớp';
         }
-      } else {
-        // For teachers/admins, show general info
-        document.getElementById('headerTitle').innerHTML = '<i class="ti ti-clipboard-list me-2"></i>Quản lý bài tập';
-        document.getElementById('cardTitle').innerHTML = '<i class="ti ti-clipboard-list me-2"></i>Tất cả bài tập trong hệ thống';
-        document.getElementById('classInfo').textContent = `${currentUser.full_name || currentUser.email} • ${roleText} • Xem tất cả bài tập`;
       }
     }
 
@@ -502,88 +476,60 @@
       return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}p` : `${hours} giờ`;
     }
 
-    // Load assigned quizzes
+    // Load assigned quizzes for current user
     async function loadMyQuizzes() {
-      showLoading();
-      
+      if (!currentUser) {
+        showError('Thông tin người dùng không hợp lệ');
+        return;
+      }
+
       try {
-        console.log('Loading quizzes for user:', currentUser);
-        console.log('API URL:', `${getApiUrl('QUIZ')}/my-quizzes`);
-        console.log('Token:', localStorage.getItem('access_token') ? 'Present' : 'Missing');
-
-        // Validate user role - allow students, teachers, and admins
-        if (!currentUser) {
-          showError('Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.');
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          showError('Không tìm thấy token xác thực');
           return;
         }
 
-        // Check user role (STUDENT = 3, TEACHER = 2, ADMIN = 8686)
-        const isStudent = currentUser.role === 3 || currentUser.role === 'STUDENT';
-        const isTeacher = currentUser.role === 2 || currentUser.role === 'TEACHER'; 
-        const isAdmin = currentUser.role === 8686 || currentUser.role === 'ADMIN';
+        // Show loading state
+        const quizList = document.getElementById('quizGrid');
+        const loadingSpinner = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        
+        quizList.style.display = 'none';
+        emptyState.style.display = 'none';
+        loadingSpinner.style.display = 'block';
 
-        if (!isStudent && !isTeacher && !isAdmin) {
-          showError('Bạn không có quyền truy cập tính năng này. Vai trò hiện tại: ' + currentUser.role);
-          return;
-        }
-
-        // Check if student has class assignment (only for students)
-        if (isStudent && (!currentUser.class_name || (Array.isArray(currentUser.class_name) && currentUser.class_name.length === 0))) {
-          showError('Bạn chưa được phân lớp. Vui lòng liên hệ với giáo viên để được phân lớp.');
-          return;
-        }
-
-        const response = await fetch(`${getApiUrl('QUIZ')}/my-quizzes?limit=50`, {
+        const response = await fetch(`${getApiUrl('QUIZ')}/my-quizzes`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
 
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
+        // Hide loading
+        loadingSpinner.style.display = 'none';
 
-        // Handle different HTTP status codes properly
         if (!response.ok) {
-          if (response.status === 401) {
-            showError('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
-            // Optionally redirect to login
-            setTimeout(() => {
-              window.location.href = '../../pages/login.hml';
-            }, 3000);
-            return;
-          } else if (response.status === 403) {
-            showError('Bạn không có quyền truy cập tính năng này. Vui lòng kiểm tra vai trò của bạn.');
-            return;
-          } else if (response.status === 404) {
-            showError('Không tìm thấy API endpoint. Vui lòng liên hệ quản trị viên.');
-            return;
-          } else if (response.status >= 500) {
-            showError('Lỗi máy chủ. Vui lòng thử lại sau.');
-            return;
-          }
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.detail || data.message || `HTTP ${response.status}: Không thể tải danh sách bài tập`);
+        
+        if (data && data.quizzes && Array.isArray(data.quizzes)) {
+          displayQuizzes(data.quizzes);
+        } else {
+          quizList.style.display = 'none';
+          emptyState.style.display = 'block';
         }
-
-        displayQuizzes(data.quizzes || []);
-        document.getElementById('quizCount').textContent = (data.quizzes || []).length;
 
       } catch (error) {
         console.error('Error loading quizzes:', error);
-        // More specific error handling
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
-          showError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
-        } else if (error.message.includes('JSON')) {
-          showError('Lỗi định dạng dữ liệu từ máy chủ. Vui lòng thử lại.');
-        } else {
-          showError(error.message || 'Có lỗi không xác định xảy ra.');
-        }
+        
+        // Hide loading
+        document.getElementById('loadingState').style.display = 'none';
+        
+        showError(`Không thể tải danh sách bài tập: ${error.message}`);
       }
     }
 
@@ -697,13 +643,6 @@
 
     // Debug function to show user info and test API
     function debugUserInfo() {
-      console.log('=== DEBUG INFO ===');
-      console.log('Current User:', currentUser);
-      console.log('Access Token:', localStorage.getItem('access_token'));
-      console.log('API Base URL:', getApiUrl('QUIZ'));
-      console.log('Expected Role:', 'STUDENT (3)');
-      console.log('Current Role Type:', typeof currentUser?.role);
-      console.log('=== END DEBUG ===');
       
       const isStudent = currentUser?.role === 3 || currentUser?.role === 'STUDENT';
       const isTeacher = currentUser?.role === 2 || currentUser?.role === 'TEACHER'; 
