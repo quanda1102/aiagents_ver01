@@ -96,7 +96,7 @@
               
               // Initialize chat widget with default options
               window.chatWidget = new ChatWidget({
-                apiUrl: 'https://api.aagents.vn/api/v1/chat',
+                apiUrl: 'https://aimarketingvn.com/webhook/chat',
                 sessionExpireHours: 24,
                 testMode: isDevelopment // Enable test mode in development
               });

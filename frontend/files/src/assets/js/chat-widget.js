@@ -200,6 +200,7 @@ class ChatWidget {
           <button onclick="window.chatWidget.testClose()" style="padding: 5px 8px; font-size: 11px; border: 1px solid #6c757d; background: #6c757d; color: white; border-radius: 4px; cursor: pointer;">Close</button>
           <button onclick="window.chatWidget.testBadge()" style="padding: 5px 8px; font-size: 11px; border: 1px solid #28a745; background: #28a745; color: white; border-radius: 4px; cursor: pointer;">Badge</button>
           <button onclick="window.chatWidget.testMessage()" style="padding: 5px 8px; font-size: 11px; border: 1px solid #ffc107; background: #ffc107; color: black; border-radius: 4px; cursor: pointer;">Message</button>
+          <button onclick="window.chatWidget.testApiConnection()" style="padding: 5px 8px; font-size: 11px; border: 1px solid #dc3545; background: #dc3545; color: white; border-radius: 4px; cursor: pointer;">API Test</button>
           <button onclick="window.chatWidget.debug()" style="padding: 5px 8px; font-size: 11px; border: 1px solid #17a2b8; background: #17a2b8; color: white; border-radius: 4px; cursor: pointer;">Debug</button>
           <button onclick="window.chatWidget.showTestResults()" style="padding: 5px 8px; font-size: 11px; border: 1px solid #6f42c1; background: #6f42c1; color: white; border-radius: 4px; cursor: pointer;">Results</button>
         </div>
@@ -647,6 +648,7 @@ class ChatWidget {
     setTimeout(() => this.testClose(), 1000);
     setTimeout(() => this.testBadge(), 1500);
     setTimeout(() => this.testMessage(), 2000);
+    setTimeout(() => this.testApiConnection(), 2500);
     
     console.log('🏁 Auto-tests completed');
   }
@@ -894,6 +896,52 @@ class ChatWidget {
     console.log('🧪 Test mode enabled');
   }
 
+  // Test API connection
+  async testApiConnection() {
+    console.log('🧪 Testing API connection to:', this.options.apiUrl);
+    
+    try {
+      const testPayload = {
+        message: "Hello, this is a test message",
+        session_id: null,
+        user_metadata: {
+          user_id: 0,
+          user_name: "Test User",
+          user_role: "GUEST"
+        }
+      };
+
+      console.log('📤 Sending test request:', testPayload);
+
+      const response = await fetch(this.options.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(testPayload)
+      });
+
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', [...response.headers.entries()]);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ API Test SUCCESS:', data);
+        this.logTestResult('API Connection', 'SUCCESS', `Connected to ${this.options.apiUrl}`);
+        return data;
+      } else {
+        const errorText = await response.text();
+        console.error('❌ API Test FAILED:', response.status, errorText);
+        this.logTestResult('API Connection', 'FAILED', `HTTP ${response.status}: ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('❌ API Test ERROR:', error);
+      this.logTestResult('API Connection', 'FAILED', `Error: ${error.message}`);
+      throw error;
+    }
+  }
+
   // Disable test mode
   disableTestMode() {
     this.options.testMode = false;
@@ -939,6 +987,12 @@ window.chatWidgetTest = {
     if (window.chatWidget) {
       window.chatWidget.runAutoTests();
     }
+  },
+  
+  apiTest: () => {
+    if (window.chatWidget) {
+      return window.chatWidget.testApiConnection();
+    }
   }
 };
 
@@ -952,6 +1006,7 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
         console.log('- window.chatWidgetTest.results() - Show test results');
         console.log('- window.chatWidgetTest.debug() - Debug widget');
         console.log('- window.chatWidgetTest.autoTest() - Run auto tests');
+        console.log('- window.chatWidgetTest.apiTest() - Test API connection');
       }
     }, 2000);
   });
