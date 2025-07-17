@@ -408,7 +408,7 @@
     // Logout function
     function logoutBtn() {
       localStorage.removeItem('access_token');
-      window.location.href = '../../auth/login.html';
+      window.location.href = '../../pages/login.hml';
     }
 
     // Load user data and initialize page
@@ -550,7 +550,7 @@
             showError('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
             // Optionally redirect to login
             setTimeout(() => {
-              window.location.href = '../../auth/login.html';
+              window.location.href = '../../pages/login.hml';
             }, 3000);
             return;
           } else if (response.status === 403) {

@@ -696,6 +696,14 @@
   <script src="../assets/js/fonts/custom-font.js"></script>
   <script src="../assets/js/pcoded.js"></script>
   <script src="../assets/js/plugins/feather.min.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script>
+    // Check authentication and role
+    document.addEventListener('DOMContentLoaded', async () => {
+      const ok = await checkRole(['TEACHER', 'ADMIN']);
+      if (!ok) return;
+    });
+  </script>
 
   <script>
     // DOM elements

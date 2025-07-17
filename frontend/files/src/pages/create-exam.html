@@ -121,7 +121,14 @@
     </div>
   </div>
 
+  <script src="../assets/js/auth.js"></script>
   <script>
+    // Check authentication and role
+    document.addEventListener('DOMContentLoaded', async () => {
+      const ok = await checkRole(['TEACHER', 'ADMIN']);
+      if (!ok) return;
+    });
+    
     const token = localStorage.getItem('access_token');
     const messageList = document.getElementById('messageList');
     const contextContainer = document.getElementById('contextDataContainer');

@@ -66,3 +66,41 @@ async function isAdmin() {
   const user = await getCurrentUser();
   return user && user.role === 'ADMIN';
 }
+
+// Apply role-based visibility to all elements with data-role-allowed attribute
+async function applyRoleBasedVisibility() {
+  const user = await getCurrentUser();
+  if (!user) return;
+  
+  const userRole = user.role;
+  const elementsWithRoleRestriction = document.querySelectorAll('[data-role-allowed]');
+  
+  elementsWithRoleRestriction.forEach(element => {
+    const allowedRoles = element.getAttribute('data-role-allowed').split(',').map(role => role.trim());
+    if (!allowedRoles.includes(userRole)) {
+      element.style.display = 'none';
+    }
+  });
+}
+
+// Hide elements from students specifically
+async function hideFromStudents() {
+  const user = await getCurrentUser();
+  if (!user) return;
+  
+  if (user.role === 'STUDENT') {
+    const studentHiddenElements = document.querySelectorAll('[data-hide-from-student]');
+    studentHiddenElements.forEach(element => {
+      element.style.display = 'none';
+    });
+  }
+}
+
+// Auto-apply role-based visibility when auth.js is loaded
+document.addEventListener('DOMContentLoaded', async function() {
+  // Wait a bit for other scripts to load
+  setTimeout(async () => {
+    await applyRoleBasedVisibility();
+    await hideFromStudents();
+  }, 100);
+});
