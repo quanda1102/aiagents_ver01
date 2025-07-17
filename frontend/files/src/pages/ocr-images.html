@@ -289,6 +289,30 @@
       margin-right: 15px;
       font-size: 20px;
     }
+    
+    .border-danger {
+      border-color: #dc3545 !important;
+    }
+    
+    .bg-light-danger {
+      background-color: #f8d7da !important;
+    }
+    
+    .text-danger {
+      color: #dc3545 !important;
+    }
+    
+    .badge {
+      padding: 0.25em 0.4em;
+      font-size: 0.75em;
+      font-weight: 700;
+      border-radius: 0.25rem;
+    }
+    
+    .bg-danger {
+      background-color: #dc3545 !important;
+      color: white;
+    }
   </style>
 </head>
 <!-- [Head] end -->
@@ -590,13 +614,15 @@
               <div class="row mb-4">
                 <div class="col-12">
                   <label for="ocrMethod" class="form-label fw-semibold">
-                    <i class="ti ti-settings me-2"></i>Chọn phương thức OCR
+                    <i class="ti ti-settings me-2"></i>Phương thức OCR
                   </label>
                   <select class="form-select" id="ocrMethod">
-                    <option value="ai" selected>OCR thông minh với AI – trích xuất văn bản chính xác từ ảnh chụp và tài liệu.</option>
-                    <option value="cv">OCR bằng thị giác máy tính</option>
+                    <option value="ai" selected>OCR thông minh với AI – trích xuất văn bản chính xác từ ảnh chụp và tài liệu</option>
                   </select>
-                  <small class="text-muted">Chọn phương thức OCR phù hợp với nhu cầu của bạn</small>
+                  <small class="text-muted">
+                    <i class="ti ti-info-circle me-1"></i>
+                    Hiện tại chỉ hỗ trợ OCR AI. Phương thức Computer Vision sẽ được bổ sung sau.
+                  </small>
                 </div>
               </div>
 
@@ -610,8 +636,12 @@
                   <span class="format-tag">GIF</span>
                   <span class="format-tag">BMP</span>
                   <span class="format-tag">TIFF</span>
-                  <span class="format-tag">PDF</span>
+                  <span class="format-tag" style="background: #ff9800;">PDF*</span>
                 </div>
+                <small class="text-muted mt-2 d-block">
+                  <i class="ti ti-alert-triangle me-1" style="color: #ff9800;"></i>
+                  *PDF: Nếu gặp lỗi, hãy chuyển đổi PDF thành ảnh (PNG/JPG) để có kết quả tốt nhất
+                </small>
               </div>
 
               <!-- Upload area -->
@@ -700,7 +730,7 @@
   <script>
     // Check authentication and role
     document.addEventListener('DOMContentLoaded', async () => {
-      const ok = await checkRole(['TEACHER', 'ADMIN']);
+      const ok = await checkRole(['STUDENT', 'TEACHER', 'ADMIN']);
       if (!ok) return;
     });
   </script>
@@ -867,67 +897,139 @@
         
         // Process PDF files individually
         for (const pdfFile of pdfFiles) {
-          const formData = new FormData();
-          formData.append('file', pdfFile);
-          
-          const pdfEndpoint = ocrMethod === 'ai' 
-            ? 'https://api.aagents.vn/api/v1/ocr-ai/pdf'
-            : 'https://api.aagents.vn/api/v1/ocr/pdf';
-          
-          const response = await fetch(pdfEndpoint, {
-            method: 'POST',
-            body: formData
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Lỗi xử lý PDF ${pdfFile.name}: ${response.status}`);
+          try {
+            const formData = new FormData();
+            formData.append('file', pdfFile);
+            
+            // Always use AI OCR for PDFs since CV OCR endpoint doesn't exist
+            const pdfEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/pdf';
+            
+            console.log(`📄 Processing PDF: ${pdfFile.name} using AI OCR`);
+            
+            const response = await fetch(pdfEndpoint, {
+              method: 'POST',
+              body: formData
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error(`PDF processing error for ${pdfFile.name}:`, errorText);
+              
+              // Handle specific poppler error
+              if (errorText.includes('poppler') || errorText.includes('Unable to get page count')) {
+                throw new Error(`PDF ${pdfFile.name}: Máy chủ chưa cài đặt công cụ xử lý PDF (poppler). Vui lòng thử với ảnh hoặc liên hệ quản trị viên.`);
+              }
+              
+              throw new Error(`Lỗi xử lý PDF ${pdfFile.name}: ${response.status} - ${errorText}`);
+            }
+            
+            const result = await response.json();
+            
+            // Handle error in response body
+            if (result.pages && result.pages.length > 0 && result.pages[0].text && result.pages[0].text.startsWith('Error:')) {
+              const errorMsg = result.pages[0].text;
+              if (errorMsg.includes('poppler') || errorMsg.includes('Unable to get page count')) {
+                // Add user-friendly error message for poppler issue
+                allResults.push({
+                  filename: result.filename,
+                  text: `❌ Lỗi: Máy chủ chưa cài đặt công cụ xử lý PDF (poppler).\n\n📋 Giải pháp:\n• Chuyển đổi PDF thành ảnh (PNG/JPG) trước khi tải lên\n• Sử dụng công cụ chụp màn hình cho từng trang\n• Liên hệ quản trị viên để cài đặt poppler\n\n🔧 Chi tiết lỗi: ${errorMsg}`,
+                  type: 'pdf-error',
+                  error: true
+                });
+                continue;
+              }
+            }
+            
+            // Convert PDF result format to match image results
+            const pdfText = result.pages ? result.pages.map(page => page.text || page).join('\n\n') : '';
+            allResults.push({
+              filename: result.filename,
+              text: pdfText,
+              type: 'pdf',
+              pages: result.pages
+            });
+            
+          } catch (pdfError) {
+            console.error(`Error processing PDF ${pdfFile.name}:`, pdfError);
+            
+            // Add error result instead of throwing
+            allResults.push({
+              filename: pdfFile.name,
+              text: `❌ Lỗi xử lý PDF: ${pdfError.message}\n\n💡 Thử nghiệm:\n• Chuyển PDF thành ảnh PNG/JPG\n• Chụp màn hình từng trang PDF\n• Sử dụng OCR với ảnh thay vì PDF`,
+              type: 'pdf-error',
+              error: true
+            });
           }
-          
-          const result = await response.json();
-          // Convert PDF result format to match image results
-          const pdfText = result.pages ? result.pages.map(page => page.text || page).join('\n\n') : '';
-          allResults.push({
-            filename: result.filename,
-            text: pdfText,
-            type: 'pdf',
-            pages: result.pages
-          });
         }
         
         // Process image files in batch
         if (imageFiles.length > 0) {
-          const formData = new FormData();
-          imageFiles.forEach(file => {
-            formData.append('files', file);
-          });
-          
-          const imageEndpoint = ocrMethod === 'ai' 
-            ? 'https://api.aagents.vn/api/v1/ocr-ai/images'
-            : 'https://api.aagents.vn/api/v1/ocr/images';
-          
-          const response = await fetch(imageEndpoint, {
-            method: 'POST',
-            body: formData
-          });
-          
-          if (!response.ok) {
-            throw new Error('Lỗi xử lý hình ảnh: ' + response.status);
+          try {
+            const formData = new FormData();
+            imageFiles.forEach(file => {
+              formData.append('files', file);
+            });
+            
+            // Always use AI OCR for images since CV OCR endpoint doesn't exist
+            const imageEndpoint = 'https://api.aagents.vn/api/v1/ocr-ai/images';
+            
+            console.log(`🖼️ Processing ${imageFiles.length} image(s) using AI OCR`);
+            
+            const response = await fetch(imageEndpoint, {
+              method: 'POST',
+              body: formData
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error('Image processing error:', errorText);
+              throw new Error(`Lỗi xử lý hình ảnh: ${response.status} - ${errorText}`);
+            }
+            
+            const imageResults = await response.json();
+            
+            // Handle errors in individual image results
+            imageResults.forEach(result => {
+              if (result.text && result.text.startsWith('Error:')) {
+                result.text = `❌ Lỗi xử lý ảnh: ${result.text}\n\n💡 Gợi ý:\n• Kiểm tra chất lượng ảnh (độ nét, độ sáng)\n• Thử với ảnh có độ phân giải cao hơn\n• Đảm bảo văn bản trong ảnh rõ ràng`;
+                result.error = true;
+              }
+              result.type = 'image';
+              allResults.push(result);
+            });
+            
+          } catch (imageError) {
+            console.error('Error processing images:', imageError);
+            
+            // Add error result for all images
+            imageFiles.forEach(file => {
+              allResults.push({
+                filename: file.name,
+                text: `❌ Lỗi xử lý ảnh: ${imageError.message}\n\n💡 Thử nghiệm:\n• Kiểm tra kết nối mạng\n• Thử lại với ảnh chất lượng cao\n• Liên hệ hỗ trợ nếu lỗi tiếp tục`,
+                type: 'image-error',
+                error: true
+              });
+            });
           }
-          
-          const imageResults = await response.json();
-          // Add type to image results
-          imageResults.forEach(result => {
-            result.type = 'image';
-            allResults.push(result);
-          });
         }
         
         displayResults(allResults);
-        showAlert(`Đã xử lý thành công ${allResults.length} tệp`);
+        
+        // Show appropriate success/error message
+        const successCount = allResults.filter(r => !r.error && !r.type?.includes('error')).length;
+        const errorCount = allResults.length - successCount;
+        
+        if (errorCount === 0) {
+          showAlert(`✅ Đã xử lý thành công ${allResults.length} tệp`);
+        } else if (successCount === 0) {
+          showAlert(`❌ Không thể xử lý ${errorCount} tệp. Vui lòng kiểm tra định dạng và thử lại.`, 'error');
+        } else {
+          showAlert(`⚠️ Xử lý hoàn tất: ${successCount} thành công, ${errorCount} lỗi. Xem chi tiết bên dưới.`);
+        }
         
       } catch (error) {
         console.error('OCR processing error:', error);
-        showAlert('Có lỗi xảy ra khi xử lý OCR: ' + error.message, 'error');
+        showAlert(`❌ Có lỗi xảy ra khi xử lý OCR: ${error.message}`, 'error');
       } finally {
         processingOverlay.style.display = 'none';
         processBtn.disabled = false;
@@ -937,23 +1039,54 @@
     function displayResults(results) {
       resultsContainer.innerHTML = '';
       
+      let successCount = 0;
+      let errorCount = 0;
+      
       results.forEach((result, index) => {
         const resultItem = document.createElement('div');
-        resultItem.className = 'result-item';
+        const isError = result.error || result.type?.includes('error');
+        
+        if (isError) {
+          errorCount++;
+          resultItem.className = 'result-item border-danger';
+        } else {
+          successCount++;
+          resultItem.className = 'result-item';
+        }
+        
+        const iconClass = isError ? 'ti-alert-circle text-danger' : 'ti-file-text';
+        const copyButtonHtml = isError ? '' : `
+          <button class="copy-btn" onclick="copyToClipboard('${result.text.replace(/'/g, "\\'")}', ${index})">
+            <i class="ti ti-copy me-1"></i>Sao chép
+          </button>
+        `;
+        
         resultItem.innerHTML = `
           <div class="result-header">
             <div class="result-filename">
-              <i class="ti ti-file-text me-2"></i>
+              <i class="ti ${iconClass} me-2"></i>
               ${result.filename}
+              ${isError ? ' <span class="badge bg-danger ms-2">Lỗi</span>' : ''}
             </div>
-            <button class="copy-btn" onclick="copyToClipboard('${result.text.replace(/'/g, "\\'")}', ${index})">
-              <i class="ti ti-copy me-1"></i>Sao chép
-            </button>
+            ${copyButtonHtml}
           </div>
-          <div class="result-text">${result.text || 'Không tìm thấy văn bản trong tệp này.'}</div>
+          <div class="result-text ${isError ? 'bg-light-danger' : ''}">${result.text || 'Không tìm thấy văn bản trong tệp này.'}</div>
         `;
         resultsContainer.appendChild(resultItem);
       });
+      
+      // Add summary
+      const summaryHtml = `
+        <div class="alert alert-info mb-3">
+          <h6><i class="ti ti-info-circle me-2"></i>Kết quả xử lý</h6>
+          <p class="mb-0">
+            ✅ Thành công: ${successCount} tệp | 
+            ❌ Lỗi: ${errorCount} tệp | 
+            📊 Tổng: ${results.length} tệp
+          </p>
+        </div>
+      `;
+      resultsContainer.insertAdjacentHTML('afterbegin', summaryHtml);
       
       resultsSection.style.display = 'block';
       resultsSection.scrollIntoView({ behavior: 'smooth' });
