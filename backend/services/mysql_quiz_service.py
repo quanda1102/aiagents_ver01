@@ -275,28 +275,50 @@ class MySQLQuizService:
             db.close()
 
     def get_user_attempts(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get all quiz attempts for a specific user"""
+        """Get all quiz attempts for a specific user with quiz information"""
         db = self.get_db()
         try:
-            attempts = db.query(QuizAttempt).filter(QuizAttempt.user_id == user_id).all()
+            # Convert user_id to integer for database query
+            try:
+                user_id_int = int(user_id)
+            except ValueError:
+                logger.error(f"Invalid user_id format: {user_id}")
+                return []
             
+            logger.info(f"Looking for attempts for user_id: {user_id_int}")
+            
+            # First, check if there are any attempts at all for this user (without JOIN)
+            attempts_only = db.query(QuizAttempt).filter(QuizAttempt.user_id == user_id_int).all()
+            logger.info(f"Found {len(attempts_only)} attempts for user {user_id_int}")
+            
+            if not attempts_only:
+                logger.info("No attempts found, returning empty list")
+                return []
+            
+            # Now try to get quiz information for each attempt
             attempt_data = []
-            for attempt in attempts:
+            for attempt in attempts_only:
+                # Get quiz information separately
+                quiz = db.query(Quiz).filter(Quiz.quiz_id == attempt.quiz_id).first()
+                
                 attempt_dict = {
                     "attempt_id": attempt.attempt_id,
                     "quiz_id": attempt.quiz_id,
-                    "user_id": attempt.user_id,
+                    "quiz_title": quiz.title if quiz else None,
+                    "quiz_class_code": quiz.class_code if quiz else None,
+                    "user_id": str(attempt.user_id),  # Convert to string for consistency
                     "submitted_at": attempt.submitted_at.isoformat(),
                     "earned_points": attempt.earned_points,
                     "total_points": attempt.total_points,
-                    "score_percentage": round((attempt.earned_points / attempt.total_points * 100), 2) if attempt.total_points > 0 else 0,
+                    "score_percentage": attempt.score_percentage,
                     "results": attempt.results,
-                    "is_passed": attempt.is_passed
+                    "answers": attempt.answers
                 }
                 attempt_data.append(attempt_dict)
                 
             # Sort by submission time (newest first)
             attempt_data.sort(key=lambda x: x["submitted_at"], reverse=True)
+            logger.info(f"Returning {len(attempt_data)} attempts")
             return attempt_data
             
         except Exception as e:
@@ -306,23 +328,27 @@ class MySQLQuizService:
             db.close()
             
     def get_all_attempts(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """Get all quiz attempts (for teachers/admins)"""
+        """Get all quiz attempts (for teachers/admins) with quiz information"""
         db = self.get_db()
         try:
-            attempts = db.query(QuizAttempt).order_by(QuizAttempt.submitted_at.desc()).limit(limit).all()
+            # Join QuizAttempt with Quiz to get quiz title and class_code
+            attempts_with_quiz = db.query(QuizAttempt, Quiz).join(
+                Quiz, QuizAttempt.quiz_id == Quiz.quiz_id
+            ).order_by(QuizAttempt.submitted_at.desc()).limit(limit).all()
             
             attempt_data = []
-            for attempt in attempts:
+            for attempt, quiz in attempts_with_quiz:
                 attempt_dict = {
                     "attempt_id": attempt.attempt_id,
                     "quiz_id": attempt.quiz_id,
+                    "quiz_title": quiz.title,
+                    "quiz_class_code": quiz.class_code,
                     "user_id": attempt.user_id,
                     "submitted_at": attempt.submitted_at.isoformat(),
                     "earned_points": attempt.earned_points,
                     "total_points": attempt.total_points,
                     "score_percentage": round((attempt.earned_points / attempt.total_points * 100), 2) if attempt.total_points > 0 else 0,
-                    "results": attempt.results,
-                    "is_passed": attempt.is_passed
+                    "results": attempt.results
                 }
                 attempt_data.append(attempt_dict)
                 
@@ -342,9 +368,17 @@ class MySQLQuizService:
             
             # Filter by class if user is a student
             if user and user.role == 3:  # STUDENT role
-                query = query.filter(
-                    (Quiz.class_code == user.class_name) | (Quiz.class_code.is_(None))
-                )
+                if user.class_name:
+                    # Handle both single class (string) and multiple classes (array)
+                    if isinstance(user.class_name, list):
+                        # User has multiple classes - show only quizzes assigned to their classes
+                        query = query.filter(Quiz.class_code.in_(user.class_name))
+                    else:
+                        # User has single class (backward compatibility)
+                        query = query.filter(Quiz.class_code == user.class_name)
+                else:
+                    # No classes assigned - show no quizzes
+                    query = query.filter(Quiz.class_code == 'NO_CLASS_ASSIGNED')
             elif class_code:
                 query = query.filter(Quiz.class_code == class_code)
             

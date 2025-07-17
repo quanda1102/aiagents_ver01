@@ -71,6 +71,7 @@ class QuizSummary(BaseModel):
     time_limit: Optional[int]
     allow_multiple_attempts: bool
     shuffle_questions: bool
+    class_code: Optional[str] = None
 
 
 class QuizForTaking(BaseModel):
@@ -128,6 +129,19 @@ class QuizAttempt(BaseModel):
     score_percentage: float
     submitted_at: str
 
+class QuizAttemptWithInfo(BaseModel):
+    attempt_id: str
+    quiz_id: str
+    quiz_title: Optional[str] = None
+    quiz_class_code: Optional[str] = None
+    user_id: str
+    answers: List[QuizAnswer]
+    results: List[QuizResult]
+    total_points: int
+    earned_points: int
+    score_percentage: float
+    submitted_at: str
+
 
 class ValidateAnswerRequest(BaseModel):
     quiz_id: str
@@ -145,7 +159,7 @@ class ValidateAnswerResponse(BaseModel):
 
 
 class GenerateQuizRequest(BaseModel):
-    document_text: str = Field(..., min_length=50, max_length=50000)
+    document_text: str = Field(..., min_length=1, max_length=50000)
     quiz_title: Optional[str] = Field(default=None, max_length=200)
     number_of_questions: int = Field(default=5, ge=1, le=20)
     difficulty_level: str = Field(default="medium", pattern="^(easy|medium|hard)$")
@@ -182,4 +196,4 @@ class UserQuizStats(BaseModel):
     average_score: float
     best_score: float
     quizzes_taken: int
-    recent_attempts: List[QuizAttempt]
+    recent_attempts: List[QuizAttemptWithInfo]

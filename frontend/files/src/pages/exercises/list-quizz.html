@@ -164,7 +164,7 @@
           <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h5 class="mb-0">Danh sách bài tập</h5>
-              <a href="../../pages/exercises/create-quizz.html" class="btn btn-primary" id="createQuizBtn">
+              <a href="../../pages/exercises/create-quizz.html" class="btn btn-primary" id="createQuizBtn" data-role-allowed="ADMIN,TEACHER">
                 <i class="ti ti-plus me-1"></i>Tạo bài tập mới
               </a>
             </div>
@@ -245,10 +245,15 @@
         currentUser = await getCurrentUser();
         isTeacherOrAdmin = currentUser && ['TEACHER', 'ADMIN'].includes(currentUser.role);
         
+        // Apply role-based visibility
+        if (typeof applyRoleBasedVisibility === 'function') {
+            await applyRoleBasedVisibility();
+        }
+        
         // Show/hide UI elements based on role
         if (currentUser?.role === 'STUDENT') {
             document.getElementById('my-quizzes-tab-li').style.display = 'block';
-            document.getElementById('createQuizBtn').style.display = 'none';
+            // createQuizBtn is now handled by applyRoleBasedVisibility
         }
         
         // Load initial quiz list

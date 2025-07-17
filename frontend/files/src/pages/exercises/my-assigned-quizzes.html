@@ -408,7 +408,7 @@
     // Logout function
     function logoutBtn() {
       localStorage.removeItem('access_token');
-      window.location.href = '../../auth/login.html';
+      window.location.href = '../../pages/login.hml';
     }
 
     // Load user data and initialize page
@@ -448,8 +448,9 @@
         document.getElementById('headerTitle').innerHTML = '<i class="ti ti-school me-2"></i>Lớp của bạn';
         document.getElementById('cardTitle').innerHTML = '<i class="ti ti-clipboard-list me-2"></i>Bài tập được giao cho lớp';
         if (currentUser.class_name) {
-          const classDisplayName = getClassDisplayName(currentUser.class_name);
-          document.getElementById('classInfo').textContent = `${classDisplayName} • ${currentUser.full_name || currentUser.email} • ${roleText}`;
+          const classList = Array.isArray(currentUser.class_name) ? currentUser.class_name : [currentUser.class_name];
+          const classDisplayNames = classList.map(getClassDisplayName).join(', ');
+          document.getElementById('classInfo').textContent = `${classDisplayNames} • ${currentUser.full_name || currentUser.email} • ${roleText}`;
         } else {
           document.getElementById('classInfo').innerHTML = `
             <span class="text-warning">
@@ -527,7 +528,7 @@
         }
 
         // Check if student has class assignment (only for students)
-        if (isStudent && !currentUser.class_name) {
+        if (isStudent && (!currentUser.class_name || (Array.isArray(currentUser.class_name) && currentUser.class_name.length === 0))) {
           showError('Bạn chưa được phân lớp. Vui lòng liên hệ với giáo viên để được phân lớp.');
           return;
         }
@@ -549,7 +550,7 @@
             showError('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
             // Optionally redirect to login
             setTimeout(() => {
-              window.location.href = '../../auth/login.html';
+              window.location.href = '../../pages/login.hml';
             }, 3000);
             return;
           } else if (response.status === 403) {
@@ -608,7 +609,10 @@
                   <h6 class="mb-1 fw-bold">${quiz.title}</h6>
                   <span class="quiz-difficulty difficulty-${difficulty.level}">${difficulty.label}</span>
                 </div>
-                <small class="text-muted">Tạo bởi: ${quiz.created_by}</small>
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">Tạo bởi: ${quiz.created_by}</small>
+                  ${quiz.class_code ? `<span class="badge bg-primary">${getClassDisplayName(quiz.class_code)}</span>` : ''}
+                </div>
               </div>
               <div class="card-body">
                 <p class="card-text text-muted mb-3">${quiz.description || 'Không có mô tả'}</p>
@@ -721,7 +725,7 @@
           <li><strong>User Role:</strong> ${roleDisplay}</li>
           <li><strong>Role Type:</strong> ${roleText}</li>
           <li><strong>Role Check:</strong> ${roleCheck ? 'PASS' : 'FAIL (Expected STUDENT, TEACHER, or ADMIN)'}</li>
-          <li><strong>Class Name:</strong> ${currentUser?.class_name || 'N/A'}</li>
+          <li><strong>Class Name:</strong> ${currentUser?.class_name ? (Array.isArray(currentUser.class_name) ? currentUser.class_name.join(', ') : currentUser.class_name) : 'N/A'}</li>
           <li><strong>User ID:</strong> ${currentUser?.id || 'N/A'}</li>
           <li><strong>Token Present:</strong> ${localStorage.getItem('access_token') ? 'Yes' : 'No'}</li>
           <li><strong>API Endpoint:</strong> ${getApiUrl('QUIZ')}/my-quizzes</li>

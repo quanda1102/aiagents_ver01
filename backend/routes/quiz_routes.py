@@ -13,7 +13,7 @@ from typing import List
 
 from schemas.quiz_models import (
     CreateQuizRequest, QuizSummary, QuizForTaking, SubmitQuizRequest, 
-    QuizAttempt, ValidateAnswerRequest, ValidateAnswerResponse,
+    QuizAttempt, QuizAttemptWithInfo, ValidateAnswerRequest, ValidateAnswerResponse,
     QuizListResponse, QuizResponse, UserQuizStats, GenerateQuizRequest,
     GenerateQuizResponse
 )
@@ -369,33 +369,6 @@ async def validate_answer(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.delete("/{quiz_id}", response_model=QuizResponse)
-async def delete_quiz(
-    quiz_id: str, 
-    current_user: User = Depends(get_current_user)
-):
-    """Delete a quiz"""
-    if not quiz_service:
-        raise HTTPException(status_code=503, detail="Quiz service unavailable")
-    
-    try:
-        success = quiz_service.delete_quiz(quiz_id)
-        
-        if not success:
-            raise HTTPException(status_code=404, detail="Quiz not found or could not be deleted")
-        
-        return QuizResponse(
-            success=True,
-            message="Quiz deleted successfully"
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error deleting quiz: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
 @router.post("/generate", response_model=GenerateQuizResponse)
 async def generate_quiz_from_document(
     request: GenerateQuizRequest, 
@@ -525,7 +498,7 @@ async def get_my_attempts(
                 average_score=average_score,
                 best_score=best_score,
                 quizzes_taken=quizzes_taken,
-                recent_attempts=[QuizAttempt(**attempt) for attempt in limited_attempts]
+                recent_attempts=[QuizAttemptWithInfo(**attempt) for attempt in limited_attempts]
             )
         else:
             user_stats = UserQuizStats(
@@ -590,5 +563,28 @@ async def get_quiz(
         logger.error(f"Error retrieving quiz: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
-
-
+@router.delete("/{quiz_id}", response_model=QuizResponse)
+async def delete_quiz(
+    quiz_id: str, 
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a quiz"""
+    if not quiz_service:
+        raise HTTPException(status_code=503, detail="Quiz service unavailable")
+    
+    try:
+        success = quiz_service.delete_quiz(quiz_id)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail="Quiz not found or could not be deleted")
+        
+        return QuizResponse(
+            success=True,
+            message="Quiz deleted successfully"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting quiz: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")

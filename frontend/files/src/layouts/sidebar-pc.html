@@ -18,10 +18,10 @@
         </li>
 
         <!-- Người dùng -->
-        <li class="pc-item pc-caption">
+        <li class="pc-item pc-caption" data-role-allowed="ADMIN,TEACHER">
           <label>Người dùng</label>
         </li>
-        <li class="pc-item">
+        <li class="pc-item" data-role-allowed="ADMIN">
           <a href="/pages/users-list.html" class="pc-link">
             <span class="pc-micon"><i class="ti ti-users"></i></span>
             <span class="pc-mtext">Danh sách người dùng</span>
@@ -35,11 +35,11 @@
         </li>
 
         <!-- AI tools -->
-        <li class="pc-item pc-caption">
+        <li class="pc-item pc-caption" data-role-allowed="ADMIN,TEACHER">
           <label>Công cụ AI</label>
           <i class="ti ti-robot"></i>
         </li>
-        <li class="pc-item">
+        <li class="pc-item" data-role-allowed="ADMIN,TEACHER">
           <a href="/pages/ai-lesson-creator.html" class="pc-link">
             <span class="pc-micon"><i class="ti ti-bulb"></i></span>
             <span class="pc-mtext">Tạo bài giảng AI</span>
@@ -60,7 +60,7 @@
         <li class="pc-item pc-hasmenu">
           <a href="#" class="pc-link"><span class="pc-micon"><i class="ti ti-menu"></i></span><span class="pc-mtext">Bài tập</span><span class="pc-arrow"><i data-feather="chevron-right"></i></span></a>
           <ul class="pc-submenu">
-            <li class="pc-item"><a class="pc-link" href="/pages/exercises/create-quizz.html">Tạo bài tập</a></li>
+            <li class="pc-item" data-role-allowed="ADMIN,TEACHER"><a class="pc-link" href="/pages/exercises/create-quizz.html">Tạo bài tập</a></li>
             <li class="pc-item"><a class="pc-link" href="/pages/exercises/list-quizz.html">Danh sách bài tập</a></li>
             <li class="pc-item"><a class="pc-link" href="/pages/exercises/my-assigned-quizzes.html">Bài tập được giao</a></li>
             <li class="pc-item"><a class="pc-link" href="/pages/exercises/user-attempts.html">Kết quả bài làm</a></li>
@@ -100,3 +100,12 @@
     </div>
   </div>
 </nav>
+
+<script>
+// Role-based visibility for sidebar items
+document.addEventListener('DOMContentLoaded', async function() {
+  if (typeof applyRoleBasedVisibility === 'function') {
+    await applyRoleBasedVisibility();
+  }
+});
+</script>

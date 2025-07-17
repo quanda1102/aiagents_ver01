@@ -438,6 +438,11 @@
     document.addEventListener('DOMContentLoaded', async () => {
           const ok = await checkRole(['ADMIN']);
           if (!ok) return;
+          
+          // Apply role-based visibility
+          if (typeof applyRoleBasedVisibility === 'function') {
+            await applyRoleBasedVisibility();
+          }
     });
 </script>
 <script>
