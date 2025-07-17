@@ -269,6 +269,48 @@
       padding: 10px;
     }
     
+    .ai-powered-info {
+      background: linear-gradient(135deg, #f0f8ff 0%, #e8f5e8 100%);
+      border: 2px solid #4CAF50;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.1);
+    }
+    
+    .ai-powered-info .ai-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 20px;
+      font-size: 24px;
+      box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+    }
+
+    .features-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .feature-badge {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(76, 175, 80, 0.2);
+    }
+
     .ocr-method-info {
       background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
       border: 1px solid #bbdefb;
@@ -579,8 +621,14 @@
             </div>
             <div class="col-md-12">
               <div class="page-header-title">
-                <h2 class="mb-0">OCR hình ảnh</h2>
-                <p class="text-muted">Trích xuất văn bản từ hình ảnh và PDF bằng công nghệ OCR</p>
+                <h2 class="mb-0">
+                  <i class="ti ti-brain me-2" style="color: #4CAF50;"></i>
+                  OCR thông minh AI
+                </h2>
+                <p class="text-muted">
+                  <i class="ti ti-sparkles me-1" style="color: #FF6B35;"></i>
+                  Trích xuất văn bản từ hình ảnh và PDF bằng OpenAI GPT-4o Vision
+                </p>
               </div>
             </div>
           </div>
@@ -593,24 +641,62 @@
         <div class="col-12">
           <div class="card">
             <div class="card-header">
-              <h5><i class="ti ti-scan me-2"></i>Tải lên tệp để xử lý OCR</h5>
+              <h5>
+                <i class="ti ti-upload me-2"></i>Tải lên tệp để trích xuất văn bản
+                <span class="badge bg-success ms-2">
+                  <i class="ti ti-brain me-1"></i>AI-Powered
+                </span>
+              </h5>
             </div>
             <div class="card-body">
               
-              <!-- OCR Method Selection -->
+              <!-- AI-Powered OCR Info -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <div class="ai-powered-info">
+                    <div class="d-flex align-items-center">
+                      <div class="ai-icon">
+                        <i class="ti ti-brain"></i>
+                      </div>
+                      <div>
+                        <h6 class="mb-1">
+                          <i class="ti ti-sparkles me-2" style="color: #FF6B35;"></i>
+                          Được hỗ trợ bởi OpenAI GPT-4o Vision
+                        </h6>
+                        <p class="text-muted mb-2">
+                          Trích xuất văn bản thông minh với độ chính xác cao từ hình ảnh và PDF
+                        </p>
+                        <div class="features-list">
+                          <span class="feature-badge">
+                            <i class="ti ti-world me-1"></i>Tiếng Việt & Tiếng Anh
+                          </span>
+                          <span class="feature-badge">
+                            <i class="ti ti-zap me-1"></i>Xử lý nhanh
+                          </span>
+                          <span class="feature-badge">
+                            <i class="ti ti-eye me-1"></i>AI Vision
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Processing Method Selection -->
               <div class="row mb-4">
                 <div class="col-12">
                   <label for="ocrMethod" class="form-label fw-semibold">
-                    <i class="ti ti-settings me-2"></i>Phương thức OCR
+                    <i class="ti ti-settings me-2"></i>Phương thức xử lý PDF
                   </label>
                   <select class="form-select" id="ocrMethod">
-                    <option value="pypdfium2" selected>pypdfium2 - Google PDFium (Khuyến nghị cho Production)</option>
-                    <option value="pymupdf">PyMuPDF - Nhanh nhất (AGPL License)</option>
-                    <option value="original">Original - pdf2image + poppler (Ổn định nhất)</option>
+                    <option value="pypdfium2" selected>Chất lượng cao (Khuyến nghị)</option>
+                    <option value="pymupdf">Tốc độ nhanh nhất</option>
+                    <option value="original">Ổn định nhất</option>
                   </select>
                   <small class="text-muted">
                     <i class="ti ti-info-circle me-1"></i>
-                    <strong>pypdfium2</strong> được khuyến nghị cho môi trường production với giấy phép liberal và không cần system dependencies.
+                    Chất lượng cao được khuyến nghị cho hầu hết các tài liệu.
                   </small>
                 </div>
               </div>
@@ -622,13 +708,13 @@
                     <i class="ti ti-cpu me-2"></i>Chế độ xử lý
                   </label>
                   <select class="form-select" id="processingMode">
-                    <option value="batch" selected>Xử lý đồng thời (Nhanh hơn)</option>
-                    <option value="sequential">Xử lý tuần tự (Ổn định hơn)</option>
-                    <option value="structured">Đầu ra có cấu trúc (JSON format)</option>
+                    <option value="batch" selected>Xử lý nhanh (Nhiều trang cùng lúc)</option>
+                    <option value="sequential">Xử lý từng trang (Ổn định hơn)</option>
+                    <option value="structured">Đầu ra có cấu trúc (Dễ phân tích)</option>
                   </select>
                   <small class="text-muted">
                     <i class="ti ti-zap me-1"></i>
-                    Chế độ đồng thời xử lý nhiều trang cùng lúc, giúp tăng tốc độ xử lý.
+                    Xử lý nhanh được khuyến nghị cho tài liệu nhiều trang.
                   </small>
                 </div>
               </div>
@@ -647,31 +733,8 @@
                 </div>
                 <small class="text-muted mt-2 d-block">
                   <i class="ti ti-check-circle me-1" style="color: #28a745;"></i>
-                  PDF được hỗ trợ đầy đủ với 3 phương thức xử lý khác nhau (pypdfium2, PyMuPDF, original)
+                  Hỗ trợ đầy đủ các định dạng phổ biến với công nghệ AI Vision tiên tiến
                 </small>
-              </div>
-
-              <!-- Method Information -->
-              <div class="ocr-method-info">
-                <div class="d-flex align-items-center">
-                  <div class="method-icon">
-                    <i class="ti ti-cpu"></i>
-                  </div>
-                  <div>
-                    <h6 class="mb-1">Phương thức OCR được cải tiến</h6>
-                    <p class="text-muted mb-0">
-                      <strong>pypdfium2:</strong> Không cần system dependencies, giấy phép liberal<br>
-                      <strong>PyMuPDF:</strong> Nhanh nhất, chất lượng cao (AGPL license)<br>
-                      <strong>Original:</strong> Ổn định, yêu cầu poppler
-                    </p>
-                    <div class="mt-2">
-                      <small class="text-success">
-                        <i class="ti ti-world me-1"></i>
-                        <strong>Hỗ trợ ngôn ngữ:</strong> Tiếng Việt (đầy đủ dấu), Tiếng Anh, và nội dung hỗn hợp
-                      </small>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <!-- Upload area -->
@@ -879,13 +942,13 @@
       let methodName = '';
       switch(ocrMethod) {
         case 'pypdfium2':
-          methodName = 'pypdfium2 (Google PDFium)';
+          methodName = 'Chất lượng cao';
           break;
         case 'pymupdf':
-          methodName = 'PyMuPDF';
+          methodName = 'Tốc độ nhanh';
           break;
         case 'original':
-          methodName = 'pdf2image + poppler';
+          methodName = 'Ổn định';
           break;
         default:
           methodName = 'AI OCR';
@@ -894,18 +957,18 @@
       let modeText = '';
       switch(processingMode) {
         case 'batch':
-          modeText = 'với xử lý đồng thời';
+          modeText = 'với xử lý nhanh';
           break;
         case 'sequential':
-          modeText = 'với xử lý tuần tự';
+          modeText = 'với xử lý từng trang';
           break;
         case 'structured':
           modeText = 'với đầu ra có cấu trúc';
           break;
       }
       
-      processingTitle.textContent = `Đang xử lý OCR với ${methodName}...`;
-      processingSubtitle.textContent = `Sử dụng ${methodName} ${modeText} để trích xuất văn bản chính xác`;
+      processingTitle.textContent = `Đang xử lý với OpenAI GPT-4o Vision...`;
+      processingSubtitle.textContent = `Sử dụng chế độ ${methodName} ${modeText} để trích xuất văn bản chính xác`;
     }
 
     // Event listeners
@@ -1178,9 +1241,9 @@
           </button>
         `;
         
-        // Add method badge if available
-        const methodBadge = result.method ? `<span class="badge bg-info ms-2">${result.method}</span>` : '';
-        const processingBadge = result.type?.includes('structured') ? '<span class="badge bg-success ms-2">Structured</span>' : '';
+        // Add AI badge for successful results
+        const aiBadge = !isError ? '<span class="badge bg-success ms-2"><i class="ti ti-brain me-1"></i>OpenAI</span>' : '';
+        const processingBadge = result.type?.includes('structured') ? '<span class="badge bg-info ms-2"><i class="ti ti-list me-1"></i>Có cấu trúc</span>' : '';
         
         resultItem.innerHTML = `
           <div class="result-header">
@@ -1188,7 +1251,7 @@
               <i class="ti ${iconClass} me-2"></i>
               ${result.filename}
               ${isError ? ' <span class="badge bg-danger ms-2">Lỗi</span>' : ''}
-              ${methodBadge}
+              ${aiBadge}
               ${processingBadge}
             </div>
             ${copyButtonHtml}
