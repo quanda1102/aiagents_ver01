@@ -76,6 +76,39 @@
         loadCSS(`${assetsPath}css/chat-widget.css`),
         loadJS(`${assetsPath}js/chat-widget.js`)
       ]);
+      
+      // Initialize the chat widget after files are loaded
+      // Check if we're on an auth page (login/register)
+      const currentPath = window.location.pathname.toLowerCase();
+      const isAuthPage = currentPath.includes('login') || 
+                        currentPath.includes('register') || 
+                        currentPath.includes('auth');
+
+      if (!isAuthPage) {
+        // Wait a bit more to ensure ChatWidget class is available
+        setTimeout(() => {
+          try {
+            if (typeof ChatWidget !== 'undefined') {
+              // Check if we're in development mode for testing
+              const isDevelopment = window.location.hostname === 'localhost' || 
+                                   window.location.hostname === '127.0.0.1' ||
+                                   window.location.search.includes('test=true');
+              
+              // Initialize chat widget with default options
+              window.chatWidget = new ChatWidget({
+                apiUrl: 'https://aimarketingvn.com/webhook/chat',
+                sessionExpireHours: 24,
+                testMode: isDevelopment // Enable test mode in development
+              });
+              window.chatWidget.init();
+            } else {
+              console.error('❌ ChatWidget class not loaded');
+            }
+          } catch (error) {
+            console.error('❌ Chat Widget - Initialization failed:', error);
+          }
+        }, 100);
+      }
     } catch (error) {
       console.error('❌ Failed to load chat widget:', error);
     }
