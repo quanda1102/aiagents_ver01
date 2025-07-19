@@ -494,6 +494,7 @@
     }
 
     // ===== 2. Load danh sách người dùng =====
+    // ===== 2. Load danh sách người dùng =====
     async function loadUsers() {
         try {
             const apiUrl = getApiUrl('USERS') + '/';
@@ -527,7 +528,19 @@
                 return;
             }
 
+            // Bắt đầu phần chỉnh sửa
             data.forEach((user, i) => {
+                // Chuyển đổi giới tính sang tiếng Việt
+                const genderInVietnamese = user.gender === 'male' ? 'Nam' : 'Nữ';
+
+                // Chuyển đổi vai trò sang tiếng Việt
+                const roleMap = {
+                    'STUDENT': 'Học sinh',
+                    'TEACHER': 'Giáo viên',
+                    'ADMIN': 'Quản trị'
+                };
+                const roleInVietnamese = roleMap[user.role] || user.role; // Giữ nguyên nếu không có trong map
+
                 const displayClassName = Array.isArray(user.class_name)
                     ? user.class_name.join(', ')
                     : (user.class_name || '-');
@@ -538,15 +551,17 @@
                     <td>${user.email}</td>
                     <td class="editable" data-field="full_name">${user.full_name}</td>
                     <td class="editable" data-field="age">${user.age}</td>
-                    <td class="editable" data-field="gender">${user.gender}</td>
+                    <td class="editable" data-field="gender">${genderInVietnamese}</td>
                     <td class="editable" data-field="class_name" data-value='${JSON.stringify(user.class_name)}'>${(user.class_name || []).join(', ')}</td>
-                    <td class="editable" data-field="role">${user.role}</td>
+                    <td class="editable" data-field="role">${roleInVietnamese}</td>
+
                     <td class="action-buttons">
                       <button class="btn btn-sm btn-primary editBtn">Chỉnh sửa</button>
                       <button class="btn btn-sm btn-danger deleteBtn">Xoá</button>
                     </td>
                   </tr>`;
             });
+            // Kết thúc phần chỉnh sửa
 
         } catch (err) {
             console.error('Load users error:', err);
