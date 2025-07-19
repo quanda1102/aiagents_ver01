@@ -1980,7 +1980,7 @@
         document.getElementById('sseProgress').textContent = 'Trạng thái: Kết nối';
 
         // Create SSE connection
-        const sseUrl = `http://127.0.0.1:8000/api/v1/sse_lecture/generate?${params.toString()}`;
+        const sseUrl = `https://api.aaagents.com/api/v1/sse_lecture/generate?${params.toString()}`;
         const eventSource = new EventSource(sseUrl);
         
         let finalLectureData = null;
@@ -2020,23 +2020,23 @@
 
         eventSource.addEventListener('start', function(event) {
           const data = JSON.parse(event.data);
-          document.getElementById('sseStatusText').textContent = 'AI bắt đầu tạo bài giảng...';
-          document.getElementById('sseProgress').textContent = 'Trạng thái: Bắt đầu';
-          createLogEntry('status', `🚀 ${data.message}`);
+          document.getElementById('sseStatusText').textContent = 'AI bắt đầu làm việc...';
+          document.getElementById('sseProgress').textContent = 'Trạng thái: Khởi tạo';
+          createLogEntry('status', `🤖 ${data.message}`);
           currentMessageElement = null; // Reset for new content
         });
 
         eventSource.addEventListener('agent_update', function(event) {
           const data = JSON.parse(event.data);
-          document.getElementById('sseStatusText').textContent = 'AI đang xử lý...';
-          document.getElementById('sseProgress').textContent = 'Trạng thái: Đang xử lý';
-          createLogEntry('status', `⚙️ ${data.message}`);
+          document.getElementById('sseStatusText').textContent = 'AI đang suy nghĩ...';
+          document.getElementById('sseProgress').textContent = 'Trạng thái: Đang phân tích';
+          createLogEntry('status', `💭 ${data.message}`);
           currentMessageElement = null; // Reset for new content
         });
 
         eventSource.addEventListener('content_delta', function(event) {
-          document.getElementById('sseStatusText').textContent = 'AI đang viết nội dung...';
-          document.getElementById('sseProgress').textContent = 'Trạng thái: Đang tạo nội dung';
+          document.getElementById('sseStatusText').textContent = 'AI đang soạn thảo...';
+          document.getElementById('sseProgress').textContent = 'Trạng thái: Đang viết nội dung';
           
           // Parse the actual content from the event
           try {
@@ -2047,36 +2047,39 @@
             if (lastEntry && lastEntry.classList.contains('content-progress')) {
               lastEntry.textContent += '.';
             } else {
-              createLogEntry('content-progress', '📝 AI đang suy nghĩ và tạo nội dung');
+              createLogEntry('content-progress', '✍️ AI đang viết và cấu trúc nội dung bài giảng');
             }
           } catch (e) {
             // If parsing fails, just show progress
-            createLogEntry('status', '⚡ AI đang xử lý...');
+            createLogEntry('status', '💫 AI đang làm việc...');
           }
         });
 
         eventSource.addEventListener('tool_output', function(event) {
           const data = JSON.parse(event.data);
-          document.getElementById('sseStatusText').textContent = 'AI đang sử dụng công cụ...';
-          document.getElementById('sseProgress').textContent = 'Trạng thái: Đang xử lý công cụ';
+          document.getElementById('sseStatusText').textContent = 'AI đang tính toán...';
+          document.getElementById('sseProgress').textContent = 'Trạng thái: Đang lập kế hoạch';
           
           const content = data.message || data;
           
           if (typeof content === 'string' && (content.includes('LectureOutput') || content.includes('title='))) {
             // This is the lecture content
             finalLectureData = content;
-            createLogEntry('tool-output', '🛠️ Đã tạo xong cấu trúc bài giảng!');
+            createLogEntry('tool-output', '🎯 Đã hoàn thành việc thiết kế bài giảng!');
           } else if (data.status) {
-            // Handle status messages from backend
-            if (data.status.includes('Đang tạo')) {
-              createLogEntry('tool-call', `🔧 ${data.status}`);
-            } else if (data.status.includes('Đã hoàn thành')) {
+            // Handle status messages from backend - remove technical terms
+            if (data.status.includes('Đang tính toán')) {
+              createLogEntry('status', `🧮 ${data.status}`);
+            } else if (data.status.includes('Đã xây dựng xong')) {
               createLogEntry('tool-output', `✅ ${data.status}`);
+            } else if (data.status.includes('Đang tạo')) {
+              createLogEntry('status', `📝 ${data.status.replace('tạo cấu trúc bài giảng', 'thiết kế bài giảng')}`);
             } else {
-              createLogEntry('tool-call', `🔧 ${data.status}`);
+              createLogEntry('status', `🎯 ${data.status}`);
             }
           } else {
-            createLogEntry('tool-output', `🛠️ Công cụ: ${content}`);
+            // Don't show raw content - it might contain technical details
+            createLogEntry('status', '🎯 AI đang lập kế hoạch bài giảng...');
           }
           currentMessageElement = null; // Reset for new content
         });
@@ -2105,6 +2108,10 @@
           };
           
           displayGeneratedContent(contentToDisplay);
+          
+          // Add download button for DOCX
+          const fileName = `${selectedDocument.subject}_${selectedDocument.grade}_${selectedDocument.lesson}_${new Date().toISOString().split('T')[0]}.docx`;
+          createDownloadButton(finalLectureData, fileName);
         });
 
         eventSource.addEventListener('completed', function(event) {
@@ -2156,6 +2163,295 @@
         
       } finally {
         document.getElementById('generateBtn').disabled = false;
+      }
+    }
+
+    function parseLectureDataToObject(lectureData) {
+      try {
+        // Parse the lecture data from the string representation into a structured object
+        let title = 'BÀI GIẢNG';
+        let goals = '';
+        let equipment = '';
+        let activities = [];
+        
+        if (typeof lectureData === 'string') {
+          // Extract title
+          const titleMatch = lectureData.match(/title='([^']*)'/) || lectureData.match(/title="([^"]*)"/);
+          if (titleMatch) title = titleMatch[1];
+          
+          // Extract goals
+          const goalsMatch = lectureData.match(/goals='([^']*)'/) || lectureData.match(/goals="([^"]*)"/);
+          if (goalsMatch) goals = goalsMatch[1];
+          
+          // Extract equipment
+          const equipmentMatch = lectureData.match(/equipment='([^']*)'/) || lectureData.match(/equipment="([^"]*)"/);
+          if (equipmentMatch) equipment = equipmentMatch[1];
+          
+          // Extract activities with tables
+          const activityMatches = lectureData.match(/Activity\([^)]*name='([^']*)'[^)]*goals='([^']*)'[^)]*content='([^']*)'[^)]*products='([^']*)'[^)]*table=\[([^\]]*)\][^)]*\)/g);
+          if (activityMatches) {
+            activityMatches.forEach(activity => {
+              const nameMatch = activity.match(/name='([^']*)'/);
+              const activityGoalsMatch = activity.match(/goals='([^']*)'/);
+              const contentMatch = activity.match(/content='([^']*)'/);
+              const productsMatch = activity.match(/products='([^']*)'/);
+              const tableMatch = activity.match(/table=\[([^\]]*)\]/);
+              
+              // Parse table data
+              let tableData = [];
+              if (tableMatch) {
+                const tableStr = tableMatch[1];
+                // Extract dictionary entries from the table array
+                const dictMatches = tableStr.match(/\{[^}]*\}/g);
+                if (dictMatches) {
+                  dictMatches.forEach(dict => {
+                    const pairs = {};
+                    // Extract key-value pairs from dictionary string
+                    const kvMatches = dict.match(/'([^']+)':\s*'([^']*)'/g);
+                    if (kvMatches) {
+                      kvMatches.forEach(kv => {
+                        const [, key, value] = kv.match(/'([^']+)':\s*'([^']*)'/);
+                        pairs[key] = value;
+                      });
+                    }
+                    tableData.push(pairs);
+                  });
+                }
+              }
+              
+              activities.push({
+                name: nameMatch ? nameMatch[1] : '',
+                goals: activityGoalsMatch ? activityGoalsMatch[1] : '',
+                content: contentMatch ? contentMatch[1] : '',
+                products: productsMatch ? productsMatch[1] : '',
+                table: tableData
+              });
+            });
+          }
+        }
+        
+        return {
+          title: title,
+          goals: goals,
+          equipment: equipment,
+          activities: activities
+        };
+      } catch (error) {
+        console.error('Error parsing lecture data:', error);
+        return {
+          title: 'BÀI GIẢNG',
+          goals: 'Mục tiêu bài học',
+          equipment: 'Thiết bị cần thiết',
+          activities: []
+        };
+      }
+    }
+
+    function convertLectureToDocxFormat(lectureData) {
+      try {
+        // Parse the lecture data from the string representation
+        let title = 'BÀI GIẢNG';
+        let goals = '';
+        let equipment = '';
+        let activities = [];
+        
+        if (typeof lectureData === 'string') {
+          // Extract title
+          const titleMatch = lectureData.match(/title='([^']*)'/) || lectureData.match(/title="([^"]*)"/);
+          if (titleMatch) title = titleMatch[1].toUpperCase();
+          
+          // Extract goals
+          const goalsMatch = lectureData.match(/goals='([^']*)'/) || lectureData.match(/goals="([^"]*)"/);
+          if (goalsMatch) goals = goalsMatch[1];
+          
+          // Extract equipment
+          const equipmentMatch = lectureData.match(/equipment='([^']*)'/) || lectureData.match(/equipment="([^"]*)"/);
+          if (equipmentMatch) equipment = equipmentMatch[1];
+          
+          // Extract activities with tables
+          const activityMatches = lectureData.match(/Activity\([^)]*name='([^']*)'[^)]*goals='([^']*)'[^)]*content='([^']*)'[^)]*products='([^']*)'[^)]*table=\[([^\]]*)\][^)]*\)/g);
+          if (activityMatches) {
+            activityMatches.forEach(activity => {
+              const nameMatch = activity.match(/name='([^']*)'/);
+              const activityGoalsMatch = activity.match(/goals='([^']*)'/);
+              const contentMatch = activity.match(/content='([^']*)'/);
+              const productsMatch = activity.match(/products='([^']*)'/);
+              const tableMatch = activity.match(/table=\[([^\]]*)\]/);
+              
+              // Parse table data
+              let tableData = [];
+              if (tableMatch) {
+                const tableStr = tableMatch[1];
+                // Extract dictionary entries from the table array
+                const dictMatches = tableStr.match(/\{[^}]*\}/g);
+                if (dictMatches) {
+                  dictMatches.forEach(dict => {
+                    const pairs = {};
+                    // Extract key-value pairs from dictionary string
+                    const kvMatches = dict.match(/'([^']+)':\s*'([^']*)'/g);
+                    if (kvMatches) {
+                      kvMatches.forEach(kv => {
+                        const [, key, value] = kv.match(/'([^']+)':\s*'([^']*)'/);
+                        pairs[key] = value;
+                      });
+                    }
+                    tableData.push(pairs);
+                  });
+                }
+              }
+              
+              activities.push({
+                name: nameMatch ? nameMatch[1] : '',
+                goals: activityGoalsMatch ? activityGoalsMatch[1] : '',
+                content: contentMatch ? contentMatch[1] : '',
+                products: productsMatch ? productsMatch[1] : '',
+                table: tableData
+              });
+            });
+          }
+        }
+        
+        // Format for DOCX with proper structure
+        let docxText = `# ${title}\n\n`;
+        docxText += `## MỤC TIÊU BÀI HỌC\n${goals}\n\n`;
+        docxText += `## THIẾT BỊ VÀ DỤNG CỤ\n${equipment}\n\n`;
+        docxText += `## CÁC HOẠT ĐỘNG HỌC TẬP\n\n`;
+        
+        activities.forEach((activity, index) => {
+          docxText += `### Hoạt động ${index + 1}: ${activity.name}\n\n`;
+          docxText += `**Mục tiêu:** ${activity.goals}\n\n`;
+          docxText += `**Nội dung:** ${activity.content}\n\n`;
+          docxText += `**Sản phẩm:** ${activity.products}\n\n`;
+          
+          // Add table for activity details
+          if (activity.table && activity.table.length > 0) {
+            docxText += `[TABLE_START]\n`;
+            
+            // Create table headers from the first row keys
+            const firstRow = activity.table[0];
+            const headers = Object.keys(firstRow);
+            docxText += headers.join(' | ') + '\n';
+            docxText += headers.map(() => '---').join('|') + '\n';
+            
+            // Add table rows
+            activity.table.forEach(row => {
+              const values = headers.map(header => row[header] || '');
+              docxText += values.join(' | ') + '\n';
+            });
+            
+            docxText += `[TABLE_END]\n\n`;
+          } else {
+            // Fallback table if no table data
+            docxText += `[TABLE_START]\n`;
+            docxText += `Hoạt động của giáo viên | Hoạt động của học sinh\n`;
+            docxText += `---|---\n`;
+            docxText += `Hướng dẫn và tổ chức các hoạt động học tập theo kế hoạch | Tham gia tích cực và thực hiện các bài tập được giao\n`;
+            docxText += `Theo dõi và hỗ trợ học sinh trong quá trình học | Đặt câu hỏi và trao đổi với giáo viên khi cần\n`;
+            docxText += `[TABLE_END]\n\n`;
+          }
+        });
+        
+        return docxText;
+      } catch (error) {
+        console.error('Error converting lecture to DOCX format:', error);
+        return `# BÀI GIẢNG\n\nNội dung bài giảng được tạo thành công.\n\n${lectureData}`;
+      }
+    }
+
+    function createDownloadButton(lectureData, fileName) {
+      // Create download button
+      const downloadDiv = document.createElement('div');
+      downloadDiv.className = 'log-entry final-summary';
+      downloadDiv.innerHTML = `
+        <div style="text-align: center; padding: 10px;">
+          <p>📄 Bài giảng đã sẵn sàng để tải xuống!</p>
+          <button id="downloadDocxBtn" class="btn btn-primary" style="margin: 10px;">
+            <i class="ti ti-download"></i> Tải xuống file DOCX
+          </button>
+        </div>
+      `;
+      
+      document.getElementById('sseContentText').appendChild(downloadDiv);
+      
+      // Add click handler
+      document.getElementById('downloadDocxBtn').addEventListener('click', function() {
+        exportLectureToDocx(lectureData, fileName);
+        this.innerHTML = '<i class="ti ti-check"></i> Đang tải...';
+        this.disabled = true;
+      });
+      
+      autoScroll();
+    }
+
+    async function exportLectureToDocx(lectureData, fileName) {
+      try {
+        const lectureObj = parseLectureDataToObject(lectureData);
+        
+        const requestBody = {
+          title: lectureObj.title,
+          goals: lectureObj.goals,
+          equipment: lectureObj.equipment,
+          activities: lectureObj.activities,
+          metadata: {
+            subject: selectedDocument.subject,
+            grade: selectedDocument.grade,
+            lesson: selectedDocument.lesson,
+            created: new Date().toISOString()
+          },
+          file_name: fileName || 'bai_giang.docx'
+        };
+        
+        // Try the new optimized endpoint first, fallback to old one if needed
+        let response = await fetch('https://api.aaagents.com/api/v1/lecture-docx/format-lecture', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        // If new endpoint fails, fallback to old one
+        if (!response.ok) {
+          console.log('New endpoint failed, using fallback...');
+          const docxText = convertLectureToDocxFormat(lectureData);
+          const fallbackBody = {
+            raw_text: docxText,
+            file_name: fileName || 'bai_giang.docx'
+          };
+          
+          response = await fetch('https://api.aaagents.com/api/v1/docx/format-and-download', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(fallbackBody)
+          });
+        }
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName || 'bai_giang.docx';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          
+          // Update button to show success
+          const btn = document.getElementById('downloadDocxBtn');
+          if (btn) {
+            btn.innerHTML = '<i class="ti ti-check"></i> Đã tải thành công!';
+            btn.style.backgroundColor = '#28a745';
+          }
+        } else {
+          console.error('Failed to export DOCX:', response.statusText);
+          createLogEntry('status', '❌ Không thể tạo file DOCX');
+        }
+      } catch (error) {
+        console.error('Error exporting to DOCX:', error);
+        createLogEntry('status', '❌ Lỗi khi tạo file DOCX');
       }
     }
 

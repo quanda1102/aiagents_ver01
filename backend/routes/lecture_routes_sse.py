@@ -66,7 +66,7 @@ async def generate_lecture(
                 "stage": "initializing"
             })
 
-            yield create_sse_message("agent_update", "Đang chuẩn bị tạo bài giảng...")
+            yield create_sse_message("agent_update", f"Đang phân tích yêu cầu: {number_of_periods} tiết học, mỗi tiết {minutes_per_period} phút...")
 
             final_content = ""
             current_stage = "starting"
@@ -83,17 +83,17 @@ async def generate_lecture(
                 elif isinstance(event, AgentUpdatedStreamEvent):
                     agent_name = event.new_agent.name if hasattr(event.new_agent, 'name') else 'AI Agent'
                     if agent_name == 'lecture_agent':
-                        yield create_sse_message("agent_update", "AI đang phân tích yêu cầu...")
+                        yield create_sse_message("agent_update", "Đang suy nghĩ về cách tổ chức nội dung phù hợp...")
                     else:
-                        yield create_sse_message("agent_update", f"Chuyển sang: {agent_name}")
+                        yield create_sse_message("agent_update", "Đang chuyển sang bước tiếp theo...")
                 elif isinstance(event, RunItemStreamEvent):
                     item = event.item
                     if item.type == "tool_call_item":
-                        yield create_sse_message("tool_output", {"status": "Đang tạo cấu trúc bài giảng..."})
+                        yield create_sse_message("tool_output", {"status": f"Đang tính toán xem dựa trên thời lượng {number_of_periods} tiết và {minutes_per_period} phút mỗi tiết thì nên xây dựng cấu trúc thế nào..."})
                     elif item.type == "tool_call_output_item":
                         # Don't send raw tool output - it contains technical details
                         # Instead send user-friendly message
-                        yield create_sse_message("tool_output", {"status": "Đã hoàn thành tạo cấu trúc bài giảng"})
+                        yield create_sse_message("tool_output", {"status": "Đã xây dựng xong cấu trúc bài giảng với các hoạt động phù hợp"})
                     elif item.type == "run_item_output_item":
                         final_content = ItemHelpers.get_item_content(item)
                         yield create_sse_message("final_content", final_content)
