@@ -1994,7 +1994,10 @@
         
         function autoScroll() {
           const contentEl = document.getElementById('sseContentText');
-          contentEl.scrollTop = contentEl.scrollHeight;
+          contentEl.scrollTo({
+            top: contentEl.scrollHeight,
+            behavior: 'smooth'
+          });
         }
         
         function createLogEntry(className, content) {
@@ -2053,6 +2056,7 @@
             const lastEntry = document.getElementById('sseContentText').lastElementChild;
             if (lastEntry && lastEntry.classList.contains('content-progress')) {
               lastEntry.textContent += '.';
+              autoScroll(); // Scroll as dots are added
             } else {
               createLogEntry('content-progress', '✍️ AI đang viết và cấu trúc nội dung bài giảng');
             }
@@ -2126,12 +2130,17 @@
           document.getElementById('sseProgress').textContent = 'Trạng thái: Thành công';
           createLogEntry('status', '🎉 Hoàn thành tạo bài giảng!');
           
+          // Show final lecture content if available
+          if (finalLectureData) {
+            createLogEntry('final-content', '📋 Nội dung bài giảng đã sẵn sàng để tải xuống');
+          }
+          
           eventSource.close();
           
-          // Hide SSE indicators after a delay
+          // Hide only the status, keep content visible
           setTimeout(() => {
             document.getElementById('sseStatus').style.display = 'none';
-            document.getElementById('sseContent').style.display = 'none';
+            // Keep sseContent visible - don't hide it
           }, 3000);
         });
 
