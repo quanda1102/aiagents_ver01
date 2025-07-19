@@ -2021,18 +2021,22 @@
 
         // Handle streaming text content (from the default message event)
         eventSource.onmessage = function(event) {
+          console.log('Raw SSE event data:', event.data);
+          
+          // Check if it's the problematic JSON string
+          if (event.data.includes('so_tiet_hoc') || event.data.includes('so_phut_moi_tiet')) {
+            console.log('BLOCKING JSON data:', event.data);
+            return; // Block this completely
+          }
+          
           try {
             const textChunk = JSON.parse(event.data);
-            console.log('SSE message received:', textChunk);
+            console.log('Parsed SSE message:', textChunk);
             
             // Filter out unwanted JSON objects 
             if (typeof textChunk === 'object') {
-              // Skip any object that contains calculation data
-              if (textChunk.so_tiet_hoc || textChunk.so_phut_moi_tiet || 
-                  textChunk.number_of_periods || textChunk.minutes_per_period) {
-                console.log('Skipping calculation JSON:', textChunk);
-                return; // Skip this JSON data
-              }
+              console.log('BLOCKING object type data:', textChunk);
+              return; // Block all objects
             }
             
             // Only display meaningful text content
@@ -2094,7 +2098,16 @@
         });
 
         eventSource.addEventListener('tool_output', function(event) {
+          console.log('TOOL_OUTPUT event received:', event.data);
+          
+          // Block JSON calculation data in tool_output too
+          if (event.data.includes('so_tiet_hoc') || event.data.includes('so_phut_moi_tiet')) {
+            console.log('BLOCKING JSON in tool_output:', event.data);
+            return;
+          }
+          
           const data = JSON.parse(event.data);
+          console.log('Tool output data:', data);
           document.getElementById('sseStatusText').textContent = 'AI đang tính toán...';
           document.getElementById('sseProgress').textContent = 'Trạng thái: Đang lập kế hoạch';
           
@@ -2123,15 +2136,27 @@
         });
 
         eventSource.addEventListener('final_content', function(event) {
-          const data = JSON.parse(event.data);
+          console.log('FINAL_CONTENT event received:', event.data);
+          
+          // The backend sends the complete LectureOutput object directly, not wrapped in a message
+          let lectureOutputData;
+          try {
+            lectureOutputData = JSON.parse(event.data);
+          } catch (e) {
+            // If it's already a string, use it directly
+            lectureOutputData = event.data;
+          }
+          
+          console.log('Final lecture output data:', lectureOutputData);
           document.getElementById('sseStatusText').textContent = 'Hoàn thành!';
           document.getElementById('sseProgress').textContent = 'Trạng thái: Đã hoàn thành';
           
-          finalLectureData = data.message || data;
+          finalLectureData = lectureOutputData;
+          console.log('Final lecture data set to:', finalLectureData);
           createLogEntry('final-summary', '✅ Bài giảng đã được tạo thành công!');
           
-          // Display the final content
-          const formattedContent = formatLectureOutput(finalLectureData);
+          // Format the structured data properly
+          const formattedContent = formatStructuredLectureData(lectureOutputData);
           const contentToDisplay = {
             title: `${selectedDocument.lesson} - Được tạo bởi AI (SSE)`,
             content: formattedContent,
@@ -2203,6 +2228,15 @@
           document.getElementById('sseProgress').textContent = 'Lỗi: Không thể nhận dữ liệu từ server';
           createLogEntry('status', '❌ Lỗi: Không thể nhận dữ liệu từ server');
           eventSource.close();
+        });
+
+        // Catch-all event listener to debug what's coming through
+        eventSource.addEventListener('message', function(event) {
+          console.log('GENERIC MESSAGE event:', event.data);
+          if (event.data.includes('so_tiet_hoc') || event.data.includes('so_phut_moi_tiet')) {
+            console.log('FOUND JSON IN GENERIC MESSAGE - BLOCKING');
+            return;
+          }
         });
 
         eventSource.onerror = function(event) {
@@ -2467,6 +2501,59 @@
       autoScroll();
     }
 
+    async function exportStructuredLectureToDocx(lectureData, fileName) {
+      console.log('Exporting structured lecture data:', lectureData);
+      
+      if (!lectureData || typeof lectureData !== 'object') {
+        alert('Không có dữ liệu bài giảng để xuất');
+        return;
+      }
+      
+      try {
+        // Use the optimized lecture DOCX endpoint
+        let response = await fetch('https://api.aagents.vn/api/v1/lecture-docx/format-lecture', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            title: lectureData.title || 'Bài giảng được tạo bởi AI',
+            goals: lectureData.goals || 'Mục tiêu bài học',
+            equipment: lectureData.equipment || 'Thiết bị cần thiết',
+            activities: lectureData.activities || [],
+            metadata: {
+              subject: selectedDocument?.subject || 'Môn học',
+              grade: selectedDocument?.grade || 'Lớp học',
+              created: new Date().toISOString()
+            },
+            file_name: fileName
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Download the file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        console.log('DOCX download successful');
+        
+      } catch (error) {
+        console.error('Error exporting to DOCX:', error);
+        alert('Lỗi khi tạo file DOCX: ' + error.message);
+      }
+    }
+
     async function exportLectureToDocx(lectureData, fileName) {
       try {
         const lectureObj = parseLectureDataToObject(lectureData);
@@ -2537,6 +2624,91 @@
         console.error('Error exporting to DOCX:', error);
         createLogEntry('status', '❌ Lỗi khi tạo file DOCX');
       }
+    }
+
+    function formatStructuredLectureData(lectureData) {
+      console.log('formatStructuredLectureData called with:', lectureData);
+      
+      if (!lectureData || typeof lectureData !== 'object') {
+        console.error('Invalid lecture data structure:', lectureData);
+        return '<p>Lỗi: Dữ liệu bài giảng không hợp lệ</p>';
+      }
+      
+      let html = '';
+      
+      // Title
+      if (lectureData.title) {
+        html += `<h2 style="color: #2c3e50; margin-bottom: 20px;">${lectureData.title.toUpperCase()}</h2>`;
+      }
+      
+      // Goals
+      if (lectureData.goals) {
+        html += `
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="color: #e74c3c; margin-bottom: 10px;">🎯 MỤC TIÊU BÀI HỌC</h3>
+            <p>${lectureData.goals}</p>
+          </div>
+        `;
+      }
+      
+      // Equipment
+      if (lectureData.equipment) {
+        html += `
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="color: #f39c12; margin-bottom: 10px;">🛠️ THIẾT BỊ VÀ DỤNG CỤ</h3>
+            <p>${lectureData.equipment}</p>
+          </div>
+        `;
+      }
+      
+      // Activities
+      if (lectureData.activities && Array.isArray(lectureData.activities)) {
+        html += `<h3 style="color: #27ae60; margin: 25px 0 15px 0;">📚 CÁC HOẠT ĐỘNG HỌC TẬP</h3>`;
+        
+        lectureData.activities.forEach((activity, index) => {
+          html += `
+            <div style="border: 2px solid #3498db; border-radius: 10px; padding: 20px; margin-bottom: 25px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+              <h4 style="color: #2980b9; margin-bottom: 15px;">Hoạt động ${index + 1}: ${activity.name || `Hoạt động ${index + 1}`}</h4>
+              
+              ${activity.goals ? `<p><strong>Mục tiêu:</strong> ${activity.goals}</p>` : ''}
+              ${activity.content ? `<p><strong>Nội dung:</strong> ${activity.content}</p>` : ''}
+              ${activity.products ? `<p><strong>Sản phẩm:</strong> ${activity.products}</p>` : ''}
+          `;
+          
+          // Activity table
+          if (activity.table && Array.isArray(activity.table) && activity.table.length > 0) {
+            html += `
+              <table style="width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <thead>
+                  <tr style="background: #3498db; color: white;">
+                    <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">HOẠT ĐỘNG CỦA GIÁO VIÊN</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">HOẠT ĐỘNG CỦA HỌC SINH</th>
+                  </tr>
+                </thead>
+                <tbody>
+            `;
+            
+            activity.table.forEach((row, rowIndex) => {
+              const bgColor = rowIndex % 2 === 0 ? '#f8f9fa' : 'white';
+              html += `
+                <tr style="background: ${bgColor};">
+                  <td style="padding: 12px; border: 1px solid #ddd; vertical-align: top;">${row['Hoạt động của giáo viên 1'] || row['Hoạt động của giáo viên'] || ''}</td>
+                  <td style="padding: 12px; border: 1px solid #ddd; vertical-align: top;">${row['Hoạt động của học sinh 1'] || row['Hoạt động của học sinh'] || ''}</td>
+                </tr>
+              `;
+            });
+            
+            html += `
+                </tbody>
+              </table>
+            `;
+          }
+          
+          html += `</div>`;
+        });
+      }
+      
+      return html;
     }
 
     function formatLectureOutput(lectureData) {
@@ -2822,7 +2994,7 @@
     }
 
     function displayGeneratedContent(response) {
-
+      console.log('displayGeneratedContent called with:', response);
       
       // Hide empty state and show content display area
       const emptyState = document.getElementById('emptyState');
@@ -2861,7 +3033,7 @@
         if (response.metadata?.sseResponse) {
           const downloadButtonHtml = `
             <div style="text-align: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-              <button onclick="exportLectureToDocx('${response.metadata.rawResponse.replace(/'/g, "\\'")}', 'bai-giang.docx')" 
+              <button onclick="exportStructuredLectureToDocx(window.currentLessonContent.metadata.rawResponse, 'bai-giang.docx')" 
                       class="btn btn-primary" style="padding: 12px 24px; font-size: 16px;">
                 📄 Tải xuống DOCX
               </button>
