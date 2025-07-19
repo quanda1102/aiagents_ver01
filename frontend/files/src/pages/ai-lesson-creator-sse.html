@@ -45,6 +45,35 @@
       margin: 20px 0;
       display: none;
     }
+    .log-entry {
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      line-height: 1.5;
+    }
+    .status {
+      background-color: #f0f0f0;
+      font-style: italic;
+      color: #666;
+      text-align: center;
+    }
+    .tool-call {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffeeba;
+    }
+    .tool-output {
+      background-color: #e2e3e5;
+      border-left: 4px solid #d6d8db;
+    }
+    .content-progress {
+      background-color: #e7f5ff;
+      border-left: 4px solid #d1ecf1;
+    }
+    .final-summary {
+      background-color: #d4edda;
+      border-left: 4px solid #c3e6cb;
+      margin-top: 10px;
+    }
     .ai-response h4 {
       color: white;
       margin-bottom: 20px;
@@ -1901,15 +1930,31 @@
       document.getElementById('sseContent').style.display = 'block';
       document.getElementById('generateBtn').disabled = true;
 
-      // Get reference document text from TinyMCE editor if available, otherwise use stored text
-      let referenceDocumentText = extractedDocumentText;
+      // Get reference document text - prioritize uploaded/URL content, then backend document content
+      let referenceDocumentText = '';
+      
+      // First check if there's content from file upload or URL
       const extractedEditor = tinymce.get('extractedTextEditor');
       if (extractedEditor) {
-        // Convert HTML back to plain text for API
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = extractedEditor.getContent();
-        referenceDocumentText = tempDiv.textContent || tempDiv.innerText || extractedDocumentText;
+        referenceDocumentText = tempDiv.textContent || tempDiv.innerText || '';
+      } else if (extractedDocumentText) {
+        referenceDocumentText = extractedDocumentText;
       }
+      
+      // If no uploaded content, use the selected backend document content
+      if (!referenceDocumentText && selectedDocumentContent) {
+        referenceDocumentText = selectedDocumentContent;
+      }
+      
+      // Final fallback
+      if (!referenceDocumentText) {
+        referenceDocumentText = 'Tài liệu tham khảo cơ bản cho bài học';
+      }
+      
+      // Debug log to check what's being sent
+      console.log('Reference text being sent:', referenceDocumentText.substring(0, 200) + '...');
 
       // Get advanced config
       const numberOfPeriods = document.getElementById('numberOfPeriods').value;
@@ -1938,151 +1983,134 @@
         const sseUrl = `http://127.0.0.1:8000/api/v1/sse_lecture/generate?${params.toString()}`;
         const eventSource = new EventSource(sseUrl);
         
-        let accumulatedContent = '';
-        let currentTitle = `${selectedDocument.lesson} - Được tạo bởi AI (SSE)`;
         let finalLectureData = null;
+        
+        function autoScroll() {
+          const contentEl = document.getElementById('sseContentText');
+          contentEl.scrollTop = contentEl.scrollHeight;
+        }
+        
+        function createLogEntry(className, content) {
+          const div = document.createElement('div');
+          div.className = `log-entry ${className}`;
+          div.textContent = content;
+          document.getElementById('sseContentText').appendChild(div);
+          autoScroll();
+          return div;
+        }
+
+        let currentMessageElement = null;
 
         // Handle SSE events
         eventSource.onopen = function(event) {
           document.getElementById('sseStatusText').textContent = 'Kết nối thành công!';
           document.getElementById('sseProgress').textContent = 'Trạng thái: Đã kết nối';
+          // Clear the log container
+          document.getElementById('sseContentText').innerHTML = '';
+        };
+
+        // Handle streaming text content (from the default message event)
+        eventSource.onmessage = function(event) {
+          const textChunk = JSON.parse(event.data);
+          if (!currentMessageElement) {
+            currentMessageElement = createLogEntry('content-progress', '');
+          }
+          currentMessageElement.textContent += textChunk;
         };
 
         eventSource.addEventListener('start', function(event) {
           const data = JSON.parse(event.data);
           document.getElementById('sseStatusText').textContent = 'AI bắt đầu tạo bài giảng...';
-          document.getElementById('sseProgress').textContent = `Trạng thái: ${data.stage || 'Bắt đầu'}`;
-          document.getElementById('sseContentText').textContent = `🚀 ${data.message}\n`;
+          document.getElementById('sseProgress').textContent = 'Trạng thái: Bắt đầu';
+          createLogEntry('status', `🚀 ${data.message}`);
+          currentMessageElement = null; // Reset for new content
         });
 
         eventSource.addEventListener('agent_update', function(event) {
           const data = JSON.parse(event.data);
           document.getElementById('sseStatusText').textContent = 'AI đang xử lý...';
           document.getElementById('sseProgress').textContent = 'Trạng thái: Đang xử lý';
-          document.getElementById('sseContentText').textContent += `🤖 ${data.message}\n`;
-          
-          // Auto scroll
-          const contentEl = document.getElementById('sseContentText');
-          contentEl.scrollTop = contentEl.scrollHeight;
+          createLogEntry('status', `⚙️ ${data.message}`);
+          currentMessageElement = null; // Reset for new content
         });
 
         eventSource.addEventListener('content_delta', function(event) {
           document.getElementById('sseStatusText').textContent = 'AI đang viết nội dung...';
           document.getElementById('sseProgress').textContent = 'Trạng thái: Đang tạo nội dung';
           
-          // This contains the raw streaming data - just show that something is happening
-          document.getElementById('sseContentText').textContent += `.`;
+          // Parse the actual content from the event
+          try {
+            const data = JSON.parse(event.data);
+            // The backend sends str(event) which might be the event representation
+            // For now, just show that content is being generated
+            const lastEntry = document.getElementById('sseContentText').lastElementChild;
+            if (lastEntry && lastEntry.classList.contains('content-progress')) {
+              lastEntry.textContent += '.';
+            } else {
+              createLogEntry('content-progress', '📝 AI đang suy nghĩ và tạo nội dung');
+            }
+          } catch (e) {
+            // If parsing fails, just show progress
+            createLogEntry('status', '⚡ AI đang xử lý...');
+          }
         });
 
         eventSource.addEventListener('tool_output', function(event) {
           const data = JSON.parse(event.data);
-          document.getElementById('sseStatusText').textContent = 'AI đang tạo cấu trúc bài giảng...';
-          document.getElementById('sseProgress').textContent = 'Trạng thái: Đang tạo cấu trúc';
+          document.getElementById('sseStatusText').textContent = 'AI đang sử dụng công cụ...';
+          document.getElementById('sseProgress').textContent = 'Trạng thái: Đang xử lý công cụ';
           
-          // Get the content from data.message or data itself
-          let lectureContent = data.message || data;
+          const content = data.message || data;
           
-          // Handle cases where the content is a string representation of LectureOutput object
-          if (typeof lectureContent === 'string') {
-            // Look for structured lecture data patterns
-            if (lectureContent.includes('LectureOutput') && lectureContent.includes('title=')) {
-              // This is the actual lecture data from the agent
-              finalLectureData = lectureContent;
-              document.getElementById('sseContentText').textContent += `\n\n✅ Đã tạo xong cấu trúc bài giảng!\n`;
-              
-              // Parse and display the lecture content immediately
-              const formattedContent = formatLectureOutput(lectureContent);
-              accumulatedContent = formattedContent;
-              
-              // Display content immediately
-              const contentToDisplay = {
-                title: currentTitle,
-                content: formattedContent,
-                metadata: {
-                  created: new Date().toISOString(),
-                  subject: selectedDocument.subject,
-                  grade: selectedDocument.grade,
-                  lesson: selectedDocument.lesson,
-                  sseResponse: true,
-                  rawResponse: lectureContent
-                }
-              };
-              
-              displayGeneratedContent(contentToDisplay);
-              
-            } else if (lectureContent.includes('title=') && lectureContent.includes('activities=')) {
-              // Simpler format without LectureOutput wrapper
-              finalLectureData = lectureContent;
-              document.getElementById('sseContentText').textContent += `\n\n✅ Đã tạo xong cấu trúc bài giảng!\n`;
-              
-              const formattedContent = formatLectureOutput(lectureContent);
-              accumulatedContent = formattedContent;
-              
-              const contentToDisplay = {
-                title: currentTitle,
-                content: formattedContent,
-                metadata: {
-                  created: new Date().toISOString(),
-                  subject: selectedDocument.subject,
-                  grade: selectedDocument.grade,
-                  lesson: selectedDocument.lesson,
-                  sseResponse: true,
-                  rawResponse: lectureContent
-                }
-              };
-              
-              displayGeneratedContent(contentToDisplay);
-              
-            } else {
-              // Show tool execution progress
-              document.getElementById('sseContentText').textContent += `\n📋 ${lectureContent}\n`;
-            }
+          if (typeof content === 'string' && (content.includes('LectureOutput') || content.includes('title='))) {
+            // This is the lecture content
+            finalLectureData = content;
+            createLogEntry('tool-output', '🛠️ Đã tạo xong cấu trúc bài giảng!');
           } else if (data.status) {
-            // Status update
-            document.getElementById('sseContentText').textContent += `\n📋 ${data.status}\n`;
+            // Handle status messages from backend
+            if (data.status.includes('Đang tạo')) {
+              createLogEntry('tool-call', `🔧 ${data.status}`);
+            } else if (data.status.includes('Đã hoàn thành')) {
+              createLogEntry('tool-output', `✅ ${data.status}`);
+            } else {
+              createLogEntry('tool-call', `🔧 ${data.status}`);
+            }
           } else {
-            // Other tool output
-            document.getElementById('sseContentText').textContent += `\n📋 Công cụ: ${JSON.stringify(data)}\n`;
+            createLogEntry('tool-output', `🛠️ Công cụ: ${content}`);
           }
-          
-          // Auto scroll
-          const contentEl = document.getElementById('sseContentText');
-          contentEl.scrollTop = contentEl.scrollHeight;
+          currentMessageElement = null; // Reset for new content
         });
 
         eventSource.addEventListener('final_content', function(event) {
           const data = JSON.parse(event.data);
           document.getElementById('sseStatusText').textContent = 'Hoàn thành!';
-          document.getElementById('sseProgress').textContent = 'Trạng thái: Hoàn thành';
+          document.getElementById('sseProgress').textContent = 'Trạng thái: Đã hoàn thành';
           
           finalLectureData = data.message || data;
-          const formattedContent = formatLectureOutput(finalLectureData);
-          accumulatedContent = formattedContent;
+          createLogEntry('final-summary', '✅ Bài giảng đã được tạo thành công!');
           
-          document.getElementById('sseContentText').textContent += `\n\n🎉 Hoàn thành tạo bài giảng!\n`;
+          // Display the final content
+          const formattedContent = formatLectureOutput(finalLectureData);
+          const contentToDisplay = {
+            title: `${selectedDocument.lesson} - Được tạo bởi AI (SSE)`,
+            content: formattedContent,
+            metadata: {
+              created: new Date().toISOString(),
+              subject: selectedDocument.subject,
+              grade: selectedDocument.grade,
+              lesson: selectedDocument.lesson,
+              sseResponse: true,
+              rawResponse: finalLectureData
+            }
+          };
+          
+          displayGeneratedContent(contentToDisplay);
         });
 
         eventSource.addEventListener('completed', function(event) {
           document.getElementById('sseStatusText').textContent = 'Đã hoàn thành!';
           document.getElementById('sseProgress').textContent = 'Trạng thái: Thành công';
-          
-          // Display final content
-          if (accumulatedContent || finalLectureData) {
-            const contentToDisplay = {
-              title: currentTitle,
-              content: accumulatedContent || formatLectureOutput(finalLectureData),
-              metadata: {
-                created: new Date().toISOString(),
-                subject: selectedDocument.subject,
-                grade: selectedDocument.grade,
-                lesson: selectedDocument.lesson,
-                sseResponse: true,
-                rawResponse: finalLectureData
-              }
-            };
-            
-            displayGeneratedContent(contentToDisplay);
-          }
+          createLogEntry('status', '🎉 Hoàn thành tạo bài giảng!');
           
           eventSource.close();
           
@@ -2097,25 +2125,15 @@
           const data = JSON.parse(event.data);
           document.getElementById('sseStatusText').textContent = 'Lỗi!';
           document.getElementById('sseProgress').textContent = `Lỗi: ${data.message}`;
-          document.getElementById('sseContentText').textContent += `\n❌ Lỗi: ${data.message}\n`;
+          createLogEntry('status', `❌ Lỗi: ${data.message}`);
           eventSource.close();
         });
 
         eventSource.onerror = function(event) {
           document.getElementById('sseStatusText').textContent = 'Lỗi kết nối!';
           document.getElementById('sseProgress').textContent = 'Trạng thái: Lỗi kết nối';
-          document.getElementById('sseContentText').textContent += `\n❌ Lỗi kết nối SSE\n`;
+          createLogEntry('status', '❌ Lỗi kết nối SSE');
           eventSource.close();
-          
-          // Show fallback content
-          if (!accumulatedContent) {
-            const mockContent = generateMockResponse({
-              subject: selectedDocument.subject,
-              grade: selectedDocument.grade,
-              lesson: selectedDocument.lesson
-            });
-            displayGeneratedContent(mockContent);
-          }
         };
 
       } catch (error) {

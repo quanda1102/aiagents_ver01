@@ -66,22 +66,34 @@ async def generate_lecture(
                 "stage": "initializing"
             })
 
-            yield create_sse_message("agent_update", "Khởi tạo hệ thống AI Agent ...")
+            yield create_sse_message("agent_update", "Đang chuẩn bị tạo bài giảng...")
 
             final_content = ""
             current_stage = "starting"
 
             async for event in result.stream_events():
                 if isinstance(event, RawResponsesStreamEvent):
-                    yield create_sse_message("content_delta", str(event))
+                    # Extract actual text content from the response event
+                    if hasattr(event, 'data') and hasattr(event.data, 'delta'):
+                        delta_text = event.data.delta
+                        # Only send if delta_text is a simple string, not complex objects
+                        if delta_text and isinstance(delta_text, str) and len(delta_text.strip()) > 0:
+                            yield f"data: {json.dumps(delta_text)}\n\n"
+                    # Remove fallback dots as they're not meaningful
                 elif isinstance(event, AgentUpdatedStreamEvent):
-                    yield create_sse_message("agent_update", str(event))
+                    agent_name = event.new_agent.name if hasattr(event.new_agent, 'name') else 'AI Agent'
+                    if agent_name == 'lecture_agent':
+                        yield create_sse_message("agent_update", "AI đang phân tích yêu cầu...")
+                    else:
+                        yield create_sse_message("agent_update", f"Chuyển sang: {agent_name}")
                 elif isinstance(event, RunItemStreamEvent):
                     item = event.item
                     if item.type == "tool_call_item":
-                        yield create_sse_message("tool_output", {"status": "Đang xử lý"})
+                        yield create_sse_message("tool_output", {"status": "Đang tạo cấu trúc bài giảng..."})
                     elif item.type == "tool_call_output_item":
-                        yield create_sse_message("tool_output", str(item.output))
+                        # Don't send raw tool output - it contains technical details
+                        # Instead send user-friendly message
+                        yield create_sse_message("tool_output", {"status": "Đã hoàn thành tạo cấu trúc bài giảng"})
                     elif item.type == "run_item_output_item":
                         final_content = ItemHelpers.get_item_content(item)
                         yield create_sse_message("final_content", final_content)
