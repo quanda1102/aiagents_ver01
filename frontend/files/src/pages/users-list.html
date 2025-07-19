@@ -3,408 +3,433 @@
 <!-- [Head] start -->
 
 <head>
-  <title>Danh sách người dùng</title>
-  <!-- [Meta] -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="description" content="Mantis is made using Bootstrap 5 design framework. Download the free admin template & use it for your project.">
-  <meta name="keywords" content="Mantis, Dashboard UI Kit, Bootstrap 5, Admin Template, Admin Dashboard, CRM, CMS, Bootstrap Admin Template">
-  <meta name="author" content="CodedThemes">
+    <title>Danh sách người dùng</title>
+    <!-- [Meta] -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description"
+          content="Mantis is made using Bootstrap 5 design framework. Download the free admin template & use it for your project.">
+    <meta name="keywords"
+          content="Mantis, Dashboard UI Kit, Bootstrap 5, Admin Template, Admin Dashboard, CRM, CMS, Bootstrap Admin Template">
+    <meta name="author" content="CodedThemes">
 
-  <!-- [Favicon] icon -->
-  <link rel="icon" href="../assets/images/logo_tma.png" type="image/x-icon"> <!-- [Google Font] Family -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" id="main-font-link">
-<!-- [Tabler Icons] https://tablericons.com -->
-<link rel="stylesheet" href="../assets/fonts/tabler-icons.min.css" >
-<!-- [Feather Icons] https://feathericons.com -->
-<link rel="stylesheet" href="../assets/fonts/feather.css" >
-<!-- [Font Awesome Icons] https://fontawesome.com/icons -->
-<link rel="stylesheet" href="../assets/fonts/fontawesome.css" >
-<!-- [Material Icons] https://fonts.google.com/icons -->
-<link rel="stylesheet" href="../assets/fonts/material.css" >
-<!-- [Template CSS Files] -->
-<link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" >
-<link rel="stylesheet" href="../assets/css/style-preset.css" >
+    <!-- [Favicon] icon -->
+    <link rel="icon" href="../assets/images/logo_tma.png" type="image/x-icon"> <!-- [Google Font] Family -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap"
+          id="main-font-link">
+    <!-- [Tabler Icons] https://tablericons.com -->
+    <link rel="stylesheet" href="../assets/fonts/tabler-icons.min.css">
+    <!-- [Feather Icons] https://feathericons.com -->
+    <link rel="stylesheet" href="../assets/fonts/feather.css">
+    <!-- [Font Awesome Icons] https://fontawesome.com/icons -->
+    <link rel="stylesheet" href="../assets/fonts/fontawesome.css">
+    <!-- [Material Icons] https://fonts.google.com/icons -->
+    <link rel="stylesheet" href="../assets/fonts/material.css">
+    <!-- [Template CSS Files] -->
+    <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link">
+    <link rel="stylesheet" href="../assets/css/style-preset.css">
 
 </head>
 <!-- [Head] end -->
 <!-- [Body] Start -->
 
 <body data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
-  <!-- [ Pre-loader ] start -->
+<!-- [ Pre-loader ] start -->
 <div class="loader-bg">
-  <div class="loader-track">
-    <div class="loader-fill"></div>
-  </div>
+    <div class="loader-track">
+        <div class="loader-fill"></div>
+    </div>
 </div>
 <!-- [ Pre-loader ] End -->
- <!-- [ Sidebar Menu ] start -->
+<!-- [ Sidebar Menu ] start -->
 <div data-include="../layouts/sidebar-pc.html"></div>
 <!-- [ Sidebar Menu ] end --> <!-- [ Header Topbar ] start -->
 <header class="pc-header">
-  <div class="header-wrapper"> <!-- [Mobile Media Block] start -->
-<div class="me-auto pc-mob-drp">
-  <ul class="list-unstyled">
-    <!-- ======= Menu collapse Icon ===== -->
-    <li class="pc-h-item pc-sidebar-collapse">
-      <a href="#" class="pc-head-link ms-0" id="sidebar-hide">
-        <i class="ti ti-menu-2"></i>
-      </a>
-    </li>
-    <li class="pc-h-item pc-sidebar-popup">
-      <a href="#" class="pc-head-link ms-0" id="mobile-collapse">
-        <i class="ti ti-menu-2"></i>
-      </a>
-    </li>
-    <li class="dropdown pc-h-item d-inline-flex d-md-none">
-      <a
-        class="pc-head-link dropdown-toggle arrow-none m-0"
-        data-bs-toggle="dropdown"
-        href="#"
-        role="button"
-        aria-haspopup="false"
-        aria-expanded="false"
-      >
-        <i class="ti ti-search"></i>
-      </a>
-      <div class="dropdown-menu pc-h-dropdown drp-search">
-        <form class="px-3">
-          <div class="form-group mb-0 d-flex align-items-center">
-            <i data-feather="search"></i>
-            <input type="search" class="form-control border-0 shadow-none" placeholder="Search here. . .">
-          </div>
-        </form>
-      </div>
-    </li>
-    <li class="pc-h-item d-none d-md-inline-flex">
-      <form class="header-search">
-        <i data-feather="search" class="icon-search"></i>
-        <input type="search" class="form-control" placeholder="Search here. . .">
-      </form>
-    </li>
-  </ul>
-</div>
-<!-- [Mobile Media Block end] -->
-<div class="ms-auto">
-  <ul class="list-unstyled">
-    <li class="dropdown pc-h-item">
-      <a
-        class="pc-head-link dropdown-toggle arrow-none me-0"
-        data-bs-toggle="dropdown"
-        href="#"
-        role="button"
-        aria-haspopup="false"
-        aria-expanded="false"
-      >
-        <i class="ti ti-mail"></i>
-      </a>
-      <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
-        <div class="dropdown-header d-flex align-items-center justify-content-between">
-          <h5 class="m-0">Message</h5>
-          <a href="#!" class="pc-head-link bg-transparent"><i class="ti ti-x text-danger"></i></a>
+    <div class="header-wrapper"> <!-- [Mobile Media Block] start -->
+        <div class="me-auto pc-mob-drp">
+            <ul class="list-unstyled">
+                <!-- ======= Menu collapse Icon ===== -->
+                <li class="pc-h-item pc-sidebar-collapse">
+                    <a href="#" class="pc-head-link ms-0" id="sidebar-hide">
+                        <i class="ti ti-menu-2"></i>
+                    </a>
+                </li>
+                <li class="pc-h-item pc-sidebar-popup">
+                    <a href="#" class="pc-head-link ms-0" id="mobile-collapse">
+                        <i class="ti ti-menu-2"></i>
+                    </a>
+                </li>
+                <li class="dropdown pc-h-item d-inline-flex d-md-none">
+                    <a
+                            class="pc-head-link dropdown-toggle arrow-none m-0"
+                            data-bs-toggle="dropdown"
+                            href="#"
+                            role="button"
+                            aria-haspopup="false"
+                            aria-expanded="false"
+                    >
+                        <i class="ti ti-search"></i>
+                    </a>
+                    <div class="dropdown-menu pc-h-dropdown drp-search">
+                        <form class="px-3">
+                            <div class="form-group mb-0 d-flex align-items-center">
+                                <i data-feather="search"></i>
+                                <input type="search" class="form-control border-0 shadow-none"
+                                       placeholder="Search here. . .">
+                            </div>
+                        </form>
+                    </div>
+                </li>
+                <li class="pc-h-item d-none d-md-inline-flex">
+                    <form class="header-search">
+                        <i data-feather="search" class="icon-search"></i>
+                        <input type="search" class="form-control" placeholder="Search here. . .">
+                    </form>
+                </li>
+            </ul>
         </div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-header px-0 text-wrap header-notification-scroll position-relative" style="max-height: calc(100vh - 215px)">
-          <div class="list-group list-group-flush w-100">
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
-                </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">3:00 AM</span>
-                  <p class="text-body mb-1">It's <b>Cristina danny's</b> birthday today.</p>
-                  <span class="text-muted">2 min ago</span>
-                </div>
-              </div>
-            </a>
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <img src="../assets/images/user/avatar-1.jpg" alt="user-image" class="user-avtar">
-                </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">6:00 PM</span>
-                  <p class="text-body mb-1"><b>Aida Burg</b> commented your post.</p>
-                  <span class="text-muted">5 August</span>
-                </div>
-              </div>
-            </a>
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <img src="../assets/images/user/avatar-3.jpg" alt="user-image" class="user-avtar">
-                </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">2:45 PM</span>
-                  <p class="text-body mb-1"><b>There was a failure to your setup.</b></p>
-                  <span class="text-muted">7 hours ago</span>
-                </div>
-              </div>
-            </a>
-            <a class="list-group-item list-group-item-action">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <img src="../assets/images/user/avatar-4.jpg" alt="user-image" class="user-avtar">
-                </div>
-                <div class="flex-grow-1 ms-1">
-                  <span class="float-end text-muted">9:10 PM</span>
-                  <p class="text-body mb-1"><b>Cristina Danny </b> invited to join <b> Meeting.</b></p>
-                  <span class="text-muted">Daily scrum meeting time</span>
-                </div>
-              </div>
-            </a>
-          </div>
+        <!-- [Mobile Media Block end] -->
+        <div class="ms-auto">
+            <ul class="list-unstyled">
+                <li class="dropdown pc-h-item">
+                    <a
+                            class="pc-head-link dropdown-toggle arrow-none me-0"
+                            data-bs-toggle="dropdown"
+                            href="#"
+                            role="button"
+                            aria-haspopup="false"
+                            aria-expanded="false"
+                    >
+                        <i class="ti ti-mail"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
+                        <div class="dropdown-header d-flex align-items-center justify-content-between">
+                            <h5 class="m-0">Message</h5>
+                            <a href="#!" class="pc-head-link bg-transparent"><i class="ti ti-x text-danger"></i></a>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header px-0 text-wrap header-notification-scroll position-relative"
+                             style="max-height: calc(100vh - 215px)">
+                            <div class="list-group list-group-flush w-100">
+                                <a class="list-group-item list-group-item-action">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <img src="../assets/images/user/avatar-2.jpg" alt="user-image"
+                                                 class="user-avtar">
+                                        </div>
+                                        <div class="flex-grow-1 ms-1">
+                                            <span class="float-end text-muted">3:00 AM</span>
+                                            <p class="text-body mb-1">It's <b>Cristina danny's</b> birthday today.</p>
+                                            <span class="text-muted">2 min ago</span>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="list-group-item list-group-item-action">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <img src="../assets/images/user/avatar-1.jpg" alt="user-image"
+                                                 class="user-avtar">
+                                        </div>
+                                        <div class="flex-grow-1 ms-1">
+                                            <span class="float-end text-muted">6:00 PM</span>
+                                            <p class="text-body mb-1"><b>Aida Burg</b> commented your post.</p>
+                                            <span class="text-muted">5 August</span>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="list-group-item list-group-item-action">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <img src="../assets/images/user/avatar-3.jpg" alt="user-image"
+                                                 class="user-avtar">
+                                        </div>
+                                        <div class="flex-grow-1 ms-1">
+                                            <span class="float-end text-muted">2:45 PM</span>
+                                            <p class="text-body mb-1"><b>There was a failure to your setup.</b></p>
+                                            <span class="text-muted">7 hours ago</span>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a class="list-group-item list-group-item-action">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            <img src="../assets/images/user/avatar-4.jpg" alt="user-image"
+                                                 class="user-avtar">
+                                        </div>
+                                        <div class="flex-grow-1 ms-1">
+                                            <span class="float-end text-muted">9:10 PM</span>
+                                            <p class="text-body mb-1"><b>Cristina Danny </b> invited to join <b>
+                                                Meeting.</b></p>
+                                            <span class="text-muted">Daily scrum meeting time</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="text-center py-2">
+                            <a href="#!" class="link-primary">View all</a>
+                        </div>
+                    </div>
+                </li>
+                <li class="dropdown pc-h-item header-user-profile">
+                    <a
+                            class="pc-head-link dropdown-toggle arrow-none me-0"
+                            data-bs-toggle="dropdown"
+                            href="#"
+                            role="button"
+                            aria-haspopup="false"
+                            data-bs-auto-close="outside"
+                            aria-expanded="false"
+                    >
+                        <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
+                        <span class="user_name"></span>
+                    </a>
+                    <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
+                        <div class="dropdown-header">
+                            <div class="d-flex mb-1">
+                                <div class="flex-shrink-0">
+                                    <img src="../assets/images/user/avatar-2.jpg" alt="user-image"
+                                         class="user-avtar wid-35">
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1 user_name"></h6>
+                                    <span class="user_role"></span>
+                                </div>
+                                <button type="button" id="logoutBtn" class="pc-head-link bg-transparent"
+                                        style="border: unset;" onclick="logoutBtn()"><i
+                                        class="ti ti-power text-danger"></i></button>
+                            </div>
+                        </div>
+                        <ul class="nav drp-tabs nav-fill nav-tabs" id="mydrpTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button
+                                        class="nav-link active"
+                                        id="drp-t1"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#drp-tab-1"
+                                        type="button"
+                                        role="tab"
+                                        aria-controls="drp-tab-1"
+                                        aria-selected="true"
+                                ><i class="ti ti-user"></i> Profile
+                                </button
+                                >
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button
+                                        class="nav-link"
+                                        id="drp-t2"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#drp-tab-2"
+                                        type="button"
+                                        role="tab"
+                                        aria-controls="drp-tab-2"
+                                        aria-selected="false"
+                                ><i class="ti ti-settings"></i> Setting
+                                </button
+                                >
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="mysrpTabContent">
+                            <div class="tab-pane fade show active" id="drp-tab-1" role="tabpanel"
+                                 aria-labelledby="drp-t1" tabindex="0">
+                                <a href="#!" class="dropdown-item">
+                                    <i class="ti ti-edit-circle"></i>
+                                    <span>Edit Profile</span>
+                                </a>
+                                <a href="#!" class="dropdown-item">
+                                    <i class="ti ti-user"></i>
+                                    <span>View Profile</span>
+                                </a>
+                                <a href="#!" class="dropdown-item">
+                                    <i class="ti ti-clipboard-list"></i>
+                                    <span>Social Profile</span>
+                                </a>
+                                <a href="#!" class="dropdown-item">
+                                    <i class="ti ti-wallet"></i>
+                                    <span>Billing</span>
+                                </a>
+                                <a href="#!" class="dropdown-item">
+                                    <i class="ti ti-power"></i>
+                                    <span onclick="logoutBtn()">Logout</span>
+                                </a>
+                            </div>
+                            <div class="tab-pane fade" id="drp-tab-2" role="tabpanel" aria-labelledby="drp-t2"
+                                 tabindex="0">
+                                <a href="#!" class="dropdown-item">
+                                    <i class="ti ti-help"></i>
+                                    <span>Support</span>
+                                </a>
+                                <a href="#!" class="dropdown-item">
+                                    <i class="ti ti-user"></i>
+                                    <span>Account Settings</span>
+                                </a>
+                                <a href="#!" class="dropdown-item">
+                                    <i class="ti ti-lock"></i>
+                                    <span>Privacy Center</span>
+                                </a>
+                                <a href="#!" class="dropdown-item">
+                                    <i class="ti ti-messages"></i>
+                                    <span>Feedback</span>
+                                </a>
+                                <a href="#!" class="dropdown-item">
+                                    <i class="ti ti-list"></i>
+                                    <span>History</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
         </div>
-        <div class="dropdown-divider"></div>
-        <div class="text-center py-2">
-          <a href="#!" class="link-primary">View all</a>
-        </div>
-      </div>
-    </li>
-    <li class="dropdown pc-h-item header-user-profile">
-      <a
-        class="pc-head-link dropdown-toggle arrow-none me-0"
-        data-bs-toggle="dropdown"
-        href="#"
-        role="button"
-        aria-haspopup="false"
-        data-bs-auto-close="outside"
-        aria-expanded="false"
-      >
-        <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
-        <span class="user_name"></span>
-      </a>
-      <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
-        <div class="dropdown-header">
-          <div class="d-flex mb-1">
-            <div class="flex-shrink-0">
-              <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar wid-35">
-            </div>
-            <div class="flex-grow-1 ms-3">
-              <h6 class="mb-1 user_name"></h6>
-              <span class="user_role"></span>
-            </div>
-            <button type="button" id="logoutBtn" class="pc-head-link bg-transparent" style="border: unset;" onclick="logoutBtn()"><i class="ti ti-power text-danger"></i></button>
-          </div>
-        </div>
-        <ul class="nav drp-tabs nav-fill nav-tabs" id="mydrpTab" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button
-              class="nav-link active"
-              id="drp-t1"
-              data-bs-toggle="tab"
-              data-bs-target="#drp-tab-1"
-              type="button"
-              role="tab"
-              aria-controls="drp-tab-1"
-              aria-selected="true"
-              ><i class="ti ti-user"></i> Profile</button
-            >
-          </li>
-          <li class="nav-item" role="presentation">
-            <button
-              class="nav-link"
-              id="drp-t2"
-              data-bs-toggle="tab"
-              data-bs-target="#drp-tab-2"
-              type="button"
-              role="tab"
-              aria-controls="drp-tab-2"
-              aria-selected="false"
-              ><i class="ti ti-settings"></i> Setting</button
-            >
-          </li>
-        </ul>
-        <div class="tab-content" id="mysrpTabContent">
-          <div class="tab-pane fade show active" id="drp-tab-1" role="tabpanel" aria-labelledby="drp-t1" tabindex="0">
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-edit-circle"></i>
-              <span>Edit Profile</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-user"></i>
-              <span>View Profile</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-clipboard-list"></i>
-              <span>Social Profile</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-wallet"></i>
-              <span>Billing</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-power"></i>
-              <span onclick="logoutBtn()">Logout</span>
-            </a>
-          </div>
-          <div class="tab-pane fade" id="drp-tab-2" role="tabpanel" aria-labelledby="drp-t2" tabindex="0">
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-help"></i>
-              <span>Support</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-user"></i>
-              <span>Account Settings</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-lock"></i>
-              <span>Privacy Center</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-messages"></i>
-              <span>Feedback</span>
-            </a>
-            <a href="#!" class="dropdown-item">
-              <i class="ti ti-list"></i>
-              <span>History</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </li>
-  </ul>
-</div>
- </div>
+    </div>
 </header>
 <!-- [ Header ] end -->
 
-  <!-- [ Main Content ] start -->
-  <div class="pc-container">
+<!-- [ Main Content ] start -->
+<div class="pc-container">
     <div class="pc-content">
-      <!-- [ breadcrumb ] start -->
-      <div class="page-header" style="display: none">
-        <div class="page-block">
-          <div class="row align-items-center">
-            <div class="col-md-12">
-              <div class="page-header-title">
-                <h5 class="m-b-10">Danh sách người dùng</h5>
-              </div>
-              <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="../../dashboard/index.html">Trang chủ</a></li>
-<!--                <li class="breadcrumb-item"><a href="javascript: void(0)">Pages</a></li>-->
-                <li class="breadcrumb-item" aria-current="page">Danh sách người dùng</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- [ breadcrumb ] end -->
-
-      <!-- [ Main Content ] start -->
-      <div class="row">
-        <!-- [ sample-page ] start -->
-        <div class="col-sm-12">
-          <div class="card">
-            <div class="card-header">
-              <h5>Danh sách người dùng</h5>
-            </div>
-            <div class="card-body">
-                <button class="btn btn-success m-b-10" data-bs-toggle="modal" data-bs-target="#createUserModal">+ Thêm người dùng</button>
-                <table class="table table-bordered table-hover">
-                  <thead class="table-secondary">
-                    <tr>
-                      <th>#</th>
-                      <th>Email</th>
-                      <th>Họ tên</th>
-                      <th>Tuổi</th>
-                      <th>Giới tính</th>
-                      <th>Lớp</th>
-                      <th>Vai trò</th>
-                      <th>Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody id="userTableBody">
-                    <!-- Dữ liệu người dùng render tại đây -->
-                  </tbody>
-                </table>
-                <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog">
-                      <form class="modal-content" id="createUserForm">
-                        <div class="modal-header">
-                          <h5 class="modal-title">Tạo người dùng mới</h5>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header" style="display: none">
+            <div class="page-block">
+                <div class="row align-items-center">
+                    <div class="col-md-12">
+                        <div class="page-header-title">
+                            <h5 class="m-b-10">Danh sách người dùng</h5>
                         </div>
-                        <div class="modal-body">
-                          <div class="mb-2">
-                            <label>Email</label>
-                            <input type="email" name="email" class="form-control" required />
-                          </div>
-                          <div class="mb-2">
-                            <label>Mật khẩu</label>
-                            <div class="input-group">
-                              <input type="text" name="password" class="form-control" required id="passwordInput" />
-                              <button type="button" class="btn btn-outline-secondary" onclick="copyPassword()"><i class="ti ti-copy"></i></button>
-                            </div>
-                          </div>
-                          <div class="mb-2">
-                                <button type="button" class="btn btn-outline-secondary" onclick="generatePassword()">Mật khẩu ngẫu nhiên</button>
-                          </div>
-                          <div class="mb-2">
-                            <label>Họ tên</label>
-                            <input type="text" name="full_name" class="form-control" required />
-                          </div>
-                          <div class="mb-2">
-                            <label>Tuổi</label>
-                            <input type="number" name="age" class="form-control" required />
-                          </div>
-                          <div class="mb-2">
-                            <label>Giới tính</label>
-                            <select name="gender" class="form-select">
-                              <option value="male">Nam</option>
-                              <option value="female">Nữ</option>
-                            </select>
-                          </div>
-                          <div class="mb-2">
-                            <label>Lớp</label>
-                            <input type="text" name="class_name" class="form-control" />
-                          </div>
-                          <div class="mb-2">
-                            <label>Vai trò</label>
-                            <select name="role" class="form-select">
-                              <option value="STUDENT">Học sinh</option>
-                              <option value="TEACHER">Giáo viên</option>
-                              <option value="ADMIN">Quản trị</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div class="modal-footer">
-                          <button type="submit" class="btn btn-primary">Tạo</button>
-                        </div>
-                      </form>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="../../dashboard/index.html">Trang chủ</a></li>
+                            <!--                <li class="breadcrumb-item"><a href="javascript: void(0)">Pages</a></li>-->
+                            <li class="breadcrumb-item" aria-current="page">Danh sách người dùng</li>
+                        </ul>
                     </div>
-                  </div>
+                </div>
             </div>
-          </div>
         </div>
-        <!-- [ sample-page ] end -->
-      </div>
-      <!-- [ Main Content ] end -->
+        <!-- [ breadcrumb ] end -->
+
+        <!-- [ Main Content ] start -->
+        <div class="row">
+            <!-- [ sample-page ] start -->
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Danh sách người dùng</h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-success m-b-10" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                            + Thêm người dùng
+                        </button>
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-secondary">
+                            <tr>
+                                <th>#</th>
+                                <th>Email</th>
+                                <th>Họ tên</th>
+                                <th>Tuổi</th>
+                                <th>Giới tính</th>
+                                <th>Lớp</th>
+                                <th>Vai trò</th>
+                                <th>Hành động</th>
+                            </tr>
+                            </thead>
+                            <tbody id="userTableBody">
+                            <!-- Dữ liệu người dùng render tại đây -->
+                            </tbody>
+                        </table>
+                        <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <form class="modal-content" id="createUserForm">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Tạo người dùng mới</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-2">
+                                            <label>Email</label>
+                                            <input type="email" name="email" class="form-control" required/>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label>Mật khẩu</label>
+                                            <div class="input-group">
+                                                <input type="text" name="password" class="form-control" required
+                                                       id="passwordInput"/>
+                                                <button type="button" class="btn btn-outline-secondary"
+                                                        onclick="copyPassword()"><i class="ti ti-copy"></i></button>
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                    onclick="generatePassword()">Mật khẩu ngẫu nhiên
+                                            </button>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label>Họ tên</label>
+                                            <input type="text" name="full_name" class="form-control" required/>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label>Tuổi</label>
+                                            <input type="number" name="age" class="form-control" required/>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label>Giới tính</label>
+                                            <select name="gender" class="form-select">
+                                                <option value="male">Nam</option>
+                                                <option value="female">Nữ</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label>Lớp</label>
+                                            <select name="class_name" class="form-select" id="classSelect" multiple
+                                                    required></select>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label>Vai trò</label>
+                                            <select name="role" class="form-select">
+                                                <option value="STUDENT">Học sinh</option>
+                                                <option value="TEACHER">Giáo viên</option>
+                                                <option value="ADMIN">Quản trị</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-primary">Tạo</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- [ sample-page ] end -->
+        </div>
+        <!-- [ Main Content ] end -->
     </div>
-  </div>
-  <!-- [ Main Content ] end -->
-  <footer class="pc-footer">
+</div>
+<!-- [ Main Content ] end -->
+<footer class="pc-footer">
     <div class="footer-wrapper container-fluid">
-      <div class="row">
-        <div class="col-sm my-1">
-            <p class="m-0">Website được tạo bởi TMA.</p>
+        <div class="row">
+            <div class="col-sm my-1">
+                <p class="m-0">Website được tạo bởi TMA.</p>
+            </div>
+            <div class="col-auto my-1">
+                <ul class="list-inline footer-link mb-0">
+                    <!--            <li class="list-inline-item"><a href="../../index.html">Trang chủ</a></li>-->
+                </ul>
+            </div>
         </div>
-        <div class="col-auto my-1">
-          <ul class="list-inline footer-link mb-0">
-<!--            <li class="list-inline-item"><a href="../../index.html">Trang chủ</a></li>-->
-          </ul>
-        </div>
-      </div>
     </div>
-  </footer> <!-- Required Js -->
-      <!--Hàm check login-->
-  <script src="../assets/js/config.js"></script>
-  <script src="../assets/js/auth.js"></script>
-    <script>
-      requireAuth();
-    </script>
+</footer> <!-- Required Js -->
+<!--Hàm check login-->
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script>
+    requireAuth();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="../assets/js/plugins/popper.min.js"></script>
 <script src="../assets/js/plugins/simplebar.min.js"></script>
@@ -420,10 +445,7 @@
 <script>layout_change('light');</script>
 
 
-
-
 <script>change_box_container('false');</script>
-
 
 
 <script>layout_rtl_change('false');</script>
@@ -436,206 +458,312 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
-          const ok = await checkRole(['ADMIN']);
-          if (!ok) return;
-          
-          // Apply role-based visibility
-          if (typeof applyRoleBasedVisibility === 'function') {
+        const ok = await checkRole(['ADMIN']);
+        if (!ok) return;
+
+        // Apply role-based visibility
+        if (typeof applyRoleBasedVisibility === 'function') {
             await applyRoleBasedVisibility();
-          }
+        }
     });
 </script>
-<script>
-                const token = localStorage.getItem('access_token');
-            const headers = {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + token
-            };
-        
-            // 1. Load danh sách người dùng
-            async function loadUsers() {
-              try {
-                const apiUrl = getApiUrl('USERS') + '/';
-                const res = await fetch(apiUrl, {
-                  method: 'GET',
-                  headers
-                });
-            
-                if (res.status === 403) {
-                  Swal.fire('Không có quyền!', 'Bạn không có quyền xem danh sách người dùng.', 'warning');
-                  return;
-                }
-                
-                if (res.status === 401) {
-                  Swal.fire('Phiên đăng nhập hết hạn!', 'Vui lòng đăng nhập lại.', 'warning');
-                  localStorage.removeItem('access_token');
-                  window.location.href = '../pages/login.html';
-                  return;
-                }
-            
-                if (!res.ok) {
-                  const errorData = await res.json().catch(() => ({}));
-                  const errorMessage = errorData.detail || errorData.response || `HTTP ${res.status}: ${res.statusText}`;
-                  Swal.fire('Lỗi!', `Không thể tải danh sách: ${errorMessage}`, 'error');
-                  return;
-                }
-            
-                const data = await res.json();
-                
-                const tableBody = document.getElementById('userTableBody');
-                tableBody.innerHTML = '';
-                
-                if (!Array.isArray(data) || data.length === 0) {
-                  tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Không có người dùng nào.</td></tr>';
-                  return;
-                }
-            
-                data.forEach((user, i) => {
-                  // Handle class_name as array - join multiple classes or show single value
-                  const displayClassName = Array.isArray(user.class_name) 
-                    ? user.class_name.join(', ') 
-                    : (user.class_name || '-');
-                  
-                  tableBody.innerHTML += `
-                    <tr>
-                      <td>${i + 1}</td>
-                      <td>${user.email}</td>
-                      <td>${user.full_name || '-'}</td>
-                      <td>${user.age || '-'}</td>
-                      <td>${user.gender || '-'}</td>
-                      <td>${displayClassName}</td>
-                      <td>${user.role}</td>
-                      <td>
-                        <button type="button" class="btn btn-primary btn-sm ms-2" onclick="editUser(${user.id})" data-role-allowed="ADMIN">Chỉnh sửa</button>
-                        <button type="button" class="btn btn-danger btn-sm ms-2" onclick="deleteUser(${user.id})" data-role-allowed="ADMIN">Xóa</button>
-                      </td>
-                    </tr>`;
-                });
-            
-              } catch (err) {
-                console.error('Load users error:', err);
-                Swal.fire('Lỗi!', 'Lỗi kết nối khi tải danh sách người dùng.', 'error');
-              }
+<script type="module">
+    const token = localStorage.getItem('access_token');
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+    };
+
+    // ===== 1. Load danh sách lớp học =====
+    async function loadClassOptions() {
+        try {
+            const res = await fetch('https://aimarketingvn.com/webhook/list-class');
+            const data = await res.json();
+            const classSelect = document.getElementById('classSelect');
+            classSelect.innerHTML = '';
+
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.mon;
+                option.textContent = item.mon;
+                classSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Lỗi tải danh sách lớp:', error);
+        }
+    }
+
+    // ===== 2. Load danh sách người dùng =====
+    async function loadUsers() {
+        try {
+            const apiUrl = getApiUrl('USERS') + '/';
+            const res = await fetch(apiUrl, {method: 'GET', headers});
+
+            if (res.status === 403) {
+                Swal.fire('Không có quyền!', 'Bạn không có quyền xem danh sách người dùng.', 'warning');
+                return;
             }
-        
-        
-            // 2. Xử lý tạo người dùng mới
-            document.getElementById('createUserForm').addEventListener('submit', async (e) => {
-              e.preventDefault();
-              const form = e.target;
-              const formData = new FormData(form);
-              const payload = Object.fromEntries(formData.entries());
-              
-              // Convert class_name to array format that backend expects
-              if (payload.class_name && payload.class_name.trim()) {
-                payload.class_name = [payload.class_name.trim()];
-              } else {
-                payload.class_name = null;
-              }
-        
-              try {
-                const apiUrl = getApiUrl('USERS') + '/';
-                const res = await fetch(apiUrl, {
-                  method: 'POST',
-                  headers,
-                  body: JSON.stringify(payload)
-                });
-        
-                if (res.ok) {
-                  const json = await res.json();
-                  if (json && json.id) {
+
+            if (res.status === 401) {
+                Swal.fire('Phiên đăng nhập hết hạn!', 'Vui lòng đăng nhập lại.', 'warning');
+                localStorage.removeItem('access_token');
+                window.location.href = '../pages/login.html';
+                return;
+            }
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                const errorMessage = errorData.detail || errorData.response || `HTTP ${res.status}: ${res.statusText}`;
+                Swal.fire('Lỗi!', `Không thể tải danh sách: ${errorMessage}`, 'error');
+                return;
+            }
+
+            const data = await res.json();
+            const tableBody = document.getElementById('userTableBody');
+            tableBody.innerHTML = '';
+
+            if (!Array.isArray(data) || data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Không có người dùng nào.</td></tr>';
+                return;
+            }
+
+            data.forEach((user, i) => {
+                const displayClassName = Array.isArray(user.class_name)
+                    ? user.class_name.join(', ')
+                    : (user.class_name || '-');
+
+                tableBody.innerHTML += `
+                  <tr data-id="${user.id}">
+                    <td>${i + 1}</td>
+                    <td>${user.email}</td>
+                    <td class="editable" data-field="full_name">${user.full_name}</td>
+                    <td class="editable" data-field="age">${user.age}</td>
+                    <td class="editable" data-field="gender">${user.gender}</td>
+                    <td class="editable" data-field="class_name" data-value='${JSON.stringify(user.class_name)}'>${(user.class_name || []).join(', ')}</td>
+                    <td class="editable" data-field="role">${user.role}</td>
+                    <td class="action-buttons">
+                      <button class="btn btn-sm btn-primary editBtn">Chỉnh sửa</button>
+                      <button class="btn btn-sm btn-danger deleteBtn">Xoá</button>
+                    </td>
+                  </tr>`;
+            });
+
+        } catch (err) {
+            console.error('Load users error:', err);
+            Swal.fire('Lỗi!', 'Lỗi kết nối khi tải danh sách người dùng.', 'error');
+        }
+    }
+
+    // ===== 3. Xử lý tạo người dùng mới =====
+    document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+
+        // Lấy class_name từ <select multiple>
+        const selectedOptions = Array.from(document.getElementById('classSelect').selectedOptions);
+        payload.class_name = selectedOptions.length > 0
+            ? selectedOptions.map(option => option.value)
+            : null;
+
+        try {
+            const apiUrl = getApiUrl('USERS') + '/';
+            const res = await fetch(apiUrl, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                const json = await res.json();
+                if (json && json.id) {
                     Swal.fire('Thành công!', 'Tạo người dùng thành công!', 'success');
                     form.reset();
                     document.querySelector('#createUserModal .btn-close').click();
                     loadUsers();
-                  } else {
+                } else {
                     Swal.fire('Lỗi!', 'Không thể tạo người dùng!', 'error');
-                  }
-                } else {
-                  const errorData = await res.json().catch(() => ({}));
-                  const errorMessage = errorData.detail || errorData.response || `HTTP ${res.status}: ${res.statusText}`;
-                  console.error('Create user error:', errorData);
-                  Swal.fire('Lỗi!', `Không thể tạo người dùng: ${errorMessage}`, 'error');
                 }
-              } catch (err) {
-                console.error('Network error:', err);
-                Swal.fire('Lỗi!', 'Lỗi kết nối. Vui lòng thử lại.', 'error');
-              }
+            } else {
+                const errorData = await res.json().catch(() => ({}));
+                const errorMessage = errorData.detail || errorData.response || `HTTP ${res.status}: ${res.statusText}`;
+                console.error('Create user error:', errorData);
+                Swal.fire('Lỗi!', `Không thể tạo người dùng: ${errorMessage}`, 'error');
+            }
+        } catch (err) {
+            console.error('Network error:', err);
+            Swal.fire('Lỗi!', 'Lỗi kết nối. Vui lòng thử lại.', 'error');
+        }
+    });
+
+    // ===== 4. Tạo mật khẩu ngẫu nhiên =====
+    function generatePassword() {
+        const random = Math.random().toString(36).slice(-10) + Math.floor(Math.random() * 100);
+        document.getElementById('passwordInput').value = random;
+    }
+
+    // ===== 5. Copy mật khẩu =====
+    function copyPassword() {
+        const password = document.getElementById('passwordInput').value;
+        if (!password) {
+            Swal.fire('Lỗi!', 'Chưa có mật khẩu để sao chép!', 'warning');
+            return;
+        }
+
+        navigator.clipboard.writeText(password)
+            .then(() => Swal.fire('Thành công!', 'Đã sao chép mật khẩu!', 'success'))
+            .catch(err => Swal.fire('Lỗi!', 'Không thể sao chép: ' + err, 'error'));
+    }
+
+    // ===== 6. Chỉnh sửa người dùng (placeholder) =====
+    function editUser(userId) {
+        Swal.fire('Thông báo', 'Chức năng chỉnh sửa đang được phát triển!', 'info');
+    }
+
+    // ===== 7. Xóa người dùng =====
+    async function deleteUser(userId) {
+        const result = await Swal.fire({
+            title: 'Xác nhận xóa',
+            text: 'Bạn có chắc chắn muốn xóa người dùng này?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            const apiUrl = getApiUrl('USERS') + '/' + userId;
+            const res = await fetch(apiUrl, {
+                method: 'DELETE',
+                headers
             });
-        
-            // 3. Hàm tạo mật khẩu ngẫu nhiên
-            function generatePassword() {
-              const random = Math.random().toString(36).slice(-10) + Math.floor(Math.random() * 100);
-              document.getElementById('passwordInput').value = random;
+
+            if (res.ok) {
+                Swal.fire('Thành công!', 'Đã xóa người dùng!', 'success');
+                loadUsers();
+            } else {
+                const errorData = await res.json().catch(() => ({}));
+                const errorMessage = errorData.detail || errorData.response || `HTTP ${res.status}: ${res.statusText}`;
+                Swal.fire('Lỗi!', `Không thể xóa người dùng: ${errorMessage}`, 'error');
             }
-            
-            // 4. Copy password function
-            function copyPassword() {
-              const password = document.getElementById('passwordInput').value;
-              if (!password) {
-                Swal.fire('Lỗi!', 'Chưa có mật khẩu để sao chép!', 'warning');
-                return;
-              }
-            
-              navigator.clipboard.writeText(password)
-                .then(() => Swal.fire('Thành công!', 'Đã sao chép mật khẩu!', 'success'))
-                .catch(err => Swal.fire('Lỗi!', 'Không thể sao chép: ' + err, 'error'));
-            }
-            
-            // 5. Edit user function (placeholder - would need edit modal)
-            function editUser(userId) {
-              Swal.fire('Thông báo', 'Chức năng chỉnh sửa đang được phát triển!', 'info');
-              // TODO: Implement edit user modal and update functionality
-            }
-            
-            // 6. Delete user function
-            async function deleteUser(userId) {
-              const result = await Swal.fire({
-                title: 'Xác nhận xóa',
-                text: 'Bạn có chắc chắn muốn xóa người dùng này?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Xóa',
-                cancelButtonText: 'Hủy'
-              });
-              
-              if (!result.isConfirmed) return;
-              
-              try {
-                const apiUrl = getApiUrl('USERS') + '/' + userId;
-                const res = await fetch(apiUrl, {
-                  method: 'DELETE',
-                  headers
-                });
-                
-                if (res.ok) {
-                  Swal.fire('Thành công!', 'Đã xóa người dùng!', 'success');
-                  loadUsers(); // Reload the list
+        } catch (err) {
+            console.error('Delete user error:', err);
+            Swal.fire('Lỗi!', 'Lỗi kết nối khi xóa người dùng.', 'error');
+        }
+    }
+
+    // ===== 8. Gắn global các hàm cần thiết =====
+    window.generatePassword = generatePassword;
+    window.copyPassword = copyPassword;
+    window.editUser = editUser;
+    window.deleteUser = deleteUser;
+
+    // ===== 9. Khởi tạo: load lớp + user nếu đã login =====
+    if (token) {
+        loadClassOptions();
+        loadUsers();
+    }
+
+    async function populateClassSelect(selectElement, selectedValues = []) {
+        try {
+            const res = await fetch('https://aimarketingvn.com/webhook/list-class');
+            const data = await res.json();
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.mon;
+                option.textContent = item.mon;
+                if (selectedValues.includes(item.mon)) option.selected = true;
+                selectElement.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Lỗi tải danh sách lớp:', error);
+        }
+    }
+    document.addEventListener('click', async function (e) {
+        const row = e.target.closest('tr');
+        if (e.target.classList.contains('editBtn')) {
+            const cells = row.querySelectorAll('.editable');
+
+            // SỬA LỖI: Thay thế forEach bằng vòng lặp for...of
+            for (const cell of cells) {
+                const field = cell.dataset.field;
+                const value = cell.dataset.value || cell.textContent.trim();
+
+                if (field === 'class_name') {
+                    cell.innerHTML = `<select class="form-select form-select-sm" multiple required></select>`;
+                    const select = cell.querySelector('select');
+                    // Bây giờ await sẽ hoạt động chính xác
+                    await populateClassSelect(select, JSON.parse(value || '[]'));
+                } else if (field === 'gender') {
+                    cell.innerHTML = `
+                  <select class="form-select form-select-sm">
+                    <option value="male" ${value === 'male' ? 'selected' : ''}>Nam</option>
+                    <option value="female" ${value === 'female' ? 'selected' : ''}>Nữ</option>
+                  </select>`;
+                } else if (field === 'role') {
+                    cell.innerHTML = `
+                  <select class="form-select form-select-sm">
+                    <option value="STUDENT" ${value === 'STUDENT' ? 'selected' : ''}>Học sinh</option>
+                    <option value="TEACHER" ${value === 'TEACHER' ? 'selected' : ''}>Giáo viên</option>
+                    <option value="ADMIN" ${value === 'ADMIN' ? 'selected' : ''}>Quản trị</option>
+                  </select>`;
                 } else {
-                  const errorData = await res.json().catch(() => ({}));
-                  const errorMessage = errorData.detail || errorData.response || `HTTP ${res.status}: ${res.statusText}`;
-                  Swal.fire('Lỗi!', `Không thể xóa người dùng: ${errorMessage}`, 'error');
+                    cell.innerHTML = `<input type="text" class="form-control form-control-sm" value="${value}">`;
                 }
-              } catch (err) {
-                console.error('Delete user error:', err);
-                Swal.fire('Lỗi!', 'Lỗi kết nối khi xóa người dùng.', 'error');
-              }
             }
-            
-            // Make functions globally accessible
-            window.generatePassword = generatePassword;
-            window.copyPassword = copyPassword;
-            window.editUser = editUser;
-            window.deleteUser = deleteUser;
-            
-            // 7. Initialize - load users if authenticated
-            if (token) {
-              loadUsers();
+
+            const actions = row.querySelector('.action-buttons');
+            actions.innerHTML = `
+          <button class="btn btn-sm btn-primary updateBtn">Cập nhật</button>
+          <button class="btn btn-sm btn-secondary cancelBtn">Huỷ</button>`;
+        }
+
+        if (e.target.classList.contains('cancelBtn')) {
+            loadUsers(); // Reload lại danh sách để huỷ thay đổi
+        }
+
+        if (e.target.classList.contains('updateBtn')) {
+            const id = row.dataset.id;
+            const payload = {};
+
+            row.querySelectorAll('.editable').forEach(cell => {
+                const field = cell.dataset.field;
+                if (field === 'class_name') {
+                    const selected = Array.from(cell.querySelector('select').selectedOptions).map(o => o.value);
+                    payload[field] = selected;
+                } else {
+                    const input = cell.querySelector('input, select');
+                    payload[field] = input ? input.value : cell.textContent.trim();
+                }
+            });
+
+            try {
+                const res = await fetch(`https://api.aagents.vn/api/v1/users/${id}`, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+                if (json && json.id) {
+                    alert('Cập nhật thành công!');
+                    loadUsers();
+                } else {
+                    alert('Cập nhật thất bại!');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Lỗi cập nhật người dùng.');
             }
+        }
+    });
 </script>
-  
+
+
 </body>
 <!-- [Body] end -->
 
