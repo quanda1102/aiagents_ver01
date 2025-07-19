@@ -1979,16 +1979,70 @@
           document.getElementById('sseStatusText').textContent = 'AI đang tạo cấu trúc bài giảng...';
           document.getElementById('sseProgress').textContent = 'Trạng thái: Đang tạo cấu trúc';
           
-          if (typeof data === 'string' && data.includes('title=') && data.includes('activities=')) {
-            // This is the actual lecture data
-            finalLectureData = data;
-            document.getElementById('sseContentText').textContent += `\n\n✅ Đã tạo xong cấu trúc bài giảng!\n`;
-            
-            // Parse and display the lecture content
-            const formattedContent = formatLectureOutput(data);
-            accumulatedContent = formattedContent;
+          // Get the content from data.message or data itself
+          let lectureContent = data.message || data;
+          
+          // Handle cases where the content is a string representation of LectureOutput object
+          if (typeof lectureContent === 'string') {
+            // Look for structured lecture data patterns
+            if (lectureContent.includes('LectureOutput') && lectureContent.includes('title=')) {
+              // This is the actual lecture data from the agent
+              finalLectureData = lectureContent;
+              document.getElementById('sseContentText').textContent += `\n\n✅ Đã tạo xong cấu trúc bài giảng!\n`;
+              
+              // Parse and display the lecture content immediately
+              const formattedContent = formatLectureOutput(lectureContent);
+              accumulatedContent = formattedContent;
+              
+              // Display content immediately
+              const contentToDisplay = {
+                title: currentTitle,
+                content: formattedContent,
+                metadata: {
+                  created: new Date().toISOString(),
+                  subject: selectedDocument.subject,
+                  grade: selectedDocument.grade,
+                  lesson: selectedDocument.lesson,
+                  sseResponse: true,
+                  rawResponse: lectureContent
+                }
+              };
+              
+              displayGeneratedContent(contentToDisplay);
+              
+            } else if (lectureContent.includes('title=') && lectureContent.includes('activities=')) {
+              // Simpler format without LectureOutput wrapper
+              finalLectureData = lectureContent;
+              document.getElementById('sseContentText').textContent += `\n\n✅ Đã tạo xong cấu trúc bài giảng!\n`;
+              
+              const formattedContent = formatLectureOutput(lectureContent);
+              accumulatedContent = formattedContent;
+              
+              const contentToDisplay = {
+                title: currentTitle,
+                content: formattedContent,
+                metadata: {
+                  created: new Date().toISOString(),
+                  subject: selectedDocument.subject,
+                  grade: selectedDocument.grade,
+                  lesson: selectedDocument.lesson,
+                  sseResponse: true,
+                  rawResponse: lectureContent
+                }
+              };
+              
+              displayGeneratedContent(contentToDisplay);
+              
+            } else {
+              // Show tool execution progress
+              document.getElementById('sseContentText').textContent += `\n📋 ${lectureContent}\n`;
+            }
+          } else if (data.status) {
+            // Status update
+            document.getElementById('sseContentText').textContent += `\n📋 ${data.status}\n`;
           } else {
-            document.getElementById('sseContentText').textContent += `\n📋 Công cụ: ${typeof data === 'string' ? data : JSON.stringify(data)}\n`;
+            // Other tool output
+            document.getElementById('sseContentText').textContent += `\n📋 Công cụ: ${JSON.stringify(data)}\n`;
           }
           
           // Auto scroll
@@ -2108,26 +2162,79 @@
             const goals = goalsMatch ? goalsMatch[1] : 'Mục tiêu bài học';
             const equipment = equipmentMatch ? equipmentMatch[1] : 'Thiết bị cần thiết';
             
-            // Extract activities
-            const activitiesMatch = lectureData.match(/activities=\[(.*)\]/s);
+            // Extract activities with better parsing
             let activitiesHtml = '';
             
-            if (activitiesMatch) {
-              // Count number of activities (simple heuristic)
-              const activityCount = (lectureData.match(/Activity\(/g) || []).length;
+            // Look for Activity( patterns with detailed content
+            const activityMatches = lectureData.match(/Activity\([^)]*name='([^']*)'[^)]*goals='([^']*)'[^)]*content='([^']*)'[^)]*products='([^']*)'[^)]*\)/g);
+            
+            if (activityMatches && activityMatches.length > 0) {
+              activityMatches.forEach((activity, index) => {
+                // Extract activity details
+                const nameMatch = activity.match(/name='([^']*)'/);
+                const activityGoalsMatch = activity.match(/goals='([^']*)'/);
+                const contentMatch = activity.match(/content='([^']*)'/);
+                const productsMatch = activity.match(/products='([^']*)'/);
+                
+                const activityName = nameMatch ? nameMatch[1] : `Hoạt động ${index + 1}`;
+                const activityGoals = activityGoalsMatch ? activityGoalsMatch[1] : 'Mục tiêu hoạt động';
+                const content = contentMatch ? contentMatch[1] : 'Nội dung hoạt động';
+                const products = productsMatch ? productsMatch[1] : 'Sản phẩm hoạt động';
+                
+                activitiesHtml += `
+                  <div class="activity-section mb-4" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <h4 style="color: #2c3e50; margin-bottom: 15px;">🎯 ${activityName}</h4>
+                    
+                    <div class="row mb-3">
+                      <div class="col-12">
+                        <h6 style="color: #3498db;">📋 Mục tiêu:</h6>
+                        <p style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px;">${activityGoals}</p>
+                      </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                      <div class="col-12">
+                        <h6 style="color: #e74c3c;">📖 Nội dung:</h6>
+                        <p style="background: #fef7f7; padding: 10px; border-radius: 6px; margin-bottom: 10px;">${content}</p>
+                      </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                      <div class="col-12">
+                        <h6 style="color: #27ae60;">🎁 Sản phẩm mong đợi:</h6>
+                        <p style="background: #f7fef7; padding: 10px; border-radius: 6px; margin-bottom: 10px;">${products}</p>
+                      </div>
+                    </div>
+                    
+                    <div class="row">
+                      <div class="col-md-6">
+                        <h6 style="color: #8e44ad;">👨‍🏫 Hoạt động của giáo viên:</h6>
+                        <p style="background: #f8f4fd; padding: 10px; border-radius: 6px;">Hướng dẫn và tổ chức các hoạt động học tập theo kế hoạch</p>
+                      </div>
+                      <div class="col-md-6">
+                        <h6 style="color: #f39c12;">👨‍🎓 Hoạt động của học sinh:</h6>
+                        <p style="background: #fefaf4; padding: 10px; border-radius: 6px;">Tham gia tích cực và thực hiện các bài tập được giao</p>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              });
+            } else {
+              // Fallback: Create generic activities based on simple count
+              const activityCount = Math.max(1, (lectureData.match(/Activity\(/g) || []).length);
               
               for (let i = 1; i <= activityCount; i++) {
                 activitiesHtml += `
-                  <div class="activity-section mb-4">
-                    <h4>🎯 Hoạt động ${i}</h4>
+                  <div class="activity-section mb-4" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <h4 style="color: #2c3e50;">🎯 Hoạt động ${i}</h4>
                     <div class="row">
                       <div class="col-md-6">
-                        <h6>👨‍🏫 Hoạt động của giáo viên:</h6>
-                        <p>Hướng dẫn và tổ chức các hoạt động học tập</p>
+                        <h6 style="color: #8e44ad;">👨‍🏫 Hoạt động của giáo viên:</h6>
+                        <p style="background: #f8f4fd; padding: 10px; border-radius: 6px;">Hướng dẫn và tổ chức các hoạt động học tập</p>
                       </div>
                       <div class="col-md-6">
-                        <h6>👨‍🎓 Hoạt động của học sinh:</h6>
-                        <p>Tham gia tích cực và thực hiện các bài tập</p>
+                        <h6 style="color: #f39c12;">👨‍🎓 Hoạt động của học sinh:</h6>
+                        <p style="background: #fefaf4; padding: 10px; border-radius: 6px;">Tham gia tích cực và thực hiện các bài tập</p>
                       </div>
                     </div>
                   </div>
@@ -2150,7 +2257,7 @@
                 </div>
                 
                 <div class="section mb-4">
-                  <h3>📋 Các hoạt động</h3>
+                  <h3 style="color: #2c3e50;">📚 Các hoạt động học tập</h3>
                   ${activitiesHtml}
                 </div>
               </div>
