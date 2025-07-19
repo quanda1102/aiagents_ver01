@@ -1980,7 +1980,7 @@
         document.getElementById('sseProgress').textContent = 'Trạng thái: Kết nối';
 
         // Create SSE connection
-        const sseUrl = `https://api.aaagents.vn/api/v1/sse_lecture/generate?${params.toString()}`;
+        const sseUrl = `https://api.aagents.vn/api/v1/sse_lecture/generate?${params.toString()}`;
         console.log('Attempting SSE connection to:', sseUrl);
         const eventSource = new EventSource(sseUrl);
         
@@ -2423,7 +2423,7 @@
         };
         
         // Try the new optimized endpoint first, fallback to old one if needed
-        let response = await fetch('https://api.aaagents.vn/api/v1/lecture-docx/format-lecture', {
+        let response = await fetch('https://api.aagents.vn/api/v1/lecture-docx/format-lecture', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -2440,7 +2440,7 @@
             file_name: fileName || 'bai_giang.docx'
           };
           
-          response = await fetch('https://api.aaagents.vn/api/v1/docx/format-and-download', {
+          response = await fetch('https://api.aagents.vn/api/v1/docx/format-and-download', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
