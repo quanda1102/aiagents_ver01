@@ -2021,11 +2021,29 @@
 
         // Handle streaming text content (from the default message event)
         eventSource.onmessage = function(event) {
-          const textChunk = JSON.parse(event.data);
-          if (!currentMessageElement) {
-            currentMessageElement = createLogEntry('content-progress', '');
+          try {
+            const textChunk = JSON.parse(event.data);
+            // Filter out unwanted JSON objects like {"so_tiet_hoc":3,"so_phut_moi_tiet":35}
+            if (typeof textChunk === 'object' && (textChunk.so_tiet_hoc || textChunk.so_phut_moi_tiet)) {
+              return; // Skip this JSON data
+            }
+            
+            // Only display meaningful text content
+            if (typeof textChunk === 'string' && textChunk.trim()) {
+              if (!currentMessageElement) {
+                currentMessageElement = createLogEntry('content-progress', '');
+              }
+              currentMessageElement.textContent += textChunk;
+            }
+          } catch (e) {
+            // If it's not JSON, it might be plain text
+            if (event.data && event.data.trim()) {
+              if (!currentMessageElement) {
+                currentMessageElement = createLogEntry('content-progress', '');
+              }
+              currentMessageElement.textContent += event.data;
+            }
           }
-          currentMessageElement.textContent += textChunk;
         };
 
         eventSource.addEventListener('start', function(event) {
@@ -2137,11 +2155,38 @@
           
           eventSource.close();
           
-          // Hide only the status, keep content visible
+          // Hide status messages and show only final content
           setTimeout(() => {
             document.getElementById('sseStatus').style.display = 'none';
-            // Keep sseContent visible - don't hide it
-          }, 3000);
+            
+            // Clear all status messages, keep only final content
+            const contentEl = document.getElementById('sseContentText');
+            const finalContent = finalLectureData;
+            
+            if (finalContent) {
+              contentEl.innerHTML = ''; // Clear all previous messages
+              
+              // Show formatted final content with download button
+              const finalDiv = document.createElement('div');
+              finalDiv.className = 'final-lecture-content';
+              finalDiv.innerHTML = `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                  <h3>🎉 Bài giảng đã hoàn thành!</h3>
+                  <p>Nội dung bài giảng đã được tạo thành công. Bạn có thể tải xuống file DOCX bên dưới.</p>
+                  <button id="downloadDocxBtn" 
+                          style="background: white; color: #667eea; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px;">
+                    📄 Tải xuống DOCX
+                  </button>
+                </div>
+              `;
+              contentEl.appendChild(finalDiv);
+              
+              // Add click event listener to download button
+              document.getElementById('downloadDocxBtn').addEventListener('click', function() {
+                exportLectureToDocx(finalContent, 'bai-giang-ai.docx');
+              });
+            }
+          }, 2000);
         });
 
         eventSource.addEventListener('error', function(event) {
