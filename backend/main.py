@@ -14,6 +14,7 @@ from utils.pydantic_helper import format_validation_errors
 # from routes.ocr_gpt_routes import router as ocr_ai_router
 from routes.dox_formatter_routes import router as docx_formatter_router
 from routes.lecture_docx_routes import router as lecture_docx_router
+from routes.lecture_format_routes import router as lecture_format_router
 
 app = FastAPI(
     title="AI Agent Backend API",
@@ -38,6 +39,7 @@ app.include_router(unified_router)
 # app.include_router(ocr_ai_router)
 app.include_router(docx_formatter_router)
 app.include_router(lecture_docx_router)
+app.include_router(lecture_format_router)
 app.include_router(lecture_sse_router)
 
 @app.exception_handler(RequestValidationError)
