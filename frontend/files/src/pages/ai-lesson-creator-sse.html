@@ -2023,9 +2023,16 @@
         eventSource.onmessage = function(event) {
           try {
             const textChunk = JSON.parse(event.data);
-            // Filter out unwanted JSON objects like {"so_tiet_hoc":3,"so_phut_moi_tiet":35}
-            if (typeof textChunk === 'object' && (textChunk.so_tiet_hoc || textChunk.so_phut_moi_tiet)) {
-              return; // Skip this JSON data
+            console.log('SSE message received:', textChunk);
+            
+            // Filter out unwanted JSON objects 
+            if (typeof textChunk === 'object') {
+              // Skip any object that contains calculation data
+              if (textChunk.so_tiet_hoc || textChunk.so_phut_moi_tiet || 
+                  textChunk.number_of_periods || textChunk.minutes_per_period) {
+                console.log('Skipping calculation JSON:', textChunk);
+                return; // Skip this JSON data
+              }
             }
             
             // Only display meaningful text content
@@ -2034,14 +2041,16 @@
                 currentMessageElement = createLogEntry('content-progress', '');
               }
               currentMessageElement.textContent += textChunk;
+              autoScroll();
             }
           } catch (e) {
             // If it's not JSON, it might be plain text
-            if (event.data && event.data.trim()) {
+            if (event.data && event.data.trim() && !event.data.includes('{')) {
               if (!currentMessageElement) {
                 currentMessageElement = createLogEntry('content-progress', '');
               }
               currentMessageElement.textContent += event.data;
+              autoScroll();
             }
           }
         };
@@ -2847,6 +2856,19 @@
         }
         
         contentPreview.innerHTML = displayContent;
+        
+        // Add download button for SSE responses
+        if (response.metadata?.sseResponse) {
+          const downloadButtonHtml = `
+            <div style="text-align: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+              <button onclick="exportLectureToDocx('${response.metadata.rawResponse.replace(/'/g, "\\'")}', 'bai-giang.docx')" 
+                      class="btn btn-primary" style="padding: 12px 24px; font-size: 16px;">
+                📄 Tải xuống DOCX
+              </button>
+            </div>
+          `;
+          contentPreview.innerHTML += downloadButtonHtml;
+        }
 
       } else {
         console.error('contentPreview element not found!');
