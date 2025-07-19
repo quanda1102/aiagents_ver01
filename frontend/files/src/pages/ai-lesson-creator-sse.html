@@ -1981,7 +1981,14 @@
 
         // Create SSE connection
         const sseUrl = `https://api.aaagents.com/api/v1/sse_lecture/generate?${params.toString()}`;
+        console.log('Attempting SSE connection to:', sseUrl);
         const eventSource = new EventSource(sseUrl);
+        
+        // Add connection state logging
+        eventSource.onopen = function(event) {
+          console.log('SSE connection opened successfully');
+          createLogEntry('status', '✅ Kết nối SSE thành công');
+        };
         
         let finalLectureData = null;
         
@@ -2129,18 +2136,32 @@
         });
 
         eventSource.addEventListener('error', function(event) {
-          const data = JSON.parse(event.data);
           document.getElementById('sseStatusText').textContent = 'Lỗi!';
-          document.getElementById('sseProgress').textContent = `Lỗi: ${data.message}`;
-          createLogEntry('status', `❌ Lỗi: ${data.message}`);
+          document.getElementById('sseProgress').textContent = 'Lỗi: Không thể nhận dữ liệu từ server';
+          createLogEntry('status', '❌ Lỗi: Không thể nhận dữ liệu từ server');
           eventSource.close();
         });
 
         eventSource.onerror = function(event) {
+          console.error('SSE Connection Error:', event);
+          console.log('EventSource readyState:', eventSource.readyState);
+          console.log('SSE URL:', sseUrl);
+          
+          let errorMsg = 'Lỗi kết nối SSE';
+          if (eventSource.readyState === EventSource.CONNECTING) {
+            errorMsg = 'Đang thử kết nối lại...';
+          } else if (eventSource.readyState === EventSource.CLOSED) {
+            errorMsg = 'Kết nối SSE đã bị đóng';
+          }
+          
           document.getElementById('sseStatusText').textContent = 'Lỗi kết nối!';
-          document.getElementById('sseProgress').textContent = 'Trạng thái: Lỗi kết nối';
-          createLogEntry('status', '❌ Lỗi kết nối SSE');
-          eventSource.close();
+          document.getElementById('sseProgress').textContent = `Trạng thái: ${errorMsg}`;
+          createLogEntry('status', `❌ ${errorMsg}`);
+          
+          // Don't close immediately if it's still connecting (let it retry)
+          if (eventSource.readyState === EventSource.CLOSED) {
+            eventSource.close();
+          }
         };
 
       } catch (error) {

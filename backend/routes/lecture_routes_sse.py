@@ -26,7 +26,16 @@ async def test_endpoint():
         yield create_sse_message("test", "This is working")
         yield create_sse_message("done", "Test complete")
     
-    return StreamingResponse(simple_stream(), media_type="text/event-stream")
+    return StreamingResponse(
+        simple_stream(), 
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        }
+    )
 
 @router.get("/generate")
 async def generate_lecture(
@@ -105,4 +114,13 @@ async def generate_lecture(
             print(f"Full traceback: {error_details}")
             yield create_sse_message("error", f"Đã xảy ra lỗi trong quá trình tạo bài giảng: {str(e)}")
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_stream(), 
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        }
+    )
