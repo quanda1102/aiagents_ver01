@@ -2235,59 +2235,40 @@
         }
 
         function handleStreamingComplete() {
-          console.log('🚀 handleStreamingComplete called');
-          console.log('🔍 streamingComplete flag at start:', streamingComplete);
+          console.log('🚀 Streaming fallback triggered (no final_content event received)');
           
           // Check if final_content event already processed this
           if (streamingComplete === 'final_content_processed') {
-            console.log('Final content already processed via final_content event, skipping streaming fallback');
+            console.log('Final content already processed, skipping fallback');
             return;
           }
           
-          console.log('📋 No final_content event received, parsing streamed content as fallback...');
-          console.log('Raw streaming content:', streamingContent.substring(0, 300) + '...');
+          console.log('⚠️ No structured final_content event - this indicates a backend issue');
+          console.log('📋 Raw streaming content length:', streamingContent.length);
           
-          // Try to parse the streamed content as a structured lecture
-          console.log('🔍 About to call parseStreamedLectureContent...');
-          const lectureData = parseStreamedLectureContent(streamingContent);
-          console.log('🔍 parseStreamedLectureContent returned:', lectureData);
+          // Show a message that we're missing structured data
+          createLogEntry('warning', '⚠️ Không nhận được dữ liệu có cấu trúc từ backend');
+          createLogEntry('info', '📋 Hiển thị nội dung thô được stream...');
           
-          if (lectureData) {
-            console.log('✅ Successfully parsed streaming data as fallback:', lectureData);
-            
-            // Format and display
-            console.log('🔍 About to call formatStructuredLectureData...');
-            const formattedContent = formatStructuredLectureData(lectureData);
-            console.log('🔍 formatStructuredLectureData returned:', formattedContent.substring(0, 200) + '...');
-            
-            const contentToDisplay = {
-              title: `${selectedDocument?.lesson || 'Bài giảng'} - Được tạo bởi AI (SSE)`,
-              content: formattedContent,
-              metadata: {
-                created: new Date().toISOString(),
-                subject: selectedDocument?.subject || 'Không xác định',
-                grade: selectedDocument?.grade || 'Không xác định', 
-                lesson: selectedDocument?.lesson || 'Bài giảng AI',
-                sseResponse: true,
-                rawResponse: lectureData
-              }
-            };
-            
-            console.log('🔍 About to call displayGeneratedContent with:', contentToDisplay);
-            displayGeneratedContent(contentToDisplay);
-            console.log('🔍 displayGeneratedContent call completed');
-            
-            // Hide SSE status
-            setTimeout(() => {
-              document.getElementById('sseStatus').style.display = 'none';
-            }, 1000);
-            
-            createLogEntry('success', '✅ Bài giảng đã hoàn thành (từ streaming)!');
-            
-          } else {
-            console.error('❌ Failed to parse lecture content');
-            createLogEntry('error', '❌ Không thể phân tích nội dung bài giảng');
-          }
+          // For now, just show the raw streaming content
+          document.getElementById('emptyState').style.display = 'none';
+          document.getElementById('contentDisplayArea').style.display = 'block';
+          document.getElementById('contentPreview').innerHTML = `
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+              <h3>⚠️ Nội dung thô từ AI (chưa định dạng)</h3>
+              <div style="background: white; padding: 15px; border-radius: 4px; white-space: pre-wrap; font-family: monospace; max-height: 500px; overflow-y: auto;">
+                ${streamingContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+              </div>
+              <p style="margin-top: 15px; color: #666;">
+                <strong>Lưu ý:</strong> Đây là nội dung thô chưa được định dạng do không nhận được dữ liệu có cấu trúc từ backend.
+              </p>
+            </div>
+          `;
+          
+          // Hide SSE status
+          setTimeout(() => {
+            document.getElementById('sseStatus').style.display = 'none';
+          }, 2000);
         }
 
         eventSource.addEventListener('start', function(event) {
