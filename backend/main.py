@@ -8,9 +8,10 @@ from routes.auth_routes import router as auth_router
 from routes.user_routes import router as user_router
 from routes.chat_routes import router as chat_router
 from routes.lecture_routes import router as lecture_router
+from routes.lecture_routes_sse import router as lecture_sse_router
 from my_agents.exam_agents.unified_routes import unified_router
 from utils.pydantic_helper import format_validation_errors
-from routes.ocr_gpt_routes import router as ocr_ai_router
+# from routes.ocr_gpt_routes import router as ocr_ai_router
 from routes.dox_formatter_routes import router as docx_formatter_router
 
 app = FastAPI(
@@ -33,8 +34,9 @@ app.include_router(chat_router)
 app.include_router(user_router)
 app.include_router(lecture_router)
 app.include_router(unified_router)
-app.include_router(ocr_ai_router)
+# app.include_router(ocr_ai_router)
 app.include_router(docx_formatter_router)
+app.include_router(lecture_sse_router)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
