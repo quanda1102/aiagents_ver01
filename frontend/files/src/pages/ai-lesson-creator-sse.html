@@ -2502,6 +2502,25 @@
 
     function parseLectureDataToObject(lectureData) {
       try {
+        console.log('🔍 Parsing lecture data:', lectureData);
+        
+        // If lectureData is already an object with the expected structure, return it
+        if (lectureData && typeof lectureData === 'object' && lectureData.title) {
+          console.log('✅ Lecture data is already structured object');
+          return lectureData;
+        }
+        
+        // If lectureData is an object but not structured, try to extract from it
+        if (lectureData && typeof lectureData === 'object') {
+          console.log('🔄 Converting object to structured format');
+          return {
+            title: lectureData.title || lectureData.name || 'BÀI GIẢNG',
+            goals: lectureData.goals || lectureData.objectives || 'Mục tiêu bài học',
+            equipment: lectureData.equipment || lectureData.materials || 'Thiết bị cần thiết',
+            activities: lectureData.activities || lectureData.lessons || []
+          };
+        }
+        
         // Parse the lecture data from the string representation into a structured object
         let title = 'BÀI GIẢNG';
         let goals = '';
@@ -2509,16 +2528,27 @@
         let activities = [];
         
         if (typeof lectureData === 'string') {
-          // Extract title
-          const titleMatch = lectureData.match(/title='([^']*)'/) || lectureData.match(/title="([^"]*)"/);
+          console.log('📝 Parsing string data');
+          
+          // Extract title - try multiple patterns
+          const titleMatch = lectureData.match(/title='([^']*)'/) || 
+                           lectureData.match(/title="([^"]*)"/) ||
+                           lectureData.match(/title:\s*([^\n]+)/) ||
+                           lectureData.match(/^#\s*(.+?)(?:\n|$)/);
           if (titleMatch) title = titleMatch[1];
           
           // Extract goals
-          const goalsMatch = lectureData.match(/goals='([^']*)'/) || lectureData.match(/goals="([^"]*)"/);
+          const goalsMatch = lectureData.match(/goals='([^']*)'/) || 
+                           lectureData.match(/goals="([^"]*)"/) ||
+                           lectureData.match(/goals:\s*([^\n]+)/) ||
+                           lectureData.match(/mục tiêu:\s*([^\n]+)/i);
           if (goalsMatch) goals = goalsMatch[1];
           
           // Extract equipment
-          const equipmentMatch = lectureData.match(/equipment='([^']*)'/) || lectureData.match(/equipment="([^"]*)"/);
+          const equipmentMatch = lectureData.match(/equipment='([^']*)'/) || 
+                               lectureData.match(/equipment="([^"]*)"/) ||
+                               lectureData.match(/equipment:\s*([^\n]+)/) ||
+                               lectureData.match(/thiết bị:\s*([^\n]+)/i);
           if (equipmentMatch) equipment = equipmentMatch[1];
           
           // Extract activities with tables
@@ -2562,21 +2592,58 @@
               });
             });
           }
+          
+          // If no activities found, try to extract from markdown format
+          if (activities.length === 0) {
+            const activitySections = lectureData.split(/###\s*Hoạt động\s*\d+:/);
+            if (activitySections.length > 1) {
+              activitySections.slice(1).forEach((section, index) => {
+                const nameMatch = section.match(/^([^*\n]+)/);
+                const goalsMatch = section.match(/\*\*Mục tiêu:\*\*\s*([^*\n]+)/);
+                const contentMatch = section.match(/\*\*Nội dung:\*\*\s*([^*\n]+)/);
+                const productsMatch = section.match(/\*\*Sản phẩm:\*\*\s*([^*\n]+)/);
+                
+                activities.push({
+                  name: nameMatch ? nameMatch[1].trim() : `Hoạt động ${index + 1}`,
+                  goals: goalsMatch ? goalsMatch[1].trim() : 'Phát triển kỹ năng và kiến thức',
+                  content: contentMatch ? contentMatch[1].trim() : 'Nội dung hoạt động',
+                  products: productsMatch ? productsMatch[1].trim() : 'Sản phẩm học tập',
+                  table: []
+                });
+              });
+            }
+          }
         }
         
-        return {
+        const result = {
           title: title,
           goals: goals,
           equipment: equipment,
-          activities: activities
+          activities: activities.length > 0 ? activities : [{
+            name: 'Hoạt động chính',
+            goals: goals || 'Phát triển kỹ năng và kiến thức',
+            content: 'Nội dung được tạo bởi AI',
+            products: 'Kiến thức và kỹ năng mới',
+            table: []
+          }]
         };
+        
+        console.log('✅ Parsed result:', result);
+        return result;
+        
       } catch (error) {
-        console.error('Error parsing lecture data:', error);
+        console.error('❌ Error parsing lecture data:', error);
         return {
           title: 'BÀI GIẢNG',
           goals: 'Mục tiêu bài học',
           equipment: 'Thiết bị cần thiết',
-          activities: []
+          activities: [{
+            name: 'Hoạt động chính',
+            goals: 'Phát triển kỹ năng và kiến thức',
+            content: 'Nội dung được tạo bởi AI',
+            products: 'Kiến thức và kỹ năng mới',
+            table: []
+          }]
         };
       }
     }
@@ -2772,7 +2839,10 @@
 
     async function exportLectureToDocx(lectureData, fileName) {
       try {
+        console.log('🚀 Starting DOCX export with data:', lectureData);
+        
         const lectureObj = parseLectureDataToObject(lectureData);
+        console.log('📋 Parsed lecture object:', lectureObj);
         
         const requestBody = {
           title: lectureObj.title,
@@ -2787,6 +2857,8 @@
           },
           file_name: fileName || 'bai_giang.docx'
         };
+        
+        console.log('📤 Sending request body:', requestBody);
         
         // Try the new optimized endpoint first, fallback to old one if needed
         let response = await fetch('https://api.aagents.vn/api/v1/lecture-docx/format-lecture', {
