@@ -971,7 +971,17 @@
   <script>font_change("Public-Sans");</script>
 
   <script>
-    // CRITICAL: Define global functions FIRST before any other code
+    // CRITICAL: Define global variables FIRST
+    let selectedDocument = {
+      subject: null,
+      grade: null,
+      lesson: null
+    };
+    let extractedDocumentText = '';  
+    let extractedFileName = '';
+    let selectedDocumentContent = '';
+
+    // CRITICAL: Define global functions immediately after variables
     function onSubjectChange() {
       const subjectSelect = document.getElementById('subjectSelect');
       const gradeSelect = document.getElementById('gradeSelect');
@@ -1114,16 +1124,33 @@
       }
     }
 
-    // Global variables for form data
-    let selectedDocument = {
-      subject: null,
-      grade: null,
-      lesson: null
-    };
+    function toggleExistingDocsSection() {
+      const section = document.getElementById('existingDocsSection');
+      if (section.style.display === 'none') {
+        section.style.display = 'block';
+        loadExistingDocuments();
+      } else {
+        section.style.display = 'none';
+      }
+    }
 
-    let extractedDocumentText = '';  // For reference documents (files/URLs)
-    let extractedFileName = '';
-    let selectedDocumentContent = '';  // For selected document from backend API
+    function logoutBtn() {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      window.location.href = '/login.html';
+    }
+
+    function saveEditedDocument() {
+      alert('Tính năng lưu tài liệu đang được phát triển');
+    }
+
+    function exportEditedDocument() {
+      alert('Tính năng xuất tài liệu đang được phát triển');
+    }
+
+    function loadServerDocuments() {
+      alert('Đang tải danh sách tài liệu từ server...');
+    }
 
     // Function to convert Vietnamese text to ASCII-safe filename
     function createSafeFilename(text) {
@@ -1329,19 +1356,6 @@
       }
     }
 
-    // Toggle document content visibility
-    function toggleDocumentContent() {
-      const details = document.getElementById('documentContentDetails');
-      const button = details.previousElementSibling.querySelector('button');
-      
-      if (details.style.display === 'none') {
-        details.style.display = 'block';
-        button.innerHTML = '<i class="ti ti-eye-off me-1"></i>Ẩn nội dung';
-      } else {
-        details.style.display = 'none';
-        button.innerHTML = '<i class="ti ti-eye me-1"></i>Xem nội dung';
-      }
-    }
 
     function initializeTinyMCE() {
       // Initialize main content editor (VIEW-ONLY MODE)
@@ -3884,19 +3898,6 @@
       alert('Nội dung bài giảng được tạo 100% chính xác và không thể chỉnh sửa.');
     }
 
-    // Toggle advanced configuration visibility
-    function toggleAdvancedConfig() {
-      const advancedConfig = document.getElementById('advancedConfig');
-      const toggleText = document.getElementById('advancedToggleText');
-      
-      if (advancedConfig.style.display === 'none') {
-        advancedConfig.style.display = 'block';
-        toggleText.textContent = 'Ẩn cấu hình nâng cao';
-      } else {
-        advancedConfig.style.display = 'none';
-        toggleText.textContent = 'Hiện cấu hình nâng cao';
-      }
-    }
 
     // ===== EXISTING DOCUMENTS FUNCTIONS =====
     
