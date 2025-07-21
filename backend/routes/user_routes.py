@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Optional, List
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import create_engine
 from config import config
@@ -32,9 +33,23 @@ def require_admin(current_user: User = Depends(get_current_user)):
 @router.get("/", response_model=list[UserOut])
 def get_users(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, le=100),
+    email: Optional[str] = None,
+    gender: Optional[str] = None,
+    role: Optional[str] = None,
+    class_names: Optional[List[str]] = Query(None)
 ):
-    users = AuthService.get_users(db)
+    users = AuthService.get_users(
+        db,
+        page=page,
+        page_size=page_size,
+        email=email,
+        gender=gender,
+        role=role,
+        class_names=class_names
+    )
     return [UserOut.from_orm_with_role_name(u) for u in users]
 
 @router.post("/", response_model=UserOut)
