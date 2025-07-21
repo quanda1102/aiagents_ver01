@@ -983,8 +983,73 @@
     let selectedDocumentContent = '';  // For selected document from backend API
 
     // Define event handlers in global scope
+    // Make critical functions globally accessible via window object
+    window.toggleAdvancedConfig = function() {
+      const advancedConfig = document.getElementById('advancedConfig');
+      const toggleText = document.getElementById('advancedToggleText');
+      
+      if (advancedConfig.style.display === 'none') {
+        advancedConfig.style.display = 'block';
+        toggleText.textContent = 'Ẩn cấu hình nâng cao';
+      } else {
+        advancedConfig.style.display = 'none';
+        toggleText.textContent = 'Hiện cấu hình nâng cao';
+      }
+    };
+
+    window.toggleDocumentContent = function() {
+      const details = document.getElementById('documentContentDetails');
+      const button = details.previousElementSibling.querySelector('button');
+      
+      if (details.style.display === 'none') {
+        details.style.display = 'block';
+        button.innerHTML = '<i class="ti ti-eye-off me-1"></i>Ẩn nội dung';
+      } else {
+        details.style.display = 'none';
+        button.innerHTML = '<i class="ti ti-eye me-1"></i>Xem nội dung';
+      }
+    };
+
+    window.removeFile = function() {
+      document.getElementById('uploadedFile').style.display = 'none';
+      document.getElementById('extractedTextCard').style.display = 'none';
+      document.getElementById('fileUploadArea').style.display = 'block';
+      document.getElementById('documentFile').value = '';
+      extractedDocumentText = '';
+      extractedFileName = '';
+    };
+
+    window.loadFromUrl = async function() {
+      const urlInput = document.getElementById('documentUrl');
+      let url = urlInput.value.trim();
+      
+      if (!url) {
+        alert('Vui lòng nhập URL tài liệu');
+        return;
+      }
+      
+      try {
+        // Show loading state
+        const button = document.querySelector('[onclick="loadFromUrl()"]');
+        button.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i>Đang tải...';
+        button.disabled = true;
+        
+        // Process the URL (this function exists further down)
+        await processUrlContent(url);
+        
+      } catch (error) {
+        console.error('Error loading from URL:', error);
+        alert('Lỗi khi tải nội dung từ URL: ' + error.message);
+      } finally {
+        // Reset button
+        const button = document.querySelector('[onclick="loadFromUrl()"]');
+        button.innerHTML = '<i class="ti ti-download me-1"></i>Tải nội dung';
+        button.disabled = false;
+      }
+    };
+
     // Subject selection change handler
-    async function onSubjectChange() {
+    window.onSubjectChange = async function onSubjectChange() {
       const subjectSelect = document.getElementById('subjectSelect');
       const gradeSelect = document.getElementById('gradeSelect');
       const lessonSelect = document.getElementById('lessonSelect');
@@ -1012,10 +1077,10 @@
         populateGrades(subjectSelect.value);
         gradeSelect.disabled = false;
       }
-    }
+    };
 
     // Grade selection change handler
-    function onGradeChange() {
+    window.onGradeChange = function onGradeChange() {
       const gradeSelect = document.getElementById('gradeSelect');
       const lessonSelect = document.getElementById('lessonSelect');
       
@@ -1039,10 +1104,10 @@
         populateLessons(selectedDocument.subject, gradeSelect.value);
         lessonSelect.disabled = false;
       }
-    }
+    };
 
     // Lesson selection change handler
-    async function onLessonChange() {
+    window.onLessonChange = async function onLessonChange() {
       const lessonSelect = document.getElementById('lessonSelect');
       
       // Update selected document
@@ -1062,7 +1127,7 @@
         // Disable generate button
         document.getElementById('generateBtn').disabled = true;
       }
-    }
+    };
 
     // Function to convert Vietnamese text to ASCII-safe filename
     function createSafeFilename(text) {
@@ -1130,9 +1195,9 @@
       document.getElementById('generateBtn').addEventListener('click', generateLessonContent);
       
       // Add event listeners for dropdown changes
-      document.getElementById('subjectSelect').addEventListener('change', onSubjectChange);
-      document.getElementById('gradeSelect').addEventListener('change', onGradeChange);
-      document.getElementById('lessonSelect').addEventListener('change', onLessonChange);
+      document.getElementById('subjectSelect').addEventListener('change', window.onSubjectChange);
+      document.getElementById('gradeSelect').addEventListener('change', window.onGradeChange);
+      document.getElementById('lessonSelect').addEventListener('change', window.onLessonChange);
       
       // Add Enter key support for URL input
       document.getElementById('documentUrl').addEventListener('keypress', function(e) {
