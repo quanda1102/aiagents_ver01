@@ -606,7 +606,7 @@
                 <div class="row">
                   <div class="col-md-4 mb-3">
                     <label class="form-label">Môn học <span class="text-danger">*</span></label>
-                    <select id="subjectSelect" class="form-select" required>
+                    <select id="subjectSelect" class="form-select" onchange="onSubjectChange()" required>
                       <option value="">Chọn môn học</option>
                       <option value="AI-01">Trí tuệ nhân tạo</option>
                       <option value="TOAN">Toán học</option>
@@ -618,14 +618,14 @@
                   
                   <div class="col-md-4 mb-3">
                     <label class="form-label">Lớp <span class="text-danger">*</span></label>
-                    <select id="gradeSelect" class="form-select" required disabled>
+                    <select id="gradeSelect" class="form-select" onchange="onGradeChange()" required disabled>
                       <option value="">Chọn lớp</option>
                     </select>
                   </div>
                   
                   <div class="col-md-4 mb-3">
                     <label class="form-label">Bài học <span class="text-danger">*</span></label>
-                    <select id="lessonSelect" class="form-select" required disabled>
+                    <select id="lessonSelect" class="form-select" onchange="onLessonChange()" required disabled>
                       <option value="">Chọn bài học</option>
                     </select>
                   </div>
