@@ -3,6 +3,8 @@ from fastapi import HTTPException
 from models.user import User, Role, Gender
 from schemas.user import UserCreate, UserUpdate
 from utils.auth import get_password_hash, verify_password, create_access_token
+from typing import Optional, List
+from sqlalchemy import desc
 
 class AuthService:
 
@@ -62,8 +64,45 @@ class AuthService:
         return {"access_token": access_token, "token_type": "bearer"}
 
     @staticmethod
-    def get_users(db: Session):
-        return db.query(User).all()
+    def get_users(
+        db: Session,
+        page: int = 1,
+        page_size: int = 20,
+        email: Optional[str] = None,
+        gender: Optional[str] = None,
+        role: Optional[str] = None,
+        class_names: Optional[List[str]] = None,
+    ):
+        query = db.query(User)
+
+        if email:
+            query = query.filter(User.email.ilike(f"%{email}%"))
+
+        if gender:
+            try:
+                gender_enum = Gender(gender.lower())
+                query = query.filter(User.gender == gender_enum)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid gender")
+
+        if role:
+            try:
+                role_value = Role[role.upper()].value
+                query = query.filter(User.role == role_value)
+            except KeyError:
+                raise HTTPException(status_code=400, detail="Invalid role")
+
+        if class_names:
+            query = query.filter(User.class_name.in_(class_names))
+
+        # Sắp xếp: người mới nhất trước (giả sử theo id giảm dần)
+        query = query.order_by(desc(User.id))
+
+        # Phân trang
+        offset = (page - 1) * page_size
+        users = query.offset(offset).limit(page_size).all()
+        return users
+
 
     @staticmethod
     def create_user(user: UserCreate, db: Session):
