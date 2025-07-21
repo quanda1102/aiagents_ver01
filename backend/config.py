@@ -35,4 +35,16 @@ class Config:
     QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
     QDRANT_COLLECTION_NAME = "sql_query_cache"
 
+    # Google OAuth
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+    GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
+    
+    # Facebook OAuth
+    FACEBOOK_CLIENT_ID = os.getenv("FACEBOOK_CLIENT_ID")
+    FACEBOOK_CLIENT_SECRET = os.getenv("FACEBOOK_CLIENT_SECRET")
+    FACEBOOK_REDIRECT_URI = os.getenv("FACEBOOK_REDIRECT_URI")
+
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
 config = Config()
