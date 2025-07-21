@@ -1915,85 +1915,131 @@
 
 
 
+    // Optimized streaming function based on best practices
     async function generateLessonContent() {
       if (!selectedDocument.lesson) {
         alert('Vui lòng chọn bài học cụ thể');
         return;
       }
 
-      const requirements = document.getElementById('specialRequirements').value;
+      // Prepare request data
+      const requestData = {
+        subject: selectedDocument.subject || 'Toán',
+        grade: selectedDocument.grade || '10',
+        lesson: selectedDocument.lesson || 'Đại số',
+        reference_text: getReferenceText(),
+        number_of_periods: document.getElementById('numberOfPeriods').value || 1,
+        minutes_per_period: document.getElementById('minutesPerPeriod').value || 45,
+        special_instructions: document.getElementById('specialRequirements').value || ''
+      };
 
-      // Show loading and SSE status
-      document.getElementById('emptyState').style.display = 'none';
-      document.getElementById('loadingSpinner').style.display = 'none';
-      document.getElementById('sseStatus').style.display = 'block';
-      document.getElementById('sseContent').style.display = 'block';
-      document.getElementById('generateBtn').disabled = true;
-
-      // Get reference document text - prioritize uploaded/URL content, then backend document content
-      let referenceDocumentText = '';
+      // Initialize UI state
+      initializeStreamingUI();
       
-      // First check if there's content from file upload or URL
+      try {
+        await streamLessonGeneration(requestData);
+      } catch (error) {
+        handleStreamingError(error);
+      }
+    }
+
+    // Extract reference text helper
+    function getReferenceText() {
       const extractedEditor = tinymce.get('extractedTextEditor');
       if (extractedEditor) {
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = extractedEditor.getContent();
-        referenceDocumentText = tempDiv.textContent || tempDiv.innerText || '';
-      } else if (extractedDocumentText) {
-        referenceDocumentText = extractedDocumentText;
+        return tempDiv.textContent || tempDiv.innerText || '';
       }
-      
-      // If no uploaded content, use the selected backend document content
-      if (!referenceDocumentText && selectedDocumentContent) {
-        referenceDocumentText = selectedDocumentContent;
-      }
-      
-      // Final fallback
-      if (!referenceDocumentText) {
-        referenceDocumentText = 'Tài liệu tham khảo cơ bản cho bài học';
-      }
-      
-      // Debug log to check what's being sent
-      console.log('Reference text being sent:', referenceDocumentText.substring(0, 200) + '...');
+      return extractedDocumentText || selectedDocumentContent || 'Tài liệu tham khảo cơ bản';
+    }
 
-      // Get advanced config
-      const numberOfPeriods = document.getElementById('numberOfPeriods').value;
-      const minutesPerPeriod = document.getElementById('minutesPerPeriod').value;
+    // Initialize UI for streaming
+    function initializeStreamingUI() {
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('sseStatus').style.display = 'block';
+      document.getElementById('sseContent').style.display = 'block';
+      document.getElementById('generateBtn').disabled = true;
+      document.getElementById('sseContentText').innerHTML = '';
+      
+      updateStatus('Đang khởi tạo...', 'Chuẩn bị kết nối');
+    }
 
-      // Prepare SSE URL parameters
-      const params = new URLSearchParams({
-        subject: selectedDocument.subject || 'Toán',
-        grade: selectedDocument.grade || '10',
-        lesson: selectedDocument.lesson || 'Đại số',
-        reference_text: referenceDocumentText || 'Tài liệu tham khảo',
-        number_of_periods: numberOfPeriods || 1,
-        minutes_per_period: minutesPerPeriod || 45,
-        special_instructions: requirements || '',
-        example: referenceDocumentText || ''
+    // Main streaming function using modern fetch + ReadableStream
+    async function streamLessonGeneration(requestData) {
+      const url = 'https://api.aagents.vn/api/v1/sse_lecture/generate';
+      const params = new URLSearchParams(requestData);
+      
+      updateStatus('Đang kết nối...', 'Gửi yêu cầu tới AI');
+      
+      const response = await fetch(`${url}?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/event-stream',
+          'Cache-Control': 'no-cache'
+        }
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
+      updateStatus('Đã kết nối!', 'Đang nhận dữ liệu từ AI');
+      
+      // Process streaming response
+      await processStreamingResponse(response);
+    }
 
+    // Process streaming response with modern ReadableStream
+    async function processStreamingResponse(response) {
+      const reader = response.body
+        .pipeThrough(new TextDecoderStream())
+        .getReader();
+
+      let buffer = '';
+      let currentMessage = '';
+      let finalLectureData = null;
+      
+      const messageElement = createLogEntry('content-progress', '');
+      
       try {
-        // Update status
-        document.getElementById('sseStatusText').textContent = 'Đang kết nối với API SSE...';
-        document.getElementById('sseProgress').textContent = 'Trạng thái: Kết nối';
+        while (true) {
+          const { value, done } = await reader.read();
+          
+          if (done) {
+            if (finalLectureData) {
+              await processFinalContent(finalLectureData);
+            } else {
+              // Fallback: process accumulated message
+              await handleStreamingComplete(currentMessage);
+            }
+            break;
+          }
 
-        // Create SSE connection
-        const sseUrl = `https://api.aagents.vn/api/v1/sse_lecture/generate?${params.toString()}`;
-        console.log('Attempting SSE connection to:', sseUrl);
-        const eventSource = new EventSource(sseUrl);
-        
-        // Add connection state logging
-        eventSource.onopen = function(event) {
-          console.log('SSE connection opened successfully');
-          createLogEntry('status', '✅ Kết nối SSE thành công');
-        };
-
-        // Log ALL events for debugging and handle final_content properly
-        ['start', 'agent_update', 'tool_output', 'final_content', 'completed', 'error'].forEach(eventType => {
-          eventSource.addEventListener(eventType, function(event) {
-            console.log(`🔍 EVENT [${eventType}]:`, event.data);
+          if (value) {
+            buffer += value;
+            const { events, remaining } = parseSSEEvents(buffer);
+            buffer = remaining;
+            
+            for (const event of events) {
+              const result = await handleStreamEvent(event, messageElement);
+              if (result.content) currentMessage += result.content;
+              if (result.finalData) finalLectureData = result.finalData;
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+        document.getElementById('generateBtn').disabled = false;
+      }
+                    }
+                  }, 3000);
+                }
+              } catch (e) {
+                console.error('Error parsing content_chunk:', e);
+              }
+              return;
+            }
             
             // Handle final_content event specifically
             if (eventType === 'final_content') {
@@ -2037,88 +2083,150 @@
 
         let currentMessageElement = null;
 
-        // Handle SSE events
-        eventSource.onopen = function(event) {
-          document.getElementById('sseStatusText').textContent = 'Kết nối thành công!';
-          document.getElementById('sseProgress').textContent = 'Trạng thái: Đã kết nối';
-          // Clear the log container
-          document.getElementById('sseContentText').innerHTML = '';
-        };
+    // Parse SSE events from buffer
+    function parseSSEEvents(buffer) {
+      const events = [];
+      const lines = buffer.split('\\n');
+      let currentEvent = {};
+      let i = 0;
+      
+      while (i < lines.length) {
+        const line = lines[i].trim();
+        
+        if (line.startsWith('event:')) {
+          currentEvent.type = line.substring(6).trim();
+        } else if (line.startsWith('data:')) {
+          currentEvent.data = line.substring(5).trim();
+        } else if (line === '' && currentEvent.type) {
+          events.push({ ...currentEvent });
+          currentEvent = {};
+        }
+        i++;
+      }
+      
+      // Return remaining buffer content
+      const lastEventEnd = buffer.lastIndexOf('\\n\\n');
+      const remaining = lastEventEnd >= 0 ? buffer.substring(lastEventEnd + 2) : buffer;
+      
+      return { events, remaining };
+    }
 
-        let streamingContent = '';
-        let streamingComplete = false;
-        let noNewDataTimeout = null;
-
-        // Handle streaming text content (from the default message event)
-        eventSource.onmessage = function(event) {
-          console.log('Raw SSE event data:', event.data);
+    // Optimized streaming helper functions
+    async function handleStreamEvent(event, messageElement) {
+      const result = { content: '', finalData: null };
+      
+      switch (event.type) {
+        case 'start':
+          updateStatus('Bắt đầu!', 'AI đang xử lý yêu cầu');
+          createLogEntry('status', '🚀 Bắt đầu tạo bài giảng');
+          break;
           
-          // Check if it's the problematic JSON string
-          if (event.data.includes('so_tiet_hoc') || event.data.includes('so_phut_moi_tiet')) {
-            console.log('BLOCKING JSON data:', event.data);
-            return; // Block this completely
-          }
-          
-          // Reset the timeout since we got new data
-          clearTimeout(noNewDataTimeout);
-          
+        case 'agent_update':
           try {
-            const textChunk = JSON.parse(event.data);
-            console.log('Parsed SSE message:', textChunk);
-            
-            // Filter out unwanted JSON objects 
-            if (typeof textChunk === 'object') {
-              console.log('BLOCKING object type data:', textChunk);
-              return; // Block all objects
-            }
-            
-            // Only display meaningful text content
-            if (typeof textChunk === 'string' && textChunk.trim()) {
-              streamingContent += textChunk;
-              
-              if (!currentMessageElement) {
-                currentMessageElement = createLogEntry('content-progress', '');
-              }
-              
-              // Show the actual streaming content in real-time
-              currentMessageElement.textContent += textChunk;
+            const data = JSON.parse(event.data);
+            const message = data.message || data;
+            updateStatus('Đang xử lý...', message);
+            createLogEntry('status', `🤖 ${message}`);
+          } catch (e) {
+            updateStatus('Đang xử lý...', event.data);
+          }
+          break;
+          
+        case 'tool_output':
+          try {
+            const data = JSON.parse(event.data);
+            const status = data.status || data.message || data;
+            createLogEntry('tool-call', `🔧 ${status}`);
+          } catch (e) {
+            createLogEntry('tool-call', '🔧 Đang gọi function tool...');
+          }
+          break;
+          
+        case 'content_chunk':
+          try {
+            const data = JSON.parse(event.data);
+            const chunk = data.message || data;
+            if (typeof chunk === 'string' && chunk.trim()) {
+              messageElement.textContent += chunk;
+              result.content = chunk;
               autoScroll();
-              
-              // Set timeout to detect end of streaming
-              noNewDataTimeout = setTimeout(() => {
-                if (!streamingComplete) {
-                  console.log('🎯 Streaming timeout triggered - processing content...');
-                  console.log('🔍 streamingComplete flag:', streamingComplete);
-                  console.log('🔍 streamingContent length:', streamingContent.length);
-                  streamingComplete = true;
-                  handleStreamingComplete();
-                }
-              }, 3000); // Wait 3 seconds after last chunk
             }
           } catch (e) {
-            // If it's not JSON, it might be plain text
-            if (event.data && event.data.trim() && !event.data.includes('{')) {
-              streamingContent += event.data;
-              
-              if (!currentMessageElement) {
-                currentMessageElement = createLogEntry('content-progress', '');
-              }
-              
-              currentMessageElement.textContent += event.data;
+            if (event.data && event.data.trim()) {
+              messageElement.textContent += event.data;
+              result.content = event.data;
               autoScroll();
-              
-              // Set timeout for plain text too
-              clearTimeout(noNewDataTimeout);
-              noNewDataTimeout = setTimeout(() => {
-                if (!streamingComplete) {
-                  console.log('🎯 Streaming appears complete, processing content...');
-                  streamingComplete = true;
-                  handleStreamingComplete();
-                }
-              }, 3000);
             }
           }
-        };
+          break;
+          
+        case 'final_content':
+          try {
+            const data = JSON.parse(event.data);
+            const content = data.message || data;
+            result.finalData = content;
+            createLogEntry('final-summary', '🎆 Đã nhận dữ liệu cuối cùng!');
+          } catch (e) {
+            console.error('Error parsing final_content:', e);
+          }
+          break;
+          
+        case 'completed':
+          updateStatus('Hoàn thành!', 'Đã tạo xong bài giảng');
+          createLogEntry('status', '✅ Hoàn thành!');
+          break;
+          
+        case 'error':
+          const errorMsg = event.data || 'Lỗi không xác định';
+          createLogEntry('status', `❌ Lỗi: ${errorMsg}`);
+          throw new Error(errorMsg);
+      }
+      
+      return result;
+    }
+
+    function updateStatus(statusText, progressText) {
+      document.getElementById('sseStatusText').textContent = statusText;
+      document.getElementById('sseProgress').textContent = `Trạng thái: ${progressText}`;
+    }
+
+    function handleStreamingError(error) {
+      console.error('Streaming error:', error);
+      updateStatus('Lỗi!', error.message);
+      createLogEntry('status', `❌ Lỗi: ${error.message}`);
+      document.getElementById('generateBtn').disabled = false;
+      
+      setTimeout(() => {
+        document.getElementById('sseStatus').style.display = 'none';
+      }, 3000);
+    }
+
+    // Fallback for when no final_content is received
+    async function handleStreamingComplete(accumulatedContent) {
+      if (!accumulatedContent || accumulatedContent.length < 50) {
+        createLogEntry('warning', '⚠️ Không nhận được nội dung có cấu trúc từ backend');
+        return;
+      }
+      
+      // Show raw content as fallback
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('contentDisplayArea').style.display = 'block';
+      document.getElementById('contentPreview').innerHTML = `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+          <h3>⚠️ Nội dung thô từ AI (chưa định dạng)</h3>
+          <div style="background: white; padding: 15px; border-radius: 4px; white-space: pre-wrap; font-family: monospace; max-height: 500px; overflow-y: auto;">
+            ${accumulatedContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+          </div>
+          <p style="margin-top: 15px; color: #666;">
+            <strong>Lưu ý:</strong> Đây là nội dung thô chưa được định dạng do không nhận được dữ liệu có cấu trúc từ backend.
+          </p>
+        </div>
+      `;
+      
+      setTimeout(() => {
+        document.getElementById('sseStatus').style.display = 'none';
+      }, 2000);
+    }
 
         async function processFinalContent(finalData) {
           console.log('🎯 Processing final content with backend formatter:', finalData);
@@ -2447,13 +2555,7 @@
         });
 
         // Catch-all event listener to debug what's coming through
-        eventSource.addEventListener('message', function(event) {
-          console.log('GENERIC MESSAGE event:', event.data);
-          if (event.data.includes('so_tiet_hoc') || event.data.includes('so_phut_moi_tiet')) {
-            console.log('FOUND JSON IN GENERIC MESSAGE - BLOCKING');
-            return;
-          }
-        });
+        // Removed duplicate generic message handler - using specific event listeners only
 
         eventSource.onerror = function(event) {
           console.error('SSE Connection Error:', event);

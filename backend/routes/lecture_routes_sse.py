@@ -87,8 +87,15 @@ async def generate_lecture(
                         delta_text = event.data.delta
                         # Only send if delta_text is a simple string, not complex objects
                         if delta_text and isinstance(delta_text, str) and len(delta_text.strip()) > 0:
-                            yield f"data: {json.dumps(delta_text)}\n\n"
-                    # Remove fallback dots as they're not meaningful
+                            # Always accumulate content for final processing
+                            final_content += delta_text
+                            
+                            # Filter out JSON structure completely - only send human-readable content
+                            json_indicators = ['{', '}', '"', 'so_tiet_hoc', 'so_phut_moi_tiet', 'activities', 'title', 'goals', 'equipment']
+                            if not any(indicator in delta_text.lower() for indicator in json_indicators):
+                                # Only send if it contains meaningful text (letters/numbers, not just punctuation)
+                                if any(c.isalnum() for c in delta_text):
+                                    yield create_sse_message("content_chunk", delta_text)
                 elif isinstance(event, AgentUpdatedStreamEvent):
                     agent_name = event.new_agent.name if hasattr(event.new_agent, 'name') else 'AI Agent'
                     if agent_name == 'lecture_agent':
@@ -98,14 +105,29 @@ async def generate_lecture(
                 elif isinstance(event, RunItemStreamEvent):
                     item = event.item
                     if item.type == "tool_call_item":
-                        yield create_sse_message("tool_output", {"status": f"Đang tính toán xem dựa trên thời lượng {number_of_periods} tiết và {minutes_per_period} phút mỗi tiết thì nên xây dựng cấu trúc thế nào..."})
+                        yield create_sse_message("tool_output", {"status": f"Gọi function tool để tạo bài giảng {number_of_periods} tiết, {minutes_per_period} phút/tiết..."})
                     elif item.type == "tool_call_output_item":
-                        # Don't send raw tool output - it contains technical details
-                        # Instead send user-friendly message
-                        yield create_sse_message("tool_output", {"status": "Đã xây dựng xong cấu trúc bài giảng với các hoạt động phù hợp"})
+                        # Extract and process tool output
+                        try:
+                            tool_output = ItemHelpers.get_item_content(item)
+                            
+                            # Convert Pydantic model to dict for JSON serialization
+                            if hasattr(tool_output, 'model_dump'):
+                                tool_output = tool_output.model_dump()
+                            elif hasattr(tool_output, 'dict'):
+                                tool_output = tool_output.dict()
+                            
+                            # Check if this is our structured lecture data
+                            if isinstance(tool_output, dict) and 'title' in tool_output:
+                                yield create_sse_message("final_content", tool_output)
+                            else:
+                                yield create_sse_message("tool_output", {"status": "Đã tạo xong cấu trúc bài giảng"})
+                        except Exception as e:
+                            yield create_sse_message("tool_output", {"status": "Đã hoàn thành xử lý"})
                     elif item.type == "run_item_output_item":
                         final_content = ItemHelpers.get_item_content(item)
                         yield create_sse_message("final_content", final_content)
+            
             yield create_sse_message("completed", "Đã tạo bài giảng")
         except Exception as e:
             import traceback
