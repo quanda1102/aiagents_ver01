@@ -597,8 +597,13 @@
 
       // Prepare request data based on working API structure
       const requestData = {
+        chatModel: {
+          provider: "openai",
+          name: "gpt-4.1-mini"
+        },
         focusMode: focusMode,
-        query: query
+        query: query,
+        stream: enableStreaming
       };
       
       // Add optional parameters only if needed
@@ -636,19 +641,46 @@
       updateStatus('Đang khởi tạo...', 'Chuẩn bị kết nối');
     }
 
-    // Streaming search function - simplified for JSON API
+    // Streaming search function with proper SSE handling
     async function streamSearch(requestData) {
       const url = 'https://research.aagents.vn/api/search';
       
       updateStatus('Đang kết nối...', 'Gửi yêu cầu tới AI');
       
+      // Try streaming first
+      if (requestData.stream) {
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'text/event-stream'
+            },
+            body: JSON.stringify(requestData)
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          updateStatus('Đã kết nối!', 'Đang nhận dữ liệu streaming');
+          
+          // Process real streaming response
+          await processRealStreaming(response);
+          return;
+        } catch (error) {
+          console.log('Streaming failed, falling back to regular request:', error.message);
+        }
+      }
+      
+      // Fallback to regular request
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify({...requestData, stream: false})
       });
 
       if (!response.ok) {
@@ -657,7 +689,7 @@
 
       updateStatus('Đã kết nối!', 'Đang xử lý phản hồi');
       
-      // Process JSON response (API doesn't support real streaming)
+      // Process JSON response
       const result = await response.json();
       currentSearchResults = result;
       
@@ -736,7 +768,82 @@
       }
     }
 
-    // Removed complex SSE parsing - API returns simple JSON response
+    // Process real streaming response with proper JSON line parsing
+    async function processRealStreaming(response) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullMessage = '';
+      let sources = null;
+      
+      const messageElement = createLogEntry('search-progress', '');
+      
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          
+          if (done) {
+            break;
+          }
+          
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop(); // Keep incomplete line in buffer
+          
+          for (const line of lines) {
+            if (line.trim()) {
+              const result = await processStreamingLine(line, messageElement);
+              if (result.message) fullMessage += result.message;
+              if (result.sources) sources = result.sources;
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+      
+      // Create final search results
+      currentSearchResults = {
+        message: fullMessage,
+        sources: sources || []
+      };
+      
+      // Show final results
+      if (currentSearchResults.message || currentSearchResults.sources.length > 0) {
+        createLogEntry('search-result', '🎆 Hoàn thành tìm kiếm!');
+        displaySearchResults(currentSearchResults);
+      }
+      
+      setTimeout(() => {
+        document.getElementById('sseStatus').style.display = 'none';
+      }, 2000);
+    }
+    
+    // Process individual streaming lines and return collected data
+    async function processStreamingLine(line, messageElement) {
+      const result = { message: '', sources: null };
+      
+      try {
+        const data = JSON.parse(line.trim());
+        
+        if (data.type === 'init') {
+          updateStatus('Đã kết nối!', 'Stream khởi tạo thành công');
+          createLogEntry('status', '🚀 Bắt đầu tìm kiếm');
+        } else if (data.type === 'sources' && data.data) {
+          result.sources = data.data;
+          displaySources(data.data);
+          createLogEntry('search-progress', `🔍 Tìm thấy ${data.data.length} nguồn thông tin`);
+        } else if (data.type === 'response' && data.data) {
+          result.message = data.data;
+          messageElement.textContent += data.data;
+          autoScroll();
+        }
+      } catch (e) {
+        console.error('Error parsing streaming line:', e, 'Line:', line);
+      }
+      
+      return result;
+    }
 
     function updateStatus(statusText, progressText) {
       document.getElementById('sseStatusText').textContent = statusText;
