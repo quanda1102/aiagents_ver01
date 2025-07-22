@@ -1,17 +1,15 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional, Dict, Any
 
-class ChatRequest(BaseModel):
+class UserMetadata(BaseModel):
     user_id: int
     user_name: str
-    user_email: EmailStr
-    user_phone: str
-    user_address: str
-    user_city: str
-    user_state: str
-    user_zip: str
-    user_country: str 
     user_role: str
+
+class ChatRequest(BaseModel):
+    message: str
     session_id: str | None = None
+    user_metadata: UserMetadata
 
 
 class ChatResponse(BaseModel):

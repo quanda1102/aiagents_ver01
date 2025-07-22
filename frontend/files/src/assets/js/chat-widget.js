@@ -20,6 +20,7 @@ class ChatWidget {
     this.sessionId = null;
     this.isOpen = false;
     this.isTyping = false;
+    this.isSending = false;
     this.widget = null;
     this.button = null;
     this.window = null;
@@ -259,54 +260,98 @@ class ChatWidget {
       return;
     }
 
+    // Remove any existing event listeners to prevent duplicates
+    this.unbindEvents();
+
     // Toggle chat window
-    this.button.addEventListener('click', (e) => {
+    this.buttonClickHandler = (e) => {
       e.preventDefault();
       e.stopPropagation();
       console.log('🔄 Chat Widget - Button clicked'); // Debug log
       this.toggle();
-    });
+    };
+    this.button.addEventListener('click', this.buttonClickHandler);
 
     // Close button
     const closeButton = this.widget.querySelector('.chat-widget-close');
     if (closeButton) {
-      closeButton.addEventListener('click', () => {
+      this.closeClickHandler = () => {
         this.close();
-      });
+      };
+      closeButton.addEventListener('click', this.closeClickHandler);
     }
 
     // Send message on button click
     if (this.sendButton) {
-      this.sendButton.addEventListener('click', () => {
+      this.sendButtonClickHandler = () => {
+        console.log('🖱️ Chat Widget - Send button clicked');
         this.sendMessage();
-      });
+      };
+      this.sendButton.addEventListener('click', this.sendButtonClickHandler);
     }
 
     // Send message on Enter key
     if (this.inputField) {
-      this.inputField.addEventListener('keydown', (e) => {
+      this.inputKeydownHandler = (e) => {
+        console.log('⌨️ Chat Widget - Key pressed:', e.key, 'Current value:', e.target.value);
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
+          e.stopPropagation(); // Prevent event bubbling
+          console.log('🔁 Chat Widget - Enter key triggered sendMessage()');
           this.sendMessage();
         }
-      });
+      };
+      this.inputField.addEventListener('keydown', this.inputKeydownHandler);
 
       // Clear badge on focus
-      this.inputField.addEventListener('focus', () => {
+      this.inputFocusHandler = () => {
         this.clearBadge();
-      });
+      };
+      this.inputField.addEventListener('focus', this.inputFocusHandler);
 
       // Auto-resize input (basic)
-      this.inputField.addEventListener('input', () => {
+      this.inputChangeHandler = () => {
         // Basic input validation
         const message = this.inputField.value.trim();
         if (this.sendButton) {
           this.sendButton.disabled = message.length === 0;
         }
-      });
+      };
+      this.inputField.addEventListener('input', this.inputChangeHandler);
     }
     
     this.logTestResult('Event Binding', 'SUCCESS', 'All events bound successfully');
+  }
+
+  unbindEvents() {
+    // Remove button click handler
+    if (this.button && this.buttonClickHandler) {
+      this.button.removeEventListener('click', this.buttonClickHandler);
+    }
+
+    // Remove close button handler
+    const closeButton = this.widget?.querySelector('.chat-widget-close');
+    if (closeButton && this.closeClickHandler) {
+      closeButton.removeEventListener('click', this.closeClickHandler);
+    }
+
+    // Remove send button handler
+    if (this.sendButton && this.sendButtonClickHandler) {
+      this.sendButton.removeEventListener('click', this.sendButtonClickHandler);
+    }
+
+    // Remove input field handlers
+    if (this.inputField) {
+      if (this.inputKeydownHandler) {
+        this.inputField.removeEventListener('keydown', this.inputKeydownHandler);
+      }
+      if (this.inputFocusHandler) {
+        this.inputField.removeEventListener('focus', this.inputFocusHandler);
+      }
+      if (this.inputChangeHandler) {
+        this.inputField.removeEventListener('input', this.inputChangeHandler);
+      }
+    }
   }
 
   toggle() {
@@ -357,24 +402,39 @@ class ChatWidget {
 
   async sendMessage() {
     const message = this.inputField.value.trim();
-    if (!message) return;
+    console.log('📩 Chat Widget - sendMessage() called with message:', `"${message}"`);
+    
+    if (!message) {
+      console.log('❌ Chat Widget - Empty message, aborting send');
+      return;
+    }
+
+    // Prevent multiple simultaneous sends
+    if (this.isSending) {
+      console.log('⚠️ Chat Widget - Already sending, aborting duplicate send');
+      return;
+    }
+    this.isSending = true;
+
+    // Clear input immediately to prevent duplicate sends
+    const originalMessage = message;
+    this.inputField.value = '';
+    this.sendButton.disabled = true;
+
+    console.log('✅ Chat Widget - Sending message:', `"${originalMessage}"`);
 
     // Add user message to chat
     this.addMessage({
       type: 'user',
-      text: message,
+      text: originalMessage,
       time: new Date()
     });
 
-      // Clear input
-      this.inputField.value = '';
-      this.sendButton.disabled = true;
-
-      // Show typing indicator
-      this.showTyping();
+    // Show typing indicator
+    this.showTyping();
 
     try {
-      const response = await this.sendToAPI(message);
+      const response = await this.sendToAPI(originalMessage);
       this.hideTyping();
       
       // Add bot response
@@ -405,10 +465,16 @@ class ChatWidget {
       });
       
       this.logTestResult('Send Message', 'FAILED', 'Error: ' + error.message);
+    } finally {
+      // Always reset the sending flag
+      this.isSending = false;
+      console.log('🏁 Chat Widget - Send operation completed, isSending reset');
     }
   }
 
   async sendToAPI(message) {
+    console.log('🚀 Chat Widget - sendToAPI called with message:', `"${message}"`);
+    
     // Get auth token if available (check both storages)
     const token = sessionStorage.getItem('access_token') || localStorage.getItem('access_token');
 
@@ -439,6 +505,8 @@ class ChatWidget {
       session_id: this.sessionId,
       user_metadata: userData
     };
+    
+    console.log('📦 Chat Widget - Request payload:', JSON.stringify(requestPayload, null, 2));
 
     const headers = {
       'Content-Type': 'application/json'
