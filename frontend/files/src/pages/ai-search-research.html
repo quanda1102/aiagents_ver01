@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="vi">
+<!-- [Head] start -->
+
+<head>
+  <title>Công cụ tìm kiếm AI Research (SSE)</title>
+  <!-- [Meta] -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Công cụ tìm kiếm AI với hỗ trợ streaming real-time">
+  <meta name="keywords" content="AI, Search, Research, Real-time">
+  <meta name="author" content="TMA">
+
+  <!-- [Favicon] icon -->
+  <link rel="icon" href="../assets/images/logo_tma.png" type="image/x-icon">
+  <!-- [Google Font] Family -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" id="main-font-link">
+  <!-- [Tabler Icons] https://tablericons.com -->
+  <link rel="stylesheet" href="../assets/fonts/tabler-icons.min.css" >
+  <!-- [Feather Icons] https://feathericons.com -->
+  <link rel="stylesheet" href="../assets/fonts/feather.css" >
+  <!-- [Font Awesome Icons] https://fontawesome.com/icons -->
+  <link rel="stylesheet" href="../assets/fonts/fontawesome.css" >
+  <!-- [Material Icons] https://fonts.google.com/icons -->
+  <link rel="stylesheet" href="../assets/fonts/material.css" >
+  <!-- [Template CSS Files] -->
+  <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" >
+  <link rel="stylesheet" href="../assets/css/style-preset.css" >
+
+  <style>
+    .search-response {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 25px;
+      color: white;
+      margin: 20px 0;
+      display: none;
+    }
+    .log-entry {
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      line-height: 1.5;
+    }
+    .status {
+      background-color: #f0f0f0;
+      font-style: italic;
+      color: #666;
+      text-align: center;
+    }
+    .search-progress {
+      background-color: #e7f5ff;
+      border-left: 4px solid #d1ecf1;
+    }
+    .search-result {
+      background-color: #d4edda;
+      border-left: 4px solid #c3e6cb;
+      margin-top: 10px;
+    }
+    .source-item {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffeeba;
+      margin-bottom: 8px;
+    }
+    .loading-spinner {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    .search-input-area {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 25px;
+      border: 2px solid #e9ecef;
+      transition: all 0.3s ease;
+    }
+    .search-input-area:hover {
+      border-color: #007bff;
+      box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+    }
+    .focus-mode-selector {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .content-preview-area {
+      min-height: 300px;
+      max-height: 600px;
+      overflow-y: auto;
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      border: 1px solid #dee2e6;
+    }
+    .content-preview-area:empty:before {
+      content: "Kết quả tìm kiếm sẽ xuất hiện tại đây...";
+      color: #6c757d;
+      font-style: italic;
+    }
+    .source-card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-left: 4px solid #007bff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .streaming-text {
+      font-family: 'Courier New', monospace;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<!-- [Head] end -->
+
+<!-- [Body] Start -->
+<body data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
+  <!-- [ Pre-loader ] start -->
+  <div class="loader-bg">
+    <div class="loader-track">
+      <div class="loader-fill"></div>
+    </div>
+  </div>
+  <!-- [ Pre-loader ] End -->
+
+  <!-- [ Sidebar Menu ] start -->
+  <div data-include="../layouts/sidebar-pc.html"></div>
+  <!-- [ Sidebar Menu ] end -->
+
+  <!-- [ Header Topbar ] start -->
+  <header class="pc-header">
+    <div class="header-wrapper">
+      <!-- [Mobile Media Block] start -->
+      <div class="me-auto pc-mob-drp">
+        <ul class="list-unstyled">
+          <!-- ======= Menu collapse Icon ===== -->
+          <li class="pc-h-item pc-sidebar-collapse">
+            <a href="#" class="pc-head-link ms-0" id="sidebar-hide">
+              <i class="ti ti-menu-2"></i>
+            </a>
+          </li>
+          <li class="pc-h-item pc-sidebar-popup">
+            <a href="#" class="pc-head-link ms-0" id="mobile-collapse">
+              <i class="ti ti-menu-2"></i>
+            </a>
+          </li>
+          <li class="dropdown pc-h-item d-inline-flex d-md-none">
+            <a class="pc-head-link dropdown-toggle arrow-none m-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+              <i class="ti ti-search"></i>
+            </a>
+            <div class="dropdown-menu pc-h-dropdown drp-search">
+              <form class="px-3">
+                <div class="form-group mb-0 d-flex align-items-center">
+                  <i data-feather="search"></i>
+                  <input type="search" class="form-control border-0 shadow-none" placeholder="Tìm kiếm...">
+                </div>
+              </form>
+            </div>
+          </li>
+          <li class="pc-h-item d-none d-md-inline-flex">
+            <form class="header-search">
+              <i data-feather="search" class="icon-search"></i>
+              <input type="search" class="form-control" placeholder="Tìm kiếm...">
+            </form>
+          </li>
+        </ul>
+      </div>
+      <!-- [Mobile Media Block end] -->
+      <div class="ms-auto">
+        <ul class="list-unstyled">
+          <li class="dropdown pc-h-item">
+            <a
+                    class="pc-head-link dropdown-toggle arrow-none me-0"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    role="button"
+                    aria-haspopup="false"
+                    aria-expanded="false"
+            >
+              <i class="ti ti-mail"></i>
+            </a>
+            <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
+              <div class="dropdown-header d-flex align-items-center justify-content-between">
+                <h5 class="m-0">Message</h5>
+                <a href="#!" class="pc-head-link bg-transparent"><i class="ti ti-x text-danger"></i></a>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-header px-0 text-wrap header-notification-scroll position-relative" style="max-height: calc(100vh - 215px)">
+                <div class="list-group list-group-flush w-100">
+                  <a class="list-group-item list-group-item-action">
+                    <div class="d-flex">
+                      <div class="flex-shrink-0">
+                        <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
+                      </div>
+                      <div class="flex-grow-1 ms-1">
+                        <span class="float-end text-muted">3:00 AM</span>
+                        <p class="text-body mb-1">It's <b>Cristina danny's</b> birthday today.</p>
+                        <span class="text-muted">2 min ago</span>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="text-center py-2">
+                <a href="#!" class="link-primary">View all</a>
+              </div>
+            </div>
+          </li>
+          <li class="dropdown pc-h-item header-user-profile">
+            <a
+                    class="pc-head-link dropdown-toggle arrow-none me-0"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    role="button"
+                    aria-haspopup="false"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false"
+            >
+              <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar">
+              <span class="user_name"></span>
+            </a>
+            <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown">
+              <div class="dropdown-header">
+                <div class="d-flex mb-1">
+                  <div class="flex-shrink-0">
+                    <img src="../assets/images/user/avatar-2.jpg" alt="user-image" class="user-avtar wid-35">
+                  </div>
+                  <div class="flex-grow-1 ms-3">
+                    <h6 class="mb-1 user_name"></h6>
+                    <span class="user_role"></span>
+                  </div>
+                  <button type="button" id="logoutBtn" class="pc-head-link bg-transparent" style="border: unset;" onclick="logoutBtn()"><i class="ti ti-power text-danger"></i></button>
+                </div>
+              </div>
+              <ul class="nav drp-tabs nav-fill nav-tabs" id="mydrpTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button
+                          class="nav-link active"
+                          id="drp-t1"
+                          data-bs-toggle="tab"
+                          data-bs-target="#drp-tab-1"
+                          type="button"
+                          role="tab"
+                          aria-controls="drp-tab-1"
+                          aria-selected="true"
+                  ><i class="ti ti-user"></i> Profile</button
+                  >
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button
+                          class="nav-link"
+                          id="drp-t2"
+                          data-bs-toggle="tab"
+                          data-bs-target="#drp-tab-2"
+                          type="button"
+                          role="tab"
+                          aria-controls="drp-tab-2"
+                          aria-selected="false"
+                  ><i class="ti ti-settings"></i> Setting</button
+                  >
+                </li>
+              </ul>
+              <div class="tab-content" id="mysrpTabContent">
+                <div class="tab-pane fade show active" id="drp-tab-1" role="tabpanel" aria-labelledby="drp-t1" tabindex="0">
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-edit-circle"></i>
+                    <span>Edit Profile</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-user"></i>
+                    <span>View Profile</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-clipboard-list"></i>
+                    <span>Social Profile</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-wallet"></i>
+                    <span>Billing</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-power"></i>
+                    <span onclick="logoutBtn()">Logout</span>
+                  </a>
+                </div>
+                <div class="tab-pane fade" id="drp-tab-2" role="tabpanel" aria-labelledby="drp-t2" tabindex="0">
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-help"></i>
+                    <span>Support</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-user"></i>
+                    <span>Account Settings</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-lock"></i>
+                    <span>Privacy Center</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-messages"></i>
+                    <span>Feedback</span>
+                  </a>
+                  <a href="#!" class="dropdown-item">
+                    <i class="ti ti-list"></i>
+                    <span>History</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </header>
+  <!-- [ Header Topbar ] end -->
+
+  <!-- [ Main Content ] start -->
+  <div class="pc-container">
+    <div class="pc-content">
+      <!-- [ breadcrumb ] start -->
+      <div class="page-header">
+        <div class="page-block">
+          <div class="row align-items-center">
+            <div class="col-md-12">
+              <div class="page-header-title">
+                <h2 class="mb-0">Công cụ tìm kiếm AI Research (SSE Real-time)</h2>
+              </div>
+              <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../dashboard/index.html">Home</a></li>
+                <li class="breadcrumb-item"><a href="javascript: void(0)">AI Tools</a></li>
+                <li class="breadcrumb-item" aria-current="page">AI Search Research</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- [ breadcrumb ] end -->
+
+      <!-- [ Main Content ] start -->
+      <div class="row">
+        <!-- [ Search Input ] start -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h5><i class="ti ti-search me-2"></i>Tìm kiếm với AI</h5>
+            </div>
+            <div class="card-body">
+              <!-- Search Input Area -->
+              <div class="search-input-area">
+                <h6 class="mb-3"><i class="ti ti-robot me-1"></i>Nhập câu hỏi hoặc từ khóa</h6>
+                
+                <div class="mb-3">
+                  <textarea id="searchQuery" class="form-control" rows="4" placeholder="VD: Trí tuệ nhân tạo trong giáo dục, Machine Learning algorithms, Blockchain technology..."></textarea>
+                </div>
+                
+                <!-- Focus Mode Selection -->
+                <div class="focus-mode-selector">
+                  <h6 class="mb-2"><i class="ti ti-target me-1"></i>Chế độ tìm kiếm</h6>
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="focusMode" id="webSearch" value="webSearch" checked>
+                        <label class="form-check-label" for="webSearch">
+                          <i class="ti ti-world me-1"></i>Web Search
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="focusMode" id="academicSearch" value="academicSearch">
+                        <label class="form-check-label" for="academicSearch">
+                          <i class="ti ti-school me-1"></i>Academic
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="focusMode" id="newsSearch" value="newsSearch">
+                        <label class="form-check-label" for="newsSearch">
+                          <i class="ti ti-news me-1"></i>News
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Advanced Options -->
+                <div class="mb-3">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAdvancedOptions()">
+                    <i class="ti ti-settings me-1"></i>
+                    <span id="advancedToggleText">Hiện tùy chọn nâng cao</span>
+                  </button>
+                  
+                  <div id="advancedOptions" class="mt-3" style="display: none;">
+                    <div class="border rounded p-3 bg-light">
+                      <div class="row">
+                        <div class="col-md-6">
+                          <label class="form-label">Streaming Mode</label>
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="enableStreaming" checked>
+                            <label class="form-check-label" for="enableStreaming">
+                              Kích hoạt streaming real-time
+                            </label>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">Language</label>
+                          <select id="searchLanguage" class="form-select form-select-sm">
+                            <option value="vi">Tiếng Việt</option>
+                            <option value="en">English</option>
+                            <option value="auto">Auto</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <button type="button" id="searchBtn" class="btn btn-primary btn-lg w-100">
+                  <i class="ti ti-search me-2"></i>Tìm kiếm với AI
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ Search Input ] end -->
+        
+        <!-- [ Search Results ] start -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h5><i class="ti ti-robot me-2"></i>Kết quả tìm kiếm</h5>
+            </div>
+            <div class="card-body">
+              <!-- Loading Spinner -->
+              <div id="loadingSpinner" class="loading-spinner">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Đang tìm kiếm...</span>
+                </div>
+                <p class="mt-3">AI đang tìm kiếm thông tin cho bạn...</p>
+              </div>
+
+              <!-- SSE Status Indicators -->
+              <div id="sseStatus" class="alert alert-info" style="display: none;">
+                <div class="d-flex align-items-center">
+                  <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                  <span id="sseStatusText">Đang kết nối với AI...</span>
+                </div>
+                <div class="mt-2">
+                  <small id="sseProgress" class="text-muted">Trạng thái: Khởi tạo</small>
+                </div>
+              </div>
+
+              <!-- Real-time SSE Content -->
+              <div id="sseContent" class="alert alert-success" style="display: none;">
+                <h6><i class="ti ti-robot me-2"></i>AI đang trả lời real-time:</h6>
+                <div id="sseContentText" class="mt-2 streaming-text" style="max-height: 300px; overflow-y: auto;"></div>
+              </div>
+              
+              <!-- Main Content Display Area -->
+              <div id="contentDisplayArea" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h5><i class="ti ti-sparkles me-2"></i>Kết quả tìm kiếm</h5>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyResults()">
+                      <i class="ti ti-copy me-1"></i>Copy
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="exportResults()">
+                      <i class="ti ti-download me-1"></i>Export
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Content Preview Area -->
+                <div id="contentPreview" class="content-preview-area">
+                  <!-- Search results will appear here -->
+                </div>
+              </div>
+              
+              <div id="emptyState" class="text-center py-5">
+                <i class="ti ti-search" style="font-size: 4rem; color: #ccc;"></i>
+                <h6 class="mt-3 text-muted">Chưa có kết quả tìm kiếm</h6>
+                <p class="text-muted">Nhập câu hỏi và bấm tìm kiếm để bắt đầu</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ Search Results ] end -->
+      </div>
+
+      <!-- [ Main Content ] end -->
+    </div>
+  </div>
+  <!-- [ Main Content ] end -->
+  
+  <footer class="pc-footer">
+    <div class="footer-wrapper container-fluid">
+      <div class="row">
+        <div class="col-sm my-1">
+          <p class="m-0">Website được tạo bởi TMA.</p>
+        </div>
+        <div class="col-auto my-1">
+          <ul class="list-inline footer-link mb-0">
+            <li class="list-inline-item"><a href="../index.html">Trang chủ</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Required Js -->
+  <!--Hàm check login-->
+  <script src="../assets/js/auth.js"></script>
+  <script>
+    requireAuth();
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const ok = await checkRole(['TEACHER', 'ADMIN']);
+      if (!ok) return;
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="../assets/js/plugins/popper.min.js"></script>
+  <script src="../assets/js/plugins/simplebar.min.js"></script>
+  <script src="../assets/js/plugins/bootstrap.min.js"></script>
+  <script src="../assets/js/fonts/custom-font.js"></script>
+  <script src="../assets/js/pcoded.js"></script>
+  <script src="../assets/js/plugins/feather.min.js"></script>
+  <script src="../assets/js/customer.js"></script>
+  <script src="../assets/js/include-layout.js"></script>
+
+  <script>layout_change('light');</script>
+  <script>change_box_container('false');</script>
+  <script>layout_rtl_change('false');</script>
+  <script>preset_change("preset-1");</script>
+  <script>font_change("Public-Sans");</script>
+
+  <script>
+    // Global variables
+    let currentSearchResults = null;
+    let isSearching = false;
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add event listener for search button
+      document.getElementById('searchBtn').addEventListener('click', performSearch);
+      
+      // Add Enter key support for search input
+      document.getElementById('searchQuery').addEventListener('keydown', function(e) {
+        if ((e.key === 'Enter' && e.ctrlKey) || (e.key === 'Enter' && e.shiftKey)) {
+          performSearch();
+        }
+      });
+    });
+
+    function logoutBtn() {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      window.location.href = '/login.html';
+    }
+
+    function toggleAdvancedOptions() {
+      const advancedOptions = document.getElementById('advancedOptions');
+      const toggleText = document.getElementById('advancedToggleText');
+      
+      if (advancedOptions.style.display === 'none') {
+        advancedOptions.style.display = 'block';
+        toggleText.textContent = 'Ẩn tùy chọn nâng cao';
+      } else {
+        advancedOptions.style.display = 'none';
+        toggleText.textContent = 'Hiện tùy chọn nâng cao';
+      }
+    }
+
+    // Main search function with streaming
+    async function performSearch() {
+      if (isSearching) {
+        return;
+      }
+
+      const query = document.getElementById('searchQuery').value.trim();
+      if (!query) {
+        alert('Vui lòng nhập câu hỏi hoặc từ khóa tìm kiếm');
+        return;
+      }
+
+      // Get focus mode
+      const focusMode = document.querySelector('input[name="focusMode"]:checked').value;
+      const enableStreaming = document.getElementById('enableStreaming').checked;
+      const language = document.getElementById('searchLanguage').value;
+
+      // Prepare request data based on Perplexica API structure
+      const requestData = {
+        chatModel: {
+          provider: "openai",
+          name: "gpt-4o-mini"
+        },
+        embeddingModel: {
+          provider: "openai", 
+          name: "text-embedding-3-large"
+        },
+        focusMode: focusMode,
+        query: query,
+        stream: enableStreaming
+      };
+
+      // Initialize UI state
+      initializeSearchUI();
+      
+      try {
+        if (enableStreaming) {
+          await streamSearch(requestData);
+        } else {
+          await regularSearch(requestData);
+        }
+      } catch (error) {
+        handleSearchError(error);
+      } finally {
+        isSearching = false;
+        document.getElementById('searchBtn').disabled = false;
+      }
+    }
+
+    // Initialize UI for searching
+    function initializeSearchUI() {
+      isSearching = true;
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('sseStatus').style.display = 'block';
+      document.getElementById('sseContent').style.display = 'block';
+      document.getElementById('searchBtn').disabled = true;
+      document.getElementById('sseContentText').innerHTML = '';
+      
+      updateStatus('Đang khởi tạo...', 'Chuẩn bị kết nối');
+    }
+
+    // Streaming search function
+    async function streamSearch(requestData) {
+      const url = 'https://research.aagents.vn/api/search';
+      
+      updateStatus('Đang kết nối...', 'Gửi yêu cầu tới AI');
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+          'Cache-Control': 'no-cache'
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      updateStatus('Đã kết nối!', 'Đang nhận dữ liệu từ AI');
+      
+      // Process streaming response
+      await processStreamingResponse(response);
+    }
+
+    // Regular (non-streaming) search
+    async function regularSearch(requestData) {
+      const url = 'https://research.aagents.vn/api/search';
+      
+      updateStatus('Đang tìm kiếm...', 'Xử lý yêu cầu');
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      // Process regular response
+      currentSearchResults = result;
+      displaySearchResults(result);
+    }
+
+    // Process streaming response with modern ReadableStream
+    async function processStreamingResponse(response) {
+      const reader = response.body
+        .pipeThrough(new TextDecoderStream())
+        .getReader();
+
+      let buffer = '';
+      let currentMessage = '';
+      let finalSearchData = null;
+      
+      const messageElement = createLogEntry('search-progress', '');
+      
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          
+          if (done) {
+            if (finalSearchData) {
+              await processFinalSearchResults(finalSearchData);
+            } else {
+              // Fallback: process accumulated message
+              await handleStreamingComplete(currentMessage);
+            }
+            break;
+          }
+
+          if (value) {
+            buffer += value;
+            const { events, remaining } = parseSSEEvents(buffer);
+            buffer = remaining;
+            
+            for (const event of events) {
+              const result = await handleStreamEvent(event, messageElement);
+              if (result.content) currentMessage += result.content;
+              if (result.finalData) finalSearchData = result.finalData;
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+        document.getElementById('searchBtn').disabled = false;
+      }
+    }
+
+    // Parse SSE events from buffer
+    function parseSSEEvents(buffer) {
+      const events = [];
+      const lines = buffer.split('\n');
+      let currentEvent = {};
+      let i = 0;
+      
+      while (i < lines.length) {
+        const line = lines[i].trim();
+        
+        if (line.startsWith('event:')) {
+          currentEvent.type = line.substring(6).trim();
+        } else if (line.startsWith('data:')) {
+          currentEvent.data = line.substring(5).trim();
+        } else if (line === '' && currentEvent.type) {
+          events.push({ ...currentEvent });
+          currentEvent = {};
+        }
+        i++;
+      }
+      
+      // Return remaining buffer content
+      const lastEventEnd = buffer.lastIndexOf('\n\n');
+      const remaining = lastEventEnd >= 0 ? buffer.substring(lastEventEnd + 2) : buffer;
+      
+      return { events, remaining };
+    }
+
+    // Handle individual stream events
+    async function handleStreamEvent(event, messageElement) {
+      const result = { content: '', finalData: null };
+      
+      switch (event.type) {
+        case 'start':
+          updateStatus('Bắt đầu!', 'AI đang xử lý yêu cầu');
+          createLogEntry('status', '🚀 Bắt đầu tìm kiếm');
+          break;
+          
+        case 'sources':
+          try {
+            const sources = JSON.parse(event.data);
+            updateStatus('Tìm nguồn...', 'Đang tìm kiếm nguồn thông tin');
+            createLogEntry('search-progress', `🔍 Tìm thấy ${sources.length} nguồn thông tin`);
+            displaySources(sources);
+          } catch (e) {
+            console.error('Error parsing sources:', e);
+          }
+          break;
+          
+        case 'response':
+          try {
+            const data = JSON.parse(event.data);
+            const chunk = data.message || data;
+            if (typeof chunk === 'string' && chunk.trim()) {
+              messageElement.textContent += chunk;
+              result.content = chunk;
+              autoScroll();
+            }
+          } catch (e) {
+            if (event.data && event.data.trim()) {
+              messageElement.textContent += event.data;
+              result.content = event.data;
+              autoScroll();
+            }
+          }
+          break;
+          
+        case 'done':
+          try {
+            const data = JSON.parse(event.data);
+            result.finalData = data;
+            createLogEntry('search-result', '🎆 Hoàn thành tìm kiếm!');
+          } catch (e) {
+            console.error('Error parsing final data:', e);
+          }
+          break;
+          
+        case 'error':
+          const errorMsg = event.data || 'Lỗi không xác định';
+          createLogEntry('status', `❌ Lỗi: ${errorMsg}`);
+          throw new Error(errorMsg);
+      }
+      
+      return result;
+    }
+
+    function updateStatus(statusText, progressText) {
+      document.getElementById('sseStatusText').textContent = statusText;
+      document.getElementById('sseProgress').textContent = `Trạng thái: ${progressText}`;
+    }
+
+    function handleSearchError(error) {
+      console.error('Search error:', error);
+      updateStatus('Lỗi!', error.message);
+      createLogEntry('status', `❌ Lỗi: ${error.message}`);
+      document.getElementById('searchBtn').disabled = false;
+      
+      setTimeout(() => {
+        document.getElementById('sseStatus').style.display = 'none';
+      }, 3000);
+    }
+
+    function createLogEntry(className, content) {
+      const div = document.createElement('div');
+      div.className = `log-entry ${className}`;
+      div.textContent = content;
+      document.getElementById('sseContentText').appendChild(div);
+      autoScroll();
+      return div;
+    }
+
+    function autoScroll() {
+      const contentEl = document.getElementById('sseContentText');
+      contentEl.scrollTo({
+        top: contentEl.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+
+    // Display sources during streaming
+    function displaySources(sources) {
+      if (!sources || sources.length === 0) return;
+      
+      const sourcesHtml = sources.map((source, index) => {
+        const title = source.metadata?.title || `Nguồn ${index + 1}`;
+        const url = source.metadata?.url || '#';
+        return `
+          <div class="source-item log-entry">
+            <strong>${title}</strong>
+            ${url !== '#' ? `<br><small><a href="${url}" target="_blank">${url}</a></small>` : ''}
+          </div>
+        `;
+      }).join('');
+      
+      const sourcesDiv = document.createElement('div');
+      sourcesDiv.innerHTML = `
+        <div class="log-entry search-progress">
+          📚 Nguồn thông tin:
+          ${sourcesHtml}
+        </div>
+      `;
+      
+      document.getElementById('sseContentText').appendChild(sourcesDiv);
+      autoScroll();
+    }
+
+    // Process final search results
+    async function processFinalSearchResults(finalData) {
+      console.log('Processing final search results:', finalData);
+      currentSearchResults = finalData;
+      displaySearchResults(finalData);
+      
+      setTimeout(() => {
+        document.getElementById('sseStatus').style.display = 'none';
+      }, 2000);
+    }
+
+    // Display search results in the content area
+    function displaySearchResults(results) {
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('contentDisplayArea').style.display = 'block';
+      
+      const contentPreview = document.getElementById('contentPreview');
+      let html = '';
+      
+      // Display main message
+      if (results.message) {
+        html += `
+          <div class="mb-4">
+            <h6 class="text-primary"><i class="ti ti-robot me-1"></i>AI Response:</h6>
+            <div class="p-3 bg-white border rounded">
+              ${results.message.replace(/\n/g, '<br>')}
+            </div>
+          </div>
+        `;
+      }
+      
+      // Display sources
+      if (results.sources && results.sources.length > 0) {
+        html += `
+          <div class="mb-4">
+            <h6 class="text-success"><i class="ti ti-link me-1"></i>Sources (${results.sources.length}):</h6>
+        `;
+        
+        results.sources.forEach((source, index) => {
+          const title = source.metadata?.title || `Source ${index + 1}`;
+          const url = source.metadata?.url || '#';
+          const content = source.pageContent ? 
+            source.pageContent.substring(0, 200) + '...' : 
+            'Content not available';
+          
+          html += `
+            <div class="source-card">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <strong class="text-dark">${title}</strong>
+                <small class="text-muted">#${index + 1}</small>
+              </div>
+              <p class="small text-muted mb-2">${content}</p>
+              ${url !== '#' ? `
+                <a href="${url}" target="_blank" class="small text-primary text-decoration-none">
+                  <i class="ti ti-external-link me-1"></i>Visit Source
+                </a>
+              ` : ''}
+            </div>
+          `;
+        });
+        
+        html += '</div>';
+      }
+      
+      // If no results
+      if (!results.message && (!results.sources || results.sources.length === 0)) {
+        html = `
+          <div class="text-center py-4 text-muted">
+            <i class="ti ti-search-off mb-2" style="font-size: 2rem;"></i>
+            <p>No results found</p>
+          </div>
+        `;
+      }
+      
+      contentPreview.innerHTML = html;
+    }
+
+    // Fallback for when streaming doesn't provide complete data
+    async function handleStreamingComplete(accumulatedContent) {
+      if (!accumulatedContent || accumulatedContent.length < 10) {
+        createLogEntry('status', '⚠️ Không nhận được kết quả từ backend');
+        return;
+      }
+      
+      // Show raw content as fallback
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('contentDisplayArea').style.display = 'block';
+      document.getElementById('contentPreview').innerHTML = `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+          <h6>⚠️ Raw Search Results</h6>
+          <div style="background: white; padding: 15px; border-radius: 4px; white-space: pre-wrap; font-family: monospace; max-height: 400px; overflow-y: auto;">
+            ${accumulatedContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+          </div>
+          <p style="margin-top: 15px; color: #666;">
+            <strong>Note:</strong> Raw content displayed due to incomplete structured data from backend.
+          </p>
+        </div>
+      `;
+      
+      setTimeout(() => {
+        document.getElementById('sseStatus').style.display = 'none';
+      }, 2000);
+    }
+
+    // Copy results to clipboard
+    async function copyResults() {
+      if (!currentSearchResults) {
+        alert('Không có kết quả nào để copy');
+        return;
+      }
+      
+      let text = '';
+      if (currentSearchResults.message) {
+        text += currentSearchResults.message + '\n\n';
+      }
+      
+      if (currentSearchResults.sources && currentSearchResults.sources.length > 0) {
+        text += 'SOURCES:\n';
+        currentSearchResults.sources.forEach((source, index) => {
+          text += `${index + 1}. ${source.metadata?.title || 'Untitled'}\n`;
+          if (source.metadata?.url) text += `   ${source.metadata.url}\n`;
+          text += '\n';
+        });
+      }
+      
+      try {
+        await navigator.clipboard.writeText(text);
+        alert('✅ Đã copy kết quả vào clipboard!');
+      } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        alert('❌ Không thể copy. Vui lòng chọn và copy thủ công.');
+      }
+    }
+
+    // Export results
+    function exportResults() {
+      if (!currentSearchResults) {
+        alert('Không có kết quả nào để export');
+        return;
+      }
+      
+      let content = `AI Search Results - ${new Date().toLocaleString('vi-VN')}\n\n`;
+      
+      if (currentSearchResults.message) {
+        content += `ANSWER:\n${currentSearchResults.message}\n\n`;
+      }
+      
+      if (currentSearchResults.sources && currentSearchResults.sources.length > 0) {
+        content += `SOURCES (${currentSearchResults.sources.length}):\n\n`;
+        currentSearchResults.sources.forEach((source, index) => {
+          content += `${index + 1}. ${source.metadata?.title || 'Untitled'}\n`;
+          if (source.metadata?.url) content += `   URL: ${source.metadata.url}\n`;
+          if (source.pageContent) content += `   Content: ${source.pageContent.substring(0, 300)}...\n`;
+          content += '\n';
+        });
+      }
+      
+      // Create and download file
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ai-search-results-${Date.now()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+  
+  <!-- [Chat Widget] -->
+  <script src="../assets/js/chat-widget-init.js"></script>
+  
+</body>
+<!-- [Body] end -->
+</html>
