@@ -992,6 +992,7 @@
 
     function displayResults(results) {
       resultsContainer.innerHTML = '';
+      globalResults = results; // Store for copy function
       
       let successCount = 0;
       let errorCount = 0;
@@ -1010,7 +1011,7 @@
         
         const iconClass = isError ? 'ti-alert-circle text-danger' : 'ti-file-text';
         const copyButtonHtml = isError ? '' : `
-          <button class="copy-btn" onclick="copyToClipboard('${result.text.replace(/'/g, "\\'")}', ${index})">
+          <button class="copy-btn" onclick="copyToClipboard(${index})">
             <i class="ti ti-copy me-1"></i>Sao chép
           </button>
         `;
@@ -1052,7 +1053,16 @@
       resultsSection.scrollIntoView({ behavior: 'smooth' });
     }
 
-    function copyToClipboard(text, index) {
+    // Store results globally for copy function
+    let globalResults = [];
+    
+    function copyToClipboard(index) {
+      const text = globalResults[index]?.text || '';
+      if (!text) {
+        showAlert('Không có văn bản để sao chép', 'error');
+        return;
+      }
+      
       navigator.clipboard.writeText(text).then(() => {
         showAlert('Đã sao chép văn bản vào clipboard');
       }).catch(() => {
