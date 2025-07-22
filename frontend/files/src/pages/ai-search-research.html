@@ -595,20 +595,16 @@
       const enableStreaming = document.getElementById('enableStreaming').checked;
       const language = document.getElementById('searchLanguage').value;
 
-      // Prepare request data based on Perplexica API structure
+      // Prepare request data based on working API structure
       const requestData = {
-        chatModel: {
-          provider: "openai",
-          name: "gpt-4o-mini"
-        },
-        embeddingModel: {
-          provider: "openai", 
-          name: "text-embedding-3-large"
-        },
         focusMode: focusMode,
-        query: query,
-        stream: enableStreaming
+        query: query
       };
+      
+      // Add optional parameters only if needed
+      if (language !== 'auto') {
+        requestData.language = language;
+      }
 
       // Initialize UI state
       initializeSearchUI();
@@ -621,6 +617,7 @@
         }
       } catch (error) {
         handleSearchError(error);
+        await handleSearchFailure(error);
       } finally {
         isSearching = false;
         document.getElementById('searchBtn').disabled = false;
@@ -639,7 +636,7 @@
       updateStatus('Đang khởi tạo...', 'Chuẩn bị kết nối');
     }
 
-    // Streaming search function
+    // Streaming search function - simplified for JSON API
     async function streamSearch(requestData) {
       const url = 'https://research.aagents.vn/api/search';
       
@@ -649,8 +646,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'text/event-stream',
-          'Cache-Control': 'no-cache'
+          'Accept': 'application/json'
         },
         body: JSON.stringify(requestData)
       });
@@ -659,10 +655,14 @@
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      updateStatus('Đã kết nối!', 'Đang nhận dữ liệu từ AI');
+      updateStatus('Đã kết nối!', 'Đang xử lý phản hồi');
       
-      // Process streaming response
-      await processStreamingResponse(response);
+      // Process JSON response (API doesn't support real streaming)
+      const result = await response.json();
+      currentSearchResults = result;
+      
+      // Simulate streaming effect for better UX
+      await simulateStreamingDisplay(result);
     }
 
     // Regular (non-streaming) search
@@ -691,135 +691,52 @@
       displaySearchResults(result);
     }
 
-    // Process streaming response with modern ReadableStream
-    async function processStreamingResponse(response) {
-      const reader = response.body
-        .pipeThrough(new TextDecoderStream())
-        .getReader();
-
-      let buffer = '';
-      let currentMessage = '';
-      let finalSearchData = null;
+    // Simulate streaming display for better UX
+    async function simulateStreamingDisplay(result) {
+      updateStatus('Đang hiển thị kết quả...', 'Xử lý dữ liệu');
       
-      const messageElement = createLogEntry('search-progress', '');
+      // Show sources first if available
+      if (result.sources && result.sources.length > 0) {
+        createLogEntry('search-progress', `🔍 Tìm thấy ${result.sources.length} nguồn thông tin`);
+        displaySources(result.sources);
+        await sleep(500);
+      }
       
-      try {
-        while (true) {
-          const { value, done } = await reader.read();
-          
-          if (done) {
-            if (finalSearchData) {
-              await processFinalSearchResults(finalSearchData);
-            } else {
-              // Fallback: process accumulated message
-              await handleStreamingComplete(currentMessage);
-            }
-            break;
-          }
-
-          if (value) {
-            buffer += value;
-            const { events, remaining } = parseSSEEvents(buffer);
-            buffer = remaining;
-            
-            for (const event of events) {
-              const result = await handleStreamEvent(event, messageElement);
-              if (result.content) currentMessage += result.content;
-              if (result.finalData) finalSearchData = result.finalData;
-            }
-          }
+      // Show message with typing effect
+      if (result.message) {
+        const messageElement = createLogEntry('search-progress', '');
+        await typewriterEffect(messageElement, result.message);
+        await sleep(500);
+      }
+      
+      createLogEntry('search-result', '🎆 Hoàn thành tìm kiếm!');
+      
+      // Display final results
+      displaySearchResults(result);
+      
+      setTimeout(() => {
+        document.getElementById('sseStatus').style.display = 'none';
+      }, 2000);
+    }
+    
+    // Helper function for sleep
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    // Typewriter effect for messages
+    async function typewriterEffect(element, text, speed = 30) {
+      const words = text.split(' ');
+      for (let i = 0; i < words.length; i++) {
+        element.textContent += words[i] + ' ';
+        autoScroll();
+        if (i < words.length - 1) {
+          await sleep(speed);
         }
-      } finally {
-        reader.releaseLock();
-        document.getElementById('searchBtn').disabled = false;
       }
     }
 
-    // Parse SSE events from buffer
-    function parseSSEEvents(buffer) {
-      const events = [];
-      const lines = buffer.split('\n');
-      let currentEvent = {};
-      let i = 0;
-      
-      while (i < lines.length) {
-        const line = lines[i].trim();
-        
-        if (line.startsWith('event:')) {
-          currentEvent.type = line.substring(6).trim();
-        } else if (line.startsWith('data:')) {
-          currentEvent.data = line.substring(5).trim();
-        } else if (line === '' && currentEvent.type) {
-          events.push({ ...currentEvent });
-          currentEvent = {};
-        }
-        i++;
-      }
-      
-      // Return remaining buffer content
-      const lastEventEnd = buffer.lastIndexOf('\n\n');
-      const remaining = lastEventEnd >= 0 ? buffer.substring(lastEventEnd + 2) : buffer;
-      
-      return { events, remaining };
-    }
-
-    // Handle individual stream events
-    async function handleStreamEvent(event, messageElement) {
-      const result = { content: '', finalData: null };
-      
-      switch (event.type) {
-        case 'start':
-          updateStatus('Bắt đầu!', 'AI đang xử lý yêu cầu');
-          createLogEntry('status', '🚀 Bắt đầu tìm kiếm');
-          break;
-          
-        case 'sources':
-          try {
-            const sources = JSON.parse(event.data);
-            updateStatus('Tìm nguồn...', 'Đang tìm kiếm nguồn thông tin');
-            createLogEntry('search-progress', `🔍 Tìm thấy ${sources.length} nguồn thông tin`);
-            displaySources(sources);
-          } catch (e) {
-            console.error('Error parsing sources:', e);
-          }
-          break;
-          
-        case 'response':
-          try {
-            const data = JSON.parse(event.data);
-            const chunk = data.message || data;
-            if (typeof chunk === 'string' && chunk.trim()) {
-              messageElement.textContent += chunk;
-              result.content = chunk;
-              autoScroll();
-            }
-          } catch (e) {
-            if (event.data && event.data.trim()) {
-              messageElement.textContent += event.data;
-              result.content = event.data;
-              autoScroll();
-            }
-          }
-          break;
-          
-        case 'done':
-          try {
-            const data = JSON.parse(event.data);
-            result.finalData = data;
-            createLogEntry('search-result', '🎆 Hoàn thành tìm kiếm!');
-          } catch (e) {
-            console.error('Error parsing final data:', e);
-          }
-          break;
-          
-        case 'error':
-          const errorMsg = event.data || 'Lỗi không xác định';
-          createLogEntry('status', `❌ Lỗi: ${errorMsg}`);
-          throw new Error(errorMsg);
-      }
-      
-      return result;
-    }
+    // Removed complex SSE parsing - API returns simple JSON response
 
     function updateStatus(statusText, progressText) {
       document.getElementById('sseStatusText').textContent = statusText;
@@ -881,9 +798,9 @@
       autoScroll();
     }
 
-    // Process final search results
+    // Process search results (simplified)
     async function processFinalSearchResults(finalData) {
-      console.log('Processing final search results:', finalData);
+      console.log('Processing search results:', finalData);
       currentSearchResults = finalData;
       displaySearchResults(finalData);
       
@@ -958,25 +875,21 @@
       contentPreview.innerHTML = html;
     }
 
-    // Fallback for when streaming doesn't provide complete data
-    async function handleStreamingComplete(accumulatedContent) {
-      if (!accumulatedContent || accumulatedContent.length < 10) {
-        createLogEntry('status', '⚠️ Không nhận được kết quả từ backend');
-        return;
-      }
+    // Error handling for failed requests
+    async function handleSearchFailure(error) {
+      createLogEntry('status', '⚠️ Không nhận được kết quả từ backend');
       
-      // Show raw content as fallback
       document.getElementById('emptyState').style.display = 'none';
       document.getElementById('contentDisplayArea').style.display = 'block';
       document.getElementById('contentPreview').innerHTML = `
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
-          <h6>⚠️ Raw Search Results</h6>
-          <div style="background: white; padding: 15px; border-radius: 4px; white-space: pre-wrap; font-family: monospace; max-height: 400px; overflow-y: auto;">
-            ${accumulatedContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
-          </div>
-          <p style="margin-top: 15px; color: #666;">
-            <strong>Note:</strong> Raw content displayed due to incomplete structured data from backend.
+        <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border: 1px solid #ffeaa7;">
+          <h6 style="color: #856404;">⚠️ Lỗi kết nối API</h6>
+          <p style="color: #856404; margin-bottom: 15px;">
+            ${error.message}
           </p>
+          <button class="btn btn-warning btn-sm" onclick="location.reload()">
+            <i class="ti ti-refresh me-1"></i>Thử lại
+          </button>
         </div>
       `;
       
