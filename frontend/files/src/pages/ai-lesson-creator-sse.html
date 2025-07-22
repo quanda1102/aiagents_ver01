@@ -971,16 +971,186 @@
   <script>font_change("Public-Sans");</script>
 
   <script>
-    // Global variables for form data
+    // CRITICAL: Define global variables FIRST
     let selectedDocument = {
       subject: null,
       grade: null,
       lesson: null
     };
-
-    let extractedDocumentText = '';  // For reference documents (files/URLs)
+    let extractedDocumentText = '';  
     let extractedFileName = '';
-    let selectedDocumentContent = '';  // For selected document from backend API
+    let selectedDocumentContent = '';
+
+    // CRITICAL: Define global functions immediately after variables
+    function onSubjectChange() {
+      const subjectSelect = document.getElementById('subjectSelect');
+      const gradeSelect = document.getElementById('gradeSelect');
+      const lessonSelect = document.getElementById('lessonSelect');
+      
+      // Clear and disable dependent dropdowns
+      gradeSelect.innerHTML = '<option value="">Chọn lớp</option>';
+      lessonSelect.innerHTML = '<option value="">Chọn bài học</option>';
+      gradeSelect.disabled = true;
+      lessonSelect.disabled = true;
+      
+      // Hide document preview
+      document.getElementById('documentContentPreview').style.display = 'none';
+      selectedDocumentContent = '';
+      
+      // Update selected document
+      selectedDocument.subject = subjectSelect.value;
+      selectedDocument.grade = null;
+      selectedDocument.lesson = null;
+      
+      // Disable generate button until lesson is selected
+      document.getElementById('generateBtn').disabled = true;
+      
+      if (subjectSelect.value) {
+        // Populate grades based on subject
+        populateGrades(subjectSelect.value);
+        gradeSelect.disabled = false;
+      }
+    }
+
+    function onGradeChange() {
+      const gradeSelect = document.getElementById('gradeSelect');
+      const lessonSelect = document.getElementById('lessonSelect');
+      
+      // Clear and disable lesson dropdown
+      lessonSelect.innerHTML = '<option value="">Chọn bài học</option>';
+      lessonSelect.disabled = true;
+      
+      // Hide document preview
+      document.getElementById('documentContentPreview').style.display = 'none';
+      selectedDocumentContent = '';
+      
+      // Update selected document
+      selectedDocument.grade = gradeSelect.value;
+      selectedDocument.lesson = null;
+      
+      // Disable generate button until lesson is selected
+      document.getElementById('generateBtn').disabled = true;
+      
+      if (gradeSelect.value) {
+        // Populate lessons based on grade
+        populateLessons(selectedDocument.subject, gradeSelect.value);
+        lessonSelect.disabled = false;
+      }
+    }
+
+    async function onLessonChange() {
+      const lessonSelect = document.getElementById('lessonSelect');
+      
+      // Update selected document
+      selectedDocument.lesson = lessonSelect.value;
+      
+      if (lessonSelect.value) {
+        // Load document content from backend
+        await loadDocumentContent(selectedDocument.subject, selectedDocument.grade, selectedDocument.lesson);
+        
+        // Enable generate button
+        document.getElementById('generateBtn').disabled = false;
+      } else {
+        // Hide document preview
+        document.getElementById('documentContentPreview').style.display = 'none';
+        selectedDocumentContent = '';
+        
+        // Disable generate button
+        document.getElementById('generateBtn').disabled = true;
+      }
+    }
+
+    function toggleAdvancedConfig() {
+      const advancedConfig = document.getElementById('advancedConfig');
+      const toggleText = document.getElementById('advancedToggleText');
+      
+      if (advancedConfig.style.display === 'none') {
+        advancedConfig.style.display = 'block';
+        toggleText.textContent = 'Ẩn cấu hình nâng cao';
+      } else {
+        advancedConfig.style.display = 'none';
+        toggleText.textContent = 'Hiện cấu hình nâng cao';
+      }
+    }
+
+    function toggleDocumentContent() {
+      const details = document.getElementById('documentContentDetails');
+      const button = details.previousElementSibling.querySelector('button');
+      
+      if (details.style.display === 'none') {
+        details.style.display = 'block';
+        button.innerHTML = '<i class="ti ti-eye-off me-1"></i>Ẩn nội dung';
+      } else {
+        details.style.display = 'none';
+        button.innerHTML = '<i class="ti ti-eye me-1"></i>Xem nội dung';
+      }
+    }
+
+    function removeFile() {
+      document.getElementById('uploadedFile').style.display = 'none';
+      document.getElementById('extractedTextCard').style.display = 'none';
+      document.getElementById('fileUploadArea').style.display = 'block';
+      document.getElementById('documentFile').value = '';
+      extractedDocumentText = '';
+      extractedFileName = '';
+    }
+
+    async function loadFromUrl() {
+      const urlInput = document.getElementById('documentUrl');
+      let url = urlInput.value.trim();
+      
+      if (!url) {
+        alert('Vui lòng nhập URL tài liệu');
+        return;
+      }
+      
+      try {
+        // Show loading state
+        const button = document.querySelector('[onclick="loadFromUrl()"]');
+        button.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i>Đang tải...';
+        button.disabled = true;
+        
+        // Process the URL (this function exists further down)
+        await processUrlContent(url);
+        
+      } catch (error) {
+        console.error('Error loading from URL:', error);
+        alert('Lỗi khi tải nội dung từ URL: ' + error.message);
+      } finally {
+        // Reset button
+        const button = document.querySelector('[onclick="loadFromUrl()"]');
+        button.innerHTML = '<i class="ti ti-download me-1"></i>Tải nội dung';
+        button.disabled = false;
+      }
+    }
+
+    function toggleExistingDocsSection() {
+      const section = document.getElementById('existingDocsSection');
+      if (section.style.display === 'none') {
+        section.style.display = 'block';
+        loadExistingDocuments();
+      } else {
+        section.style.display = 'none';
+      }
+    }
+
+    function logoutBtn() {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      window.location.href = '/pages/login.html';
+    }
+
+    function saveEditedDocument() {
+      alert('Tính năng lưu tài liệu đang được phát triển');
+    }
+
+    function exportEditedDocument() {
+      alert('Tính năng xuất tài liệu đang được phát triển');
+    }
+
+    function loadServerDocuments() {
+      alert('Đang tải danh sách tài liệu từ server...');
+    }
 
     // Function to convert Vietnamese text to ASCII-safe filename
     function createSafeFilename(text) {
@@ -1047,6 +1217,11 @@
       // Add event listener for generate button
       document.getElementById('generateBtn').addEventListener('click', generateLessonContent);
       
+      // Add event listeners for dropdown changes
+      document.getElementById('subjectSelect').addEventListener('change', onSubjectChange);
+      document.getElementById('gradeSelect').addEventListener('change', onGradeChange);
+      document.getElementById('lessonSelect').addEventListener('change', onLessonChange);
+      
       // Add Enter key support for URL input
       document.getElementById('documentUrl').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
@@ -1054,87 +1229,6 @@
         }
       });
     });
-
-    // Subject selection change handler
-    async function onSubjectChange() {
-      const subjectSelect = document.getElementById('subjectSelect');
-      const gradeSelect = document.getElementById('gradeSelect');
-      const lessonSelect = document.getElementById('lessonSelect');
-      
-      // Clear and disable dependent dropdowns
-      gradeSelect.innerHTML = '<option value="">Chọn lớp</option>';
-      lessonSelect.innerHTML = '<option value="">Chọn bài học</option>';
-      gradeSelect.disabled = true;
-      lessonSelect.disabled = true;
-      
-      // Hide document preview
-      document.getElementById('documentContentPreview').style.display = 'none';
-      selectedDocumentContent = '';
-      
-      // Update selected document
-      selectedDocument.subject = subjectSelect.value;
-      selectedDocument.grade = null;
-      selectedDocument.lesson = null;
-      
-      // Disable generate button until lesson is selected
-      document.getElementById('generateBtn').disabled = true;
-      
-      if (subjectSelect.value) {
-        // Populate grades based on subject
-        populateGrades(subjectSelect.value);
-        gradeSelect.disabled = false;
-      }
-    }
-
-    // Grade selection change handler
-    function onGradeChange() {
-      const gradeSelect = document.getElementById('gradeSelect');
-      const lessonSelect = document.getElementById('lessonSelect');
-      
-      // Clear and disable lesson dropdown
-      lessonSelect.innerHTML = '<option value="">Chọn bài học</option>';
-      lessonSelect.disabled = true;
-      
-      // Hide document preview
-      document.getElementById('documentContentPreview').style.display = 'none';
-      selectedDocumentContent = '';
-      
-      // Update selected document
-      selectedDocument.grade = gradeSelect.value;
-      selectedDocument.lesson = null;
-      
-      // Disable generate button until lesson is selected
-      document.getElementById('generateBtn').disabled = true;
-      
-      if (gradeSelect.value) {
-        // Populate lessons based on grade
-        populateLessons(selectedDocument.subject, gradeSelect.value);
-        lessonSelect.disabled = false;
-      }
-    }
-
-    // Lesson selection change handler
-    async function onLessonChange() {
-      const lessonSelect = document.getElementById('lessonSelect');
-      
-      // Update selected document
-      selectedDocument.lesson = lessonSelect.value;
-      
-      if (lessonSelect.value) {
-        // Load document content from backend
-        await loadDocumentContent(selectedDocument.subject, selectedDocument.grade, selectedDocument.lesson);
-        
-        // Enable generate button
-        document.getElementById('generateBtn').disabled = false;
-      } else {
-        // Hide document preview
-        document.getElementById('documentContentPreview').style.display = 'none';
-        selectedDocumentContent = '';
-        
-        // Disable generate button
-        document.getElementById('generateBtn').disabled = true;
-      }
-    }
 
     // Populate grades dropdown based on subject
     function populateGrades(subject) {
@@ -1262,19 +1356,6 @@
       }
     }
 
-    // Toggle document content visibility
-    function toggleDocumentContent() {
-      const details = document.getElementById('documentContentDetails');
-      const button = details.previousElementSibling.querySelector('button');
-      
-      if (details.style.display === 'none') {
-        details.style.display = 'block';
-        button.innerHTML = '<i class="ti ti-eye-off me-1"></i>Ẩn nội dung';
-      } else {
-        details.style.display = 'none';
-        button.innerHTML = '<i class="ti ti-eye me-1"></i>Xem nội dung';
-      }
-    }
 
     function initializeTinyMCE() {
       // Initialize main content editor (VIEW-ONLY MODE)
@@ -3817,19 +3898,6 @@
       alert('Nội dung bài giảng được tạo 100% chính xác và không thể chỉnh sửa.');
     }
 
-    // Toggle advanced configuration visibility
-    function toggleAdvancedConfig() {
-      const advancedConfig = document.getElementById('advancedConfig');
-      const toggleText = document.getElementById('advancedToggleText');
-      
-      if (advancedConfig.style.display === 'none') {
-        advancedConfig.style.display = 'block';
-        toggleText.textContent = 'Ẩn cấu hình nâng cao';
-      } else {
-        advancedConfig.style.display = 'none';
-        toggleText.textContent = 'Hiện cấu hình nâng cao';
-      }
-    }
 
     // ===== EXISTING DOCUMENTS FUNCTIONS =====
     

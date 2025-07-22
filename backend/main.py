@@ -1,3 +1,6 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -15,6 +18,8 @@ from utils.pydantic_helper import format_validation_errors
 from routes.dox_formatter_routes import router as docx_formatter_router
 from routes.lecture_docx_routes import router as lecture_docx_router
 from routes.lecture_format_routes import router as lecture_format_router
+from starlette.middleware.sessions import SessionMiddleware
+
 
 app = FastAPI(
     title="AI Agent Backend API",
@@ -41,6 +46,8 @@ app.include_router(docx_formatter_router)
 app.include_router(lecture_docx_router)
 app.include_router(lecture_format_router)
 app.include_router(lecture_sse_router)
+# Add session middleware
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "your-secret-key"))
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):

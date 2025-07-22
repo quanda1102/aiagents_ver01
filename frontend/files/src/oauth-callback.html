@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>OAuth Callback</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  <!-- [Favicon] icon -->
+  <link rel="icon" href="assets/images/favicon.svg" type="image/x-icon">
+  <!-- [Google Font] Family -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" id="main-font-link">
+  <!-- [Template CSS Files] -->
+  <link rel="stylesheet" href="assets/css/style.css" id="main-style-link">
+  <link rel="stylesheet" href="assets/css/style-preset.css">
+</head>
+
+<body>
+  <!-- [ Pre-loader ] start -->
+  <div class="loader-bg">
+    <div class="loader-track">
+      <div class="loader-fill"></div>
+    </div>
+  </div>
+  <!-- [ Pre-loader ] End -->
+
+  <div class="auth-main">
+    <div class="auth-wrapper v3">
+      <div class="auth-form">
+        <div class="card my-5">
+          <div class="card-body text-center">
+            <h3 class="mb-3">Đang xử lý đăng nhập...</h3>
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Required Js -->
+  <script src="assets/js/plugins/popper.min.js"></script>
+  <script src="assets/js/plugins/simplebar.min.js"></script>
+  <script src="assets/js/plugins/bootstrap.min.js"></script>
+  <script src="assets/js/fonts/custom-font.js"></script>
+  <script src="assets/js/pcoded.js"></script>
+  <script src="assets/js/plugins/feather.min.js"></script>
+
+  <script>
+    // Parse the token from URL parameters
+    function getTokenFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('token');
+    }
+
+    // Handle OAuth callback
+    function handleOAuthCallback() {
+      const token = getTokenFromURL();
+      
+      if (token) {
+        // Store the token in localStorage
+        localStorage.setItem('access_token', token);
+        
+        // Show success message
+        alert('Đăng nhập thành công!');
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard/index.html';
+      } else {
+        // No token found, show error
+        alert('Lỗi đăng nhập với Google. Vui lòng thử lại.');
+        
+        // Redirect back to login page
+        window.location.href = '/pages/login.html';
+      }
+    }
+
+    // Run the callback handler when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      handleOAuthCallback();
+    });
+  </script>
+</body>
+</html>
