@@ -4,7 +4,7 @@ load_dotenv()
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
+# from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from routes.quiz_routes import router as quiz_router
 from routes.auth_routes import router as auth_router
@@ -26,13 +26,13 @@ app = FastAPI(
     description="Backend API",
     version="1.0.0"
 )
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=False,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 # Include all routes
 app.include_router(auth_router)
