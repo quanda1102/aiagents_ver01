@@ -5,7 +5,7 @@ from io import BytesIO
 from pdf2image import convert_from_bytes
 from openai import OpenAI
 import asyncio
-import fitz  # PyMuPDF
+import pymupdf as fitz  # PyMuPDF - Using modern import with alias for compatibility
 from PIL import Image
 import pypdfium2 as pdfium
 
