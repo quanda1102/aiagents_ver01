@@ -83,6 +83,32 @@
                         <button class="btn btn-success m-b-10" data-bs-toggle="modal" data-bs-target="#createUserModal">
                             + Thêm người dùng
                         </button>
+                        <form id="searchForm" class="row g-2 mb-3">
+                            <div class="col-md-3">
+                                <input type="text" name="email" class="form-control" placeholder="Email">
+                            </div>
+                            <div class="col-md-2">
+                                <select name="gender" class="form-select">
+                                    <option value="">Giới tính</option>
+                                    <option value="male">Nam</option>
+                                    <option value="female">Nữ</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="role" class="form-select">
+                                    <option value="">Vai trò</option>
+                                    <option value="STUDENT">Học sinh</option>
+                                    <option value="TEACHER">Giáo viên</option>
+                                    <option value="ADMIN">Quản trị</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select id="filterClassSelect" name="class_name" class="form-select" multiple></select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Tìm kiếm</button>
+                            </div>
+                        </form>
                         <table class="table table-bordered table-hover">
                             <thead class="table-secondary">
                             <tr>
@@ -100,6 +126,9 @@
                             <!-- Dữ liệu người dùng render tại đây -->
                             </tbody>
                         </table>
+                        <nav>
+                            <ul id="pagination" class="pagination justify-content-center"></ul>
+                        </nav>
                         <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog">
                                 <form class="modal-content" id="createUserForm">
@@ -234,31 +263,104 @@
         'Authorization': 'Bearer ' + token
     };
 
-    // ===== 1. Load danh sách lớp học =====
-    async function loadClassOptions() {
+    // ===== STATE MANAGEMENT =====
+    let currentPage = 1;
+    const PAGE_SIZE = 20; // Giống với page_size mặc định của backend
+    let currentFilters = {}; // Lưu trữ các bộ lọc tìm kiếm hiện tại
+
+    // ===== UTILITY FUNCTIONS =====
+
+    // Lấy API URL (Giả sử bạn có hàm này)
+    function getApiUrl(resource) {
+        // Thay thế bằng logic lấy URL API của bạn
+        if (resource === 'USERS') {
+            return 'https://api.aagents.vn/api/v1/users';
+        }
+        return '';
+    }
+
+    // Populate class options for any select element
+    async function populateClassSelect(selectElement, selectedValues = []) {
         try {
             const res = await fetch('https://aimarketingvn.com/webhook/list-class');
             const data = await res.json();
-            const classSelect = document.getElementById('classSelect');
-            classSelect.innerHTML = '';
-
+            selectElement.innerHTML = ''; // Xóa các option cũ
             data.forEach(item => {
                 const option = document.createElement('option');
                 option.value = item.mon;
                 option.textContent = item.mon;
-                classSelect.appendChild(option);
+                if (selectedValues.includes(item.mon)) {
+                    option.selected = true;
+                }
+                selectElement.appendChild(option);
             });
         } catch (error) {
             console.error('Lỗi tải danh sách lớp:', error);
         }
     }
 
-    // ===== 2. Load danh sách người dùng =====
-    // ===== 2. Load danh sách người dùng =====
-    async function loadUsers() {
+
+    // ===== 1. Load danh sách lớp học cho CÁC dropdown =====
+    function loadAllClassSelects() {
+        populateClassSelect(document.getElementById('classSelect')); // For create modal
+        populateClassSelect(document.getElementById('filterClassSelect')); // For search form
+    }
+
+    // ===== 2. Render Pagination =====
+    function renderPagination(itemsOnPage) {
+        const paginationEl = document.getElementById('pagination');
+        paginationEl.innerHTML = '';
+
+        const prevDisabled = currentPage === 1;
+        const nextDisabled = itemsOnPage < PAGE_SIZE;
+
+        paginationEl.innerHTML = `
+            <li class="page-item ${prevDisabled ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage - 1}">Trang trước</a>
+            </li>
+            <li class="page-item active">
+                <a class="page-link" href="#">${currentPage}</a>
+            </li>
+            <li class="page-item ${nextDisabled ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage + 1}">Trang sau</a>
+            </li>
+        `;
+    }
+
+
+    // ===== 3. Load danh sách người dùng (Đã cập nhật để hỗ trợ tìm kiếm và phân trang) =====
+    async function loadUsers(page = 1, filters = {}) {
+        currentPage = page;
+        currentFilters = filters;
+
+        // Xây dựng URL với các tham số
+        const params = new URLSearchParams({
+            page: currentPage,
+            page_size: PAGE_SIZE
+        });
+
+        // Thêm các bộ lọc vào params nếu chúng có giá trị
+        for (const key in filters) {
+            if (filters[key] && filters[key].length > 0) {
+                // Xử lý cho class_names là một mảng
+                if (Array.isArray(filters[key])) {
+                    filters[key].forEach(value => params.append(key, value));
+                } else {
+                    params.set(key, filters[key]);
+                }
+            }
+        }
+
+        // FastAPI nhận mảng qua 'class_names'
+        if(filters.class_name) {
+            params.delete('class_name');
+            filters.class_name.forEach(cn => params.append('class_names', cn));
+        }
+
+        const apiUrl = `${getApiUrl('USERS')}/?${params.toString()}`;
+
         try {
-            const apiUrl = getApiUrl('USERS') + '/';
-            const res = await fetch(apiUrl, {method: 'GET', headers});
+            const res = await fetch(apiUrl, { method: 'GET', headers });
 
             if (res.status === 403) {
                 Swal.fire('Không có quyền!', 'Bạn không có quyền xem danh sách người dùng.', 'warning');
@@ -284,44 +386,35 @@
             tableBody.innerHTML = '';
 
             if (!Array.isArray(data) || data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Không có người dùng nào.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Không tìm thấy người dùng nào.</td></tr>';
+                document.getElementById('pagination').innerHTML = ''; // Xóa phân trang
                 return;
             }
 
-            // Bắt đầu phần chỉnh sửa
             data.forEach((user, i) => {
-                // Chuyển đổi giới tính sang tiếng Việt
                 const genderInVietnamese = user.gender === 'male' ? 'Nam' : 'Nữ';
-
-                // Chuyển đổi vai trò sang tiếng Việt
-                const roleMap = {
-                    'STUDENT': 'Học sinh',
-                    'TEACHER': 'Giáo viên',
-                    'ADMIN': 'Quản trị'
-                };
-                const roleInVietnamese = roleMap[user.role] || user.role; // Giữ nguyên nếu không có trong map
-
-                const displayClassName = Array.isArray(user.class_name)
-                    ? user.class_name.join(', ')
-                    : (user.class_name || '-');
+                const roleMap = { 'STUDENT': 'Học sinh', 'TEACHER': 'Giáo viên', 'ADMIN': 'Quản trị' };
+                const roleInVietnamese = roleMap[user.role] || user.role;
+                const displayClassName = Array.isArray(user.class_name) ? user.class_name.join(', ') : (user.class_name || '-');
 
                 tableBody.innerHTML += `
                   <tr data-id="${user.id}">
-                    <td>${i + 1}</td>
+                    <td>${(currentPage - 1) * PAGE_SIZE + i + 1}</td>
                     <td>${user.email}</td>
                     <td class="editable" data-field="full_name">${user.full_name}</td>
                     <td class="editable" data-field="age">${user.age}</td>
-                    <td class="editable" data-field="gender">${genderInVietnamese}</td>
-                    <td class="editable" data-field="class_name" data-value='${JSON.stringify(user.class_name)}'>${(user.class_name || []).join(', ')}</td>
-                    <td class="editable" data-field="role">${roleInVietnamese}</td>
-
+                    <td class="editable" data-field="gender" data-value="${user.gender}">${genderInVietnamese}</td>
+                    <td class="editable" data-field="class_name" data-value='${JSON.stringify(user.class_name || [])}'>${displayClassName}</td>
+                    <td class="editable" data-field="role" data-value="${user.role}">${roleInVietnamese}</td>
                     <td class="action-buttons">
-                      <button class="btn btn-sm btn-primary editBtn">Chỉnh sửa</button>
-                      <button class="btn btn-sm btn-danger deleteBtn">Xoá</button>
+                      <button class="btn btn-sm btn-primary editBtn">Sửa</button>
+                      <button class="btn btn-sm btn-danger deleteBtn" onclick="deleteUser('${user.id}')">Xoá</button>
                     </td>
                   </tr>`;
             });
-            // Kết thúc phần chỉnh sửa
+
+            // Render pagination
+            renderPagination(data.length);
 
         } catch (err) {
             console.error('Load users error:', err);
@@ -329,74 +422,79 @@
         }
     }
 
-    // ===== 3. Xử lý tạo người dùng mới =====
+    // ===== 4. Xử lý Form Tìm kiếm =====
+    document.getElementById('searchForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const filters = Object.fromEntries(formData.entries());
+
+        // Lấy giá trị từ select multiple
+        const classSelect = document.getElementById('filterClassSelect');
+        filters.class_name = Array.from(classSelect.selectedOptions).map(opt => opt.value);
+
+        // Bắt đầu tìm kiếm từ trang 1
+        await loadUsers(1, filters);
+    });
+
+    // ===== 5. Xử lý click Phân trang =====
+    document.getElementById('pagination').addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = e.target;
+
+        // Kiểm tra nếu click vào link và không bị disabled
+        if (target.tagName === 'A' && !target.parentElement.classList.contains('disabled')) {
+            const newPage = parseInt(target.dataset.page, 10);
+            if (newPage) {
+                loadUsers(newPage, currentFilters); // Tải trang mới với bộ lọc cũ
+            }
+        }
+    });
+
+
+    // ===== 6. Xử lý tạo người dùng mới =====
     document.getElementById('createUserForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
         const formData = new FormData(form);
         const payload = Object.fromEntries(formData.entries());
-
-        // Lấy class_name từ <select multiple>
         const selectedOptions = Array.from(document.getElementById('classSelect').selectedOptions);
-        payload.class_name = selectedOptions.length > 0
-            ? selectedOptions.map(option => option.value)
-            : null;
+        payload.class_name = selectedOptions.map(option => option.value);
 
         try {
             const apiUrl = getApiUrl('USERS') + '/';
-            const res = await fetch(apiUrl, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(payload)
-            });
-
+            const res = await fetch(apiUrl, { method: 'POST', headers, body: JSON.stringify(payload) });
             if (res.ok) {
-                const json = await res.json();
-                if (json && json.id) {
-                    Swal.fire('Thành công!', 'Tạo người dùng thành công!', 'success');
-                    form.reset();
-                    document.querySelector('#createUserModal .btn-close').click();
-                    loadUsers();
-                } else {
-                    Swal.fire('Lỗi!', 'Không thể tạo người dùng!', 'error');
-                }
+                Swal.fire('Thành công!', 'Tạo người dùng thành công!', 'success');
+                form.reset();
+                document.querySelector('#createUserModal .btn-close').click();
+                loadUsers(1, {}); // Tải lại danh sách từ trang 1
             } else {
                 const errorData = await res.json().catch(() => ({}));
                 const errorMessage = errorData.detail || errorData.response || `HTTP ${res.status}: ${res.statusText}`;
-                console.error('Create user error:', errorData);
                 Swal.fire('Lỗi!', `Không thể tạo người dùng: ${errorMessage}`, 'error');
             }
         } catch (err) {
-            console.error('Network error:', err);
             Swal.fire('Lỗi!', 'Lỗi kết nối. Vui lòng thử lại.', 'error');
         }
     });
 
-    // ===== 4. Tạo mật khẩu ngẫu nhiên =====
+    // ===== 7. Các hàm tiện ích (Tạo MK, Copy MK, Xóa) =====
     function generatePassword() {
         const random = Math.random().toString(36).slice(-10) + Math.floor(Math.random() * 100);
         document.getElementById('passwordInput').value = random;
     }
 
-    // ===== 5. Copy mật khẩu =====
     function copyPassword() {
-        const password = document.getElementById('passwordInput').value;
-        if (!password) {
+        const passwordInput = document.getElementById('passwordInput');
+        if (!passwordInput.value) {
             Swal.fire('Lỗi!', 'Chưa có mật khẩu để sao chép!', 'warning');
             return;
         }
-
-        navigator.clipboard.writeText(password)
+        navigator.clipboard.writeText(passwordInput.value)
             .then(() => Swal.fire('Thành công!', 'Đã sao chép mật khẩu!', 'success'))
             .catch(err => Swal.fire('Lỗi!', 'Không thể sao chép: ' + err, 'error'));
     }
 
-    // ===== 6. Chỉnh sửa người dùng (placeholder) =====
-    function editUser(userId) {
-        Swal.fire('Thông báo', 'Chức năng chỉnh sửa đang được phát triển!', 'info');
-    }
-
-    // ===== 7. Xóa người dùng =====
     async function deleteUser(userId) {
         const result = await Swal.fire({
             title: 'Xác nhận xóa',
@@ -412,132 +510,134 @@
         if (!result.isConfirmed) return;
 
         try {
-            const apiUrl = getApiUrl('USERS') + '/' + userId;
-            const res = await fetch(apiUrl, {
-                method: 'DELETE',
-                headers
-            });
-
+            const apiUrl = `${getApiUrl('USERS')}/${userId}`;
+            const res = await fetch(apiUrl, { method: 'DELETE', headers });
             if (res.ok) {
                 Swal.fire('Thành công!', 'Đã xóa người dùng!', 'success');
-                loadUsers();
+                // Tải lại trang hiện tại với bộ lọc hiện tại
+                loadUsers(currentPage, currentFilters);
             } else {
                 const errorData = await res.json().catch(() => ({}));
                 const errorMessage = errorData.detail || errorData.response || `HTTP ${res.status}: ${res.statusText}`;
                 Swal.fire('Lỗi!', `Không thể xóa người dùng: ${errorMessage}`, 'error');
             }
         } catch (err) {
-            console.error('Delete user error:', err);
             Swal.fire('Lỗi!', 'Lỗi kết nối khi xóa người dùng.', 'error');
         }
     }
 
-    // ===== 8. Gắn global các hàm cần thiết =====
-    window.generatePassword = generatePassword;
-    window.copyPassword = copyPassword;
-    window.editUser = editUser;
-    window.deleteUser = deleteUser;
-
-    // ===== 9. Khởi tạo: load lớp + user nếu đã login =====
-    if (token) {
-        loadClassOptions();
-        loadUsers();
-    }
-
-    async function populateClassSelect(selectElement, selectedValues = []) {
-        try {
-            const res = await fetch('https://aimarketingvn.com/webhook/list-class');
-            const data = await res.json();
-            data.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item.mon;
-                option.textContent = item.mon;
-                if (selectedValues.includes(item.mon)) option.selected = true;
-                selectElement.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Lỗi tải danh sách lớp:', error);
-        }
-    }
-    document.addEventListener('click', async function (e) {
+    // ===== 8. Xử lý Chỉnh sửa & Cập nhật nội tuyến =====
+    document.getElementById('userTableBody').addEventListener('click', async function (e) {
         const row = e.target.closest('tr');
+        if (!row) return;
+
+        // --- Nút Sửa ---
         if (e.target.classList.contains('editBtn')) {
             const cells = row.querySelectorAll('.editable');
-
-            // SỬA LỖI: Thay thế forEach bằng vòng lặp for...of
             for (const cell of cells) {
                 const field = cell.dataset.field;
-                const value = cell.dataset.value || cell.textContent.trim();
+                let value = cell.dataset.value || cell.textContent.trim();
+
+                // Chuyển đổi ngược giá trị hiển thị thành giá trị thực
+                if (field === 'gender') value = (value === 'Nam' ? 'male' : (value === 'Nữ' ? 'female' : value));
+                if (field === 'role') {
+                    const roleMapReverse = { 'Học sinh': 'STUDENT', 'Giáo viên': 'TEACHER', 'Quản trị': 'ADMIN'};
+                    value = roleMapReverse[value] || value;
+                }
 
                 if (field === 'class_name') {
                     cell.innerHTML = `<select class="form-select form-select-sm" multiple required></select>`;
                     const select = cell.querySelector('select');
-                    // Bây giờ await sẽ hoạt động chính xác
                     await populateClassSelect(select, JSON.parse(value || '[]'));
                 } else if (field === 'gender') {
                     cell.innerHTML = `
-                  <select class="form-select form-select-sm">
-                    <option value="male" ${value === 'male' ? 'selected' : ''}>Nam</option>
-                    <option value="female" ${value === 'female' ? 'selected' : ''}>Nữ</option>
-                  </select>`;
+                      <select class="form-select form-select-sm">
+                        <option value="male" ${value === 'male' ? 'selected' : ''}>Nam</option>
+                        <option value="female" ${value === 'female' ? 'selected' : ''}>Nữ</option>
+                      </select>`;
                 } else if (field === 'role') {
                     cell.innerHTML = `
-                  <select class="form-select form-select-sm">
-                    <option value="STUDENT" ${value === 'STUDENT' ? 'selected' : ''}>Học sinh</option>
-                    <option value="TEACHER" ${value === 'TEACHER' ? 'selected' : ''}>Giáo viên</option>
-                    <option value="ADMIN" ${value === 'ADMIN' ? 'selected' : ''}>Quản trị</option>
-                  </select>`;
+                      <select class="form-select form-select-sm">
+                        <option value="STUDENT" ${value === 'STUDENT' ? 'selected' : ''}>Học sinh</option>
+                        <option value="TEACHER" ${value === 'TEACHER' ? 'selected' : ''}>Giáo viên</option>
+                        <option value="ADMIN" ${value === 'ADMIN' ? 'selected' : ''}>Quản trị</option>
+                      </select>`;
                 } else {
-                    cell.innerHTML = `<input type="text" class="form-control form-control-sm" value="${value}">`;
+                    cell.innerHTML = `<input type="text" class="form-control form-control-sm" value="${cell.textContent.trim()}">`;
                 }
             }
-
             const actions = row.querySelector('.action-buttons');
             actions.innerHTML = `
-          <button class="btn btn-sm btn-primary updateBtn">Cập nhật</button>
-          <button class="btn btn-sm btn-secondary cancelBtn">Huỷ</button>`;
+              <button class="btn btn-sm btn-success updateBtn">Lưu</button>
+              <button class="btn btn-sm btn-secondary cancelBtn">Huỷ</button>`;
         }
 
+        // --- Nút Hủy ---
         if (e.target.classList.contains('cancelBtn')) {
-            loadUsers(); // Reload lại danh sách để huỷ thay đổi
+            loadUsers(currentPage, currentFilters); // Tải lại để hủy thay đổi
         }
 
+        // --- Nút Lưu (Cập nhật) ---
         if (e.target.classList.contains('updateBtn')) {
             const id = row.dataset.id;
             const payload = {};
+            let isValid = true;
 
             row.querySelectorAll('.editable').forEach(cell => {
                 const field = cell.dataset.field;
+                const input = cell.querySelector('input, select');
+                if (!input) return;
+
                 if (field === 'class_name') {
-                    const selected = Array.from(cell.querySelector('select').selectedOptions).map(o => o.value);
-                    payload[field] = selected;
+                    payload[field] = Array.from(input.selectedOptions).map(o => o.value);
                 } else {
-                    const input = cell.querySelector('input, select');
-                    payload[field] = input ? input.value : cell.textContent.trim();
+                    payload[field] = input.value;
+                }
+                if(input.required && !payload[field]){
+                    isValid = false;
                 }
             });
 
+            if(!isValid) {
+                Swal.fire('Lỗi!', 'Vui lòng điền đầy đủ các trường bắt buộc.', 'error');
+                return;
+            }
+
             try {
-                const res = await fetch(`https://api.aagents.vn/api/v1/users/${id}`, {
-                    method: 'PUT',
-                    headers,
-                    body: JSON.stringify(payload)
+                const res = await fetch(`${getApiUrl('USERS')}/${id}`, {
+                    method: 'PUT', headers, body: JSON.stringify(payload)
                 });
                 const json = await res.json();
-                if (json && json.id) {
-                    alert('Cập nhật thành công!');
-                    loadUsers();
+                if (res.ok && json.id) {
+                    Swal.fire('Thành công!', 'Cập nhật người dùng thành công!', 'success');
+                    loadUsers(currentPage, currentFilters); // Tải lại để hiển thị dữ liệu mới
                 } else {
-                    alert('Cập nhật thất bại!');
+                    const errorMessage = json.detail || 'Cập nhật thất bại!';
+                    Swal.fire('Lỗi!', errorMessage, 'error');
                 }
             } catch (err) {
                 console.error(err);
-                alert('Lỗi cập nhật người dùng.');
+                Swal.fire('Lỗi!', 'Lỗi kết nối khi cập nhật người dùng.', 'error');
             }
         }
     });
-</script>
 
+
+    // ===== 9. Gắn global các hàm cần thiết =====
+    window.generatePassword = generatePassword;
+    window.copyPassword = copyPassword;
+    window.deleteUser = deleteUser;
+
+
+    // ===== 10. Khởi tạo =====
+    if (token) {
+        loadAllClassSelects();
+        loadUsers(1, {}); // Tải trang đầu tiên khi vào trang
+    } else {
+        // Chuyển hướng nếu không có token
+        window.location.href = '../pages/login.html';
+    }
+</script>
 
 </body>
 <!-- [Body] end -->
