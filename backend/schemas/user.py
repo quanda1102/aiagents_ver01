@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional, List, Union
 from models.user import Role, Gender, LoginType
 
@@ -96,11 +96,34 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     role: Optional[str] = None
     full_name: Optional[str] = None
-    age: Optional[int] = None
+    age: Optional[int] = Field(
+        None,
+        description="Tuổi phải là số nguyên dương",
+        example=20
+    )
     class_name: Optional[List[str]] = None
     gender: Optional[str] = None
     login_type: Optional[str] = None
     oauth_id: Optional[str] = None
+
+
+    @validator('age', pre=True)
+    def validate_age(cls, value):
+        if value is None:
+            return None
+            
+        if isinstance(value, str) and value.isdigit():
+            return int(value)
+            
+        if not isinstance(value, int):
+            raise ValueError("Tuổi phải là số nguyên dương")
+
+        if value < 1:
+            raise ValueError("Tuổi phải là số nguyên dương")
+
+        return value
+
+        return value
 
 class Token(BaseModel):
     access_token: str
