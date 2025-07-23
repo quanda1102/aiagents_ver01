@@ -1,4 +1,5 @@
 import os
+import secrets
 from dotenv import load_dotenv
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -19,6 +20,7 @@ class Config:
 
     # JWT
     SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
+    SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY", secrets.token_hex(32))
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_DAYS = int(os.getenv("ACCESS_TOKEN_EXPIRE_DAYS", 1))
 

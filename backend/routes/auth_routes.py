@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from config import config
-from models.user import Base
+from models.user import Base, Role, LoginType
 from schemas.user import UserCreate, UserLogin, Token
 from services.auth_service import AuthService
 from sqlalchemy import create_engine
@@ -18,6 +18,7 @@ from fastapi.responses import RedirectResponse , JSONResponse
 from config import config
 import secrets
 import logging
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
     try:
         # 1. Xác thực với Google và lấy thông tin user
         token = await oauth.google.authorize_access_token(request)
-        userinfo = await oauth.google.parse_id_token(request, token)
+        userinfo = await oauth.google.userinfo(token=token)
         
         if not userinfo.get("email"):
             raise HTTPException(
@@ -130,7 +131,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
                 "sub": str(user.id),
                 "email": user.email,
                 "role": Role(user.role).name,
-                "login_type": user.login_type
+                "login_type": user.login_type.value if isinstance(user.login_type, LoginType) else user.login_type
             },
             expires_delta=timedelta(hours=24)  # Token hết hạn sau 24h
         )
