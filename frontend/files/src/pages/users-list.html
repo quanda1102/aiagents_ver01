@@ -612,8 +612,22 @@
                     Swal.fire('Thành công!', 'Cập nhật người dùng thành công!', 'success');
                     loadUsers(currentPage, currentFilters); // Tải lại để hiển thị dữ liệu mới
                 } else {
-                    const errorMessage = json.detail || 'Cập nhật thất bại!';
-                    Swal.fire('Lỗi!', errorMessage, 'error');
+                    let errorMessage = 'Cập nhật thất bại!';
+
+                    if (json.validation_errors && json.validation_errors.length > 0) {
+                        // Gộp các message lại thành 1 chuỗi nếu có nhiều lỗi
+                        errorMessage = json.validation_errors.map(e => e.message).join('<br>');
+                    } else if (json.response) {
+                        errorMessage = json.response;
+                    } else if (json.detail) {
+                        errorMessage = json.detail;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Xảy ra lỗi!',
+                        html: errorMessage
+                    });
                 }
             } catch (err) {
                 console.error(err);
