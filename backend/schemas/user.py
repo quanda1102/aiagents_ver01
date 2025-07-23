@@ -128,7 +128,19 @@ class UserUpdate(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
-    login_type: Optional[str] = None
+    user_info: Optional[dict] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "access_token": "eyJhbGciOi...",
+                "token_type": "bearer",
+                "user_info": {
+                    "email": "user@example.com",
+                    "role": "STUDENT"
+                }
+            }
+        }
 
 class ClassUpdate(BaseModel):
     class_name: List[str]
