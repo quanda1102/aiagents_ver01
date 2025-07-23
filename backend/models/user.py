@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Enum as SqlEnum, JSON
 from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
-from models import Base  # sửa lại dòng này
+from models import Base
 
 class Role(PyEnum):
     ADMIN = 8686
@@ -13,6 +13,12 @@ class Gender(PyEnum):
     FEMALE = "female"
     OTHER = "other"
 
+# Thêm enum cho login_type
+class LoginType(PyEnum):
+    DEFAULT = "default"
+    GOOGLE = "google"
+    FACEBOOK = "facebook"
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -23,5 +29,14 @@ class User(Base):
     age = Column(Integer, nullable=True)
     class_name = Column(JSON, default=[])
     gender = Column(SqlEnum(Gender, values_callable=lambda x: [e.value for e in x]), default=Gender.OTHER.value)
+    
+    # Thêm 2 trường mới
+    login_type = Column(
+        SqlEnum(LoginType, values_callable=lambda x: [e.value for e in x]),
+        default=LoginType.DEFAULT.value
+    )
+    oauth_id = Column(String(255), nullable=True)
+    
+    # Các relationship
     lectures = relationship("Lecture", back_populates="teacher")
     quiz_attempts = relationship("QuizAttempt", back_populates="user")
