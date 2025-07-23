@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
-from models.user import User, Role, Gender
-from schemas.user import UserCreate, UserUpdate
+from fastapi import HTTPException, status
+from models.user import User, Role, Gender, LoginType
+from schemas.user import UserCreate, UserUpdate, UserOAuthCreate
 from utils.auth import get_password_hash, verify_password, create_access_token
 from typing import Optional, List
 from sqlalchemy import desc
@@ -16,7 +16,10 @@ class AuthService:
         try:
             return Role[role_str.upper()].value
         except KeyError:
-            raise HTTPException(status_code=400, detail="Invalid role")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid role"
+            )
 
     @staticmethod
     def _parse_gender(gender_str: str | None) -> Gender:
@@ -25,16 +28,36 @@ class AuthService:
             return Gender.OTHER
         try:
             return Gender(gender_str.lower())
-        except KeyError:
-            raise HTTPException(status_code=400, detail="Invalid gender")
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid gender"
+            )
+
+    @staticmethod
+    def _parse_login_type(login_type_str: str | None) -> LoginType:
+        """Chuyển đổi login_type từ chuỗi sang Enum"""
+        if not login_type_str:
+            return LoginType.DEFAULT
+        try:
+            return LoginType(login_type_str.lower())
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid login type"
+            )
 
     @staticmethod
     def register_user(user: UserCreate, db: Session):
         if db.query(User).filter(User.email == user.email).first():
-            raise HTTPException(status_code=400, detail="Email already registered")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
 
         role_value = AuthService._parse_role(user.role)
         gender_enum = AuthService._parse_gender(user.gender)
+        login_type_enum = AuthService._parse_login_type(user.login_type)
 
         hashed_password = get_password_hash(user.password)
         db_user = User(
@@ -44,24 +67,49 @@ class AuthService:
             full_name=user.full_name,
             age=user.age,
             class_name=user.class_name,
-            gender=gender_enum
+            gender=gender_enum,
+            login_type=login_type_enum,
+            oauth_id=user.oauth_id
         )
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
 
-        access_token = create_access_token(data={"sub": user.email, "role": Role(role_value).name})
-        return {"access_token": access_token, "token_type": "bearer"}
+        access_token = create_access_token(
+            data={
+                "sub": user.email,
+                "role": Role(role_value).name,
+                "login_type": login_type_enum.value
+            }
+        )
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "login_type": login_type_enum.value
+        }
 
     @staticmethod
     def login_user(email: str, password: str, db: Session):
         db_user = db.query(User).filter(User.email == email).first()
         if not db_user or not verify_password(password, db_user.hashed_password):
-            raise HTTPException(status_code=401, detail="Incorrect email or password")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password"
+            )
 
         role_name = Role(db_user.role).name if isinstance(db_user.role, int) else str(db_user.role)
-        access_token = create_access_token(data={"sub": email, "role": role_name})
-        return {"access_token": access_token, "token_type": "bearer"}
+        access_token = create_access_token(
+            data={
+                "sub": email,
+                "role": role_name,
+                "login_type": db_user.login_type.value
+            }
+        )
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "login_type": db_user.login_type.value
+        }
 
     @staticmethod
     def get_users(
@@ -71,6 +119,7 @@ class AuthService:
         email: Optional[str] = None,
         gender: Optional[str] = None,
         role: Optional[str] = None,
+        login_type: Optional[str] = None,
         class_names: Optional[List[str]] = None,
     ):
         query = db.query(User)
@@ -83,34 +132,50 @@ class AuthService:
                 gender_enum = Gender(gender.lower())
                 query = query.filter(User.gender == gender_enum)
             except ValueError:
-                raise HTTPException(status_code=400, detail="Invalid gender")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid gender"
+                )
 
         if role:
             try:
                 role_value = Role[role.upper()].value
                 query = query.filter(User.role == role_value)
             except KeyError:
-                raise HTTPException(status_code=400, detail="Invalid role")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid role"
+                )
+
+        if login_type:
+            try:
+                login_type_enum = LoginType(login_type.lower())
+                query = query.filter(User.login_type == login_type_enum)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid login type"
+                )
 
         if class_names:
             query = query.filter(User.class_name.in_(class_names))
 
-        # Sắp xếp: người mới nhất trước (giả sử theo id giảm dần)
         query = query.order_by(desc(User.id))
-
-        # Phân trang
         offset = (page - 1) * page_size
         users = query.offset(offset).limit(page_size).all()
         return users
 
-
     @staticmethod
     def create_user(user: UserCreate, db: Session):
         if db.query(User).filter(User.email == user.email).first():
-            raise HTTPException(status_code=400, detail="Email already registered")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
 
         role_value = AuthService._parse_role(user.role)
         gender_enum = AuthService._parse_gender(user.gender)
+        login_type_enum = AuthService._parse_login_type(user.login_type)
 
         hashed_password = get_password_hash(user.password)
         db_user = User(
@@ -120,7 +185,38 @@ class AuthService:
             full_name=user.full_name,
             age=user.age,
             class_name=user.class_name,
-            gender=gender_enum
+            gender=gender_enum,
+            login_type=login_type_enum,
+            oauth_id=user.oauth_id
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+
+    @staticmethod
+    def create_oauth_user(user: UserOAuthCreate, db: Session):
+        existing_user = db.query(User).filter(User.email == user.email).first()
+        
+        if existing_user:
+            # Cập nhật thông tin OAuth nếu user đã tồn tại
+            existing_user.login_type = AuthService._parse_login_type(user.login_type)
+            existing_user.oauth_id = user.oauth_id
+            if user.full_name:
+                existing_user.full_name = user.full_name
+            db.commit()
+            db.refresh(existing_user)
+            return existing_user
+
+        # Tạo user mới cho OAuth
+        db_user = User(
+            email=user.email,
+            hashed_password="oauth_user",  # Giá trị đặc biệt cho OAuth user
+            role=Role.STUDENT.value,  # Default role
+            full_name=user.full_name,
+            gender=AuthService._parse_gender(user.gender),
+            login_type=AuthService._parse_login_type(user.login_type),
+            oauth_id=user.oauth_id
         )
         db.add(db_user)
         db.commit()
@@ -131,11 +227,17 @@ class AuthService:
     def update_user(user_id: int, user_update: UserUpdate, db: Session):
         db_user = db.query(User).filter(User.id == user_id).first()
         if not db_user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
 
         if user_update.email:
             if db.query(User).filter(User.email == user_update.email, User.id != user_id).first():
-                raise HTTPException(status_code=400, detail="Email already registered")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already registered"
+                )
             db_user.email = user_update.email
 
         if user_update.password:
@@ -146,6 +248,12 @@ class AuthService:
 
         if user_update.gender:
             db_user.gender = AuthService._parse_gender(user_update.gender)
+
+        if user_update.login_type:
+            db_user.login_type = AuthService._parse_login_type(user_update.login_type)
+
+        if user_update.oauth_id:
+            db_user.oauth_id = user_update.oauth_id
 
         if user_update.full_name:
             db_user.full_name = user_update.full_name
@@ -164,7 +272,10 @@ class AuthService:
     def delete_user(user_id: int, db: Session):
         db_user = db.query(User).filter(User.id == user_id).first()
         if not db_user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
 
         db.delete(db_user)
         db.commit()
