@@ -4,7 +4,7 @@ load_dotenv()
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-# from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from routes.quiz_routes import router as quiz_router
 from routes.auth_routes import router as auth_router
@@ -19,6 +19,7 @@ from routes.dox_formatter_routes import router as docx_formatter_router
 from routes.lecture_docx_routes import router as lecture_docx_router
 from routes.lecture_format_routes import router as lecture_format_router
 from starlette.middleware.sessions import SessionMiddleware
+from config import config
 
 
 app = FastAPI(
@@ -26,13 +27,20 @@ app = FastAPI(
     description="Backend API",
     version="1.0.0"
 )
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=False,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[config.FRONTEND_URL],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# Add session middleware before routers
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=config.SESSION_SECRET_KEY,
+    same_site='none',
+    https_only=True
+)
 
 # Include all routes
 app.include_router(auth_router)
@@ -46,8 +54,6 @@ app.include_router(docx_formatter_router)
 app.include_router(lecture_docx_router)
 app.include_router(lecture_format_router)
 app.include_router(lecture_sse_router)
-# Add session middleware
-app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "your-secret-key"))
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
