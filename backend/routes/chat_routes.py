@@ -13,7 +13,11 @@ async def chat_response(
     current_user: User = Depends(get_current_user)
 ) -> ChatResponse:
     # User is authenticated - current_user is a User object
+    # Log the received message for debugging
+    print(f"📧 Chat message received from {current_user.email}: '{request.message}'")
+    
+    # Simple echo response with user's message for testing
     return ChatResponse(
-        response=f"Hello {current_user.email}, how can I help you today?",
+        response=f"You said: '{request.message}'. How can I help you with that?",
         session_id=request.session_id or str(uuid.uuid4())
     )

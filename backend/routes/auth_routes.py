@@ -14,10 +14,12 @@ from schemas.user import UserOut
 from typing import List
 from authlib.integrations.starlette_client import OAuth
 from starlette.requests import Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse , JSONResponse
 from config import config
 import secrets
+import logging
 
+logger = logging.getLogger(__name__)
 
 # Kết nối CSDL
 engine = create_engine(config.DATABASE_URL)
@@ -77,34 +79,94 @@ oauth.register(
 
 @router.get("/google/login")
 async def login_via_google(request: Request):
-    redirect_uri = config.GOOGLE_REDIRECT_URI
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    try:
+        redirect_uri = config.GOOGLE_REDIRECT_URI
+        if not redirect_uri:
+            logger.error("Google redirect URI not configured")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Server configuration error"
+            )
+            
+        return await oauth.google.authorize_redirect(request, redirect_uri)
+        
+    except Exception as e:
+        logger.error(f"Google login redirect failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to initiate Google login"
+        )
 
 @router.get("/google/callback")
 async def google_callback(request: Request, db: Session = Depends(get_db)):
-    token = await oauth.google.authorize_access_token(request)
-    
-    resp = await oauth.google.get("https://openidconnect.googleapis.com/v1/userinfo", token=token)
-    user_info = resp.json()
+    try:
+        # 1. Xử lý token
+        token = await oauth.google.authorize_access_token(request)
+        if not token:
+            raise HTTPException(status_code=400, detail="No token received from Google")
 
-    email = user_info.get("email")
-    name = user_info.get("name")
-    picture = user_info.get("picture")
+        # 2. Lấy thông tin user từ Google
+        resp = await oauth.google.get("https://openidconnect.googleapis.com/v1/userinfo", token=token)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail="Failed to fetch user info from Google")
+        
+        user_info = resp.json()
+        logger.debug(f"Google user info: {user_info}")
 
-    if not email:
-        raise HTTPException(status_code=400, detail="Email not found in Google response")
+        # 3. Validate thông tin
+        if not user_info.get("email"):
+            raise HTTPException(status_code=400, detail="Email not provided by Google")
 
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        user = User(email=email, name=name, avatar=picture)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        email = user_info["email"]
+        oauth_id = user_info.get("sub")  # Google's unique ID
+        name = user_info.get("name", "").split()
+        first_name = name[0] if name else ""
+        last_name = " ".join(name[1:]) if len(name) > 1 else ""
 
-    access_token = create_access_token(data={"sub": str(user.id)})
+        # 4. Xử lý user trong database
+        try:
+            user = db.query(User).filter(User.email == email).first()
+            
+            if user:
+                # Cập nhật thông tin nếu user đã tồn tại
+                if user.login_type != 'google':
+                    user.login_type = 'google'
+                    user.oauth_id = oauth_id
+                    db.commit()
+            else:
+                # Tạo user mới với các giá trị mặc định phù hợp schema
+                new_user = User(
+                    email=email,
+                    hashed_password="oauth_user",  # Giá trị mặc định
+                    full_name=user_info.get("name"),
+                    role=3,  # Giả sử role 3 là user thường
+                    gender='other',
+                    login_type='google',
+                    oauth_id=oauth_id
+                )
+                db.add(new_user)
+                db.commit()
+                user = new_user
 
-    redirect_url = f"{config.FRONTEND_URL}/oauth-callback?token={access_token}"
-    return RedirectResponse(url=redirect_url)
+            db.refresh(user)
+            
+        except Exception as db_error:
+            db.rollback()
+            logger.error(f"Database error: {db_error}")
+            raise HTTPException(status_code=500, detail="Database operation failed")
+
+        # 5. Tạo JWT token
+        access_token = create_access_token(data={"sub": str(user.id)})
+        
+        # 6. Redirect về frontend
+        redirect_url = f"{config.FRONTEND_URL}/oauth-callback?token={access_token}"
+        return RedirectResponse(url=redirect_url)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail="Internal authentication error")
 
 oauth.register(
     name='facebook',

@@ -4,7 +4,7 @@ load_dotenv()
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
+# from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from routes.quiz_routes import router as quiz_router
 from routes.auth_routes import router as auth_router
@@ -14,7 +14,7 @@ from routes.lecture_routes import router as lecture_router
 from routes.lecture_routes_sse import router as lecture_sse_router
 from my_agents.exam_agents.unified_routes import unified_router
 from utils.pydantic_helper import format_validation_errors
-# from routes.ocr_gpt_routes import router as ocr_ai_router
+from routes.ocr_gpt_routes import router as ocr_ai_router
 from routes.dox_formatter_routes import router as docx_formatter_router
 from routes.lecture_docx_routes import router as lecture_docx_router
 from routes.lecture_format_routes import router as lecture_format_router
@@ -26,13 +26,13 @@ app = FastAPI(
     description="Backend API",
     version="1.0.0"
 )
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=False,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 # Include all routes
 app.include_router(auth_router)
@@ -41,7 +41,7 @@ app.include_router(chat_router)
 app.include_router(user_router)
 app.include_router(lecture_router)
 app.include_router(unified_router)
-# app.include_router(ocr_ai_router)
+app.include_router(ocr_ai_router)
 app.include_router(docx_formatter_router)
 app.include_router(lecture_docx_router)
 app.include_router(lecture_format_router)
