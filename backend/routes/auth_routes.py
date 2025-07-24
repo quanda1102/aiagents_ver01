@@ -198,19 +198,18 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
         token = await oauth.facebook.authorize_access_token(request)
         profile = await oauth.facebook.userinfo(token=token)
 
-        email = profile.get("email")
-        if not email:
-            raise HTTPException(status_code=400, detail="Email not found in Facebook response")
+        fb_id = profile.get("id")
+        email = profile.get("email") or f"{fb_id}@facebook.com"
 
         user = db.query(User).filter(User.email == email).first()
         if not user:
             generated_password = secrets.token_hex(16)
             user = User(
                 email=email,
-                full_name=profile.get("name"),
+                full_name=profile.get("name", "Facebook User"),
                 hashed_password=get_password_hash(generated_password),
                 login_type="facebook",
-                oauth_id=profile.get("id"),
+                oauth_id=fb_id,
                 role=Role.STUDENT.value
             )
             db.add(user)
