@@ -38,8 +38,8 @@ app.add_middleware(
 app.add_middleware(
     SessionMiddleware,
     secret_key=config.SESSION_SECRET_KEY,
-    same_site='none',
-    https_only=True
+    same_site='lax',  # Sử dụng 'lax' để linh hoạt hơn trong môi trường dev
+    https_only=False  # Tắt khi không dùng HTTPS ở local
 )
 
 # Include all routes
