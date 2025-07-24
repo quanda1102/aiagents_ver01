@@ -114,9 +114,13 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         # 2. Tìm hoặc tạo user trong database
         user = db.query(User).filter(User.email == userinfo["email"]).first()
         if not user:
+            # For OAuth users, we can generate a random password or use a placeholder
+            # as they won't use password-based login.
+            generated_password = secrets.token_hex(16)
             user = User(
                 email=userinfo["email"],
                 full_name=userinfo.get("name"),
+                hashed_password=AuthService.hash_password(generated_password), # Hash the password
                 login_type="google",
                 oauth_id=userinfo.get("sub"),
                 role=Role.STUDENT.value  # Default role
@@ -201,9 +205,11 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
 
         user = db.query(User).filter(User.email == email).first()
         if not user:
+            generated_password = secrets.token_hex(16)
             user = User(
                 email=email,
                 full_name=profile.get("name"),
+                hashed_password=AuthService.hash_password(generated_password),
                 login_type="facebook",
                 oauth_id=profile.get("id"),
                 role=Role.STUDENT.value  # Default role
