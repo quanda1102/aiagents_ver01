@@ -16,6 +16,7 @@ from typing import List
 from authlib.integrations.starlette_client import OAuth
 from starlette.requests import Request
 from fastapi.responses import RedirectResponse , JSONResponse
+from utils.auth import create_access_token, get_password_hash
 from config import config
 import secrets
 import logging
@@ -207,7 +208,7 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
             user = User(
                 email=email,
                 full_name=profile.get("name"),
-                hashed_password=AuthService.hash_password(generated_password),
+                hashed_password=get_password_hash(generated_password),
                 login_type="facebook",
                 oauth_id=profile.get("id"),
                 role=Role.STUDENT.value
@@ -232,7 +233,7 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
             "role": Role(user.role).name,
             "login_type": user.login_type.value if hasattr(user.login_type, 'value') else str(user.login_type)
         })
-        
+
         redirect_url = f"https://edu.aidia.vn/oauth-callback.html?{params}"
         return RedirectResponse(url=redirect_url)
 
