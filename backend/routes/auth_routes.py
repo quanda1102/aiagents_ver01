@@ -194,7 +194,6 @@ async def login_via_facebook(request: Request):
 @router.get("/facebook/callback", response_model=Token)
 async def facebook_callback(request: Request, db: Session = Depends(get_db)):
     try:
-        # Lấy token từ Facebook
         token = await oauth.facebook.authorize_access_token(request)
         profile = await oauth.facebook.userinfo(token=token)
 
@@ -202,7 +201,6 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
         if not email:
             raise HTTPException(status_code=400, detail="Email not found in Facebook response")
 
-        # Xử lý user (tạo mới hoặc lấy từ DB)
         user = db.query(User).filter(User.email == email).first()
         if not user:
             generated_password = secrets.token_hex(16)
@@ -218,23 +216,21 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
             db.commit()
             db.refresh(user)
 
-        # Tạo JWT token
         access_token = create_access_token(
             data={
-                "sub": str(user.id),
+                "sub": user.email,
                 "email": user.email,
                 "role": Role(user.role).name,
-                "login_type": user.login_type
+                "login_type": user.login_type.value if hasattr(user.login_type, 'value') else str(user.login_type)
             },
             expires_delta=timedelta(hours=24)
         )
 
-        # Tạo URL redirect với token và thông tin user
         params = urlencode({
             "token": access_token,
             "email": user.email,
             "role": Role(user.role).name,
-            "login_type": user.login_type
+            "login_type": user.login_type.value if hasattr(user.login_type, 'value') else str(user.login_type)
         })
         
         redirect_url = f"https://edu.aidia.vn/oauth-callback.html?{params}"
