@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from urllib.parse import urlencode
 from config import config
 from models.user import Base, Role, LoginType
 from schemas.user import UserCreate, UserLogin, Token
@@ -98,13 +99,13 @@ async def login_via_google(request: Request):
             detail="Failed to initiate Google login"
         )
 
-@router.get("/google/callback", response_model=Token)
+@router.get("/google/callback", response_model=None)
 async def google_callback(request: Request, db: Session = Depends(get_db)):
     try:
         # 1. Xác thực với Google và lấy thông tin user
         token = await oauth.google.authorize_access_token(request)
         userinfo = await oauth.google.userinfo(token=token)
-        
+
         if not userinfo.get("email"):
             raise HTTPException(
                 status_code=400,
@@ -114,43 +115,43 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         # 2. Tìm hoặc tạo user trong database
         user = db.query(User).filter(User.email == userinfo["email"]).first()
         if not user:
-            # For OAuth users, we can generate a random password or use a placeholder
-            # as they won't use password-based login.
             generated_password = secrets.token_hex(16)
             user = User(
                 email=userinfo["email"],
                 full_name=userinfo.get("name"),
-                hashed_password=AuthService.hash_password(generated_password), # Hash the password
+                hashed_password=AuthService.hash_password(generated_password),
                 login_type="google",
                 oauth_id=userinfo.get("sub"),
-                role=Role.STUDENT.value  # Default role
+                role=Role.STUDENT.value
             )
             db.add(user)
             db.commit()
             db.refresh(user)
 
-        # 3. Tạo JWT token với thông tin phân quyền
+        # 3. Tạo JWT token với sub là email
         access_token = create_access_token(
             data={
-                "sub": str(user.id),
+                "sub": user.email,
                 "email": user.email,
                 "role": Role(user.role).name,
-                "login_type": user.login_type.value if isinstance(user.login_type, LoginType) else user.login_type
+                "login_type": user.login_type.value
             },
-            expires_delta=timedelta(hours=24)  # Token hết hạn sau 24h
+            expires_delta=timedelta(hours=24)
         )
 
-        # 4. Trả về token dạng JSON
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user_info": {
-                "email": user.email,
-                "role": Role(user.role).name
-            }
-        }
+        # 4. Redirect về frontend với token
+        params = urlencode({
+            "token": access_token,
+            "email": user.email,
+            "role": Role(user.role).name,
+            "login_type": user.login_type
+        })
+
+        redirect_url = f"https://edu.aidia.vn/oauth-callback.html?{params}"
+        return RedirectResponse(url=redirect_url)
 
     except Exception as e:
+        logger.error(f"Google callback error: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Lỗi xác thực Google: {str(e)}"
