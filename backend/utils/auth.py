@@ -38,13 +38,34 @@ def get_current_user(
 ) -> User:
     try:
         payload = jwt.decode(token, config.SECRET_KEY, algorithms=[config.ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        user_id = payload.get("sub")
+        
+        print("JWT Payload:", payload)
+        
+        if not user_id:
+            raise HTTPException(
+                status_code=401,
+                detail="Token thiếu thông tin người dùng (sub)"
+            )
+            
+        if not str(user_id).isdigit():
+            raise HTTPException(
+                status_code=401,
+                detail=f"ID người dùng phải là số. Nhận được: {type(user_id)} - {user_id}"
+            )
+            
+        user_id_int = int(user_id)
+        user = db.query(User).filter(User.id == user_id_int).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Không tìm thấy người dùng với ID: {user_id_int}"
+            )
+            
+        return user
 
-    user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token đã hết hạn")
+    except jwt.InvalidTokenError as e:
+        raise HTTPException(status_code=401, detail=f"Token không hợp lệ: {str(e)}")
