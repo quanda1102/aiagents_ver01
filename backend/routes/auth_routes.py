@@ -233,8 +233,10 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
     except Exception as e:
         # Log the specific exception
         logger.error(f"Facebook callback error: {e}", exc_info=True)
+        if isinstance(e, HTTPException):
+            raise e  # Re-raise the exception with its original status code and detail
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Lỗi xác thực Facebook: {str(e)}"
         )
 
