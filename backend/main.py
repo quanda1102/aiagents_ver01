@@ -17,7 +17,6 @@ from routes.ocr_gpt_routes import router as ocr_ai_router
 from routes.dox_formatter_routes import router as docx_formatter_router
 from routes.lecture_docx_routes import router as lecture_docx_router
 from routes.lecture_format_routes import router as lecture_format_router
-from starlette.middleware.sessions import SessionMiddleware
 from config import config
 
 app = FastAPI(
@@ -26,12 +25,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=config.SESSION_SECRET_KEY,
-    same_site='lax',
-    https_only=False
-)
 
 # Include all routes
 app.include_router(auth_router)
@@ -60,7 +53,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "validation_errors": formatted_errors
         }
     )
-
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
