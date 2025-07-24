@@ -48,37 +48,17 @@
   <script src="assets/js/plugins/feather.min.js"></script>
 
   <script>
-    // Parse the token from URL parameters
-    function getTokenFromURL() {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get('token');
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
 
-    // Handle OAuth callback
-    function handleOAuthCallback() {
-      const token = getTokenFromURL();
-      
       if (token) {
-        // Store the token in localStorage
         localStorage.setItem('access_token', token);
-        
-        // Show success message
-        alert('Đăng nhập thành công!');
-        
-        // Redirect to dashboard
-        window.location.href = '/dashboard/index.html';
+        // 👉 Chuyển đến dashboard
+        window.location.href = '/dashboard.html';
       } else {
-        // No token found, show error
-        alert('Lỗi đăng nhập với Google. Vui lòng thử lại.');
-        
-        // Redirect back to login page
-        window.location.href = '/pages/login.html';
+        alert('Đăng nhập thất bại! Không tìm thấy token.');
       }
-    }
-
-    // Run the callback handler when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      handleOAuthCallback();
     });
   </script>
 </body>
