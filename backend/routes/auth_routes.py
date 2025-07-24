@@ -157,41 +157,76 @@ oauth.register(
     client_id=config.FACEBOOK_CLIENT_ID,
     client_secret=config.FACEBOOK_CLIENT_SECRET,
     access_token_url='https://graph.facebook.com/v19.0/oauth/access_token',
-    access_token_params=None,
     authorize_url='https://www.facebook.com/v19.0/dialog/oauth',
-    authorize_params=None,
     api_base_url='https://graph.facebook.com/v19.0/',
+    userinfo_endpoint='me?fields=id,name,email',
     client_kwargs={'scope': 'email public_profile'},
 )
 
 @router.get("/facebook/login")
 async def login_via_facebook(request: Request):
-    redirect_uri = config.FACEBOOK_REDIRECT_URI
-    return await oauth.facebook.authorize_redirect(request, redirect_uri)
+    try:
+        redirect_uri = config.FACEBOOK_REDIRECT_URI
+        if not redirect_uri:
+            logger.error("Facebook redirect URI not configured")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Server configuration error"
+            )
+        return await oauth.facebook.authorize_redirect(request, redirect_uri)
+    except Exception as e:
+        logger.error(f"Facebook login redirect failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to initiate Facebook login"
+        )
 
-@router.get("/facebook/callback")
+@router.get("/facebook/callback", response_model=Token)
 async def facebook_callback(request: Request, db: Session = Depends(get_db)):
-    token = await oauth.facebook.authorize_access_token(request)
-    resp = await oauth.facebook.get("me?fields=id,name,email,picture{url}", token=token)
-    profile = resp.json()
+    try:
+        token = await oauth.facebook.authorize_access_token(request)
+        profile = await oauth.facebook.userinfo(token=token)
 
-    email = profile.get("email")
-    name = profile.get("name")
-    picture = profile.get("picture", {}).get("data", {}).get("url")
+        email = profile.get("email")
+        if not email:
+            raise HTTPException(status_code=400, detail="Email not found in Facebook response")
 
-    if not email:
-        raise HTTPException(status_code=400, detail="Email not found in Facebook response")
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            user = User(
+                email=email,
+                full_name=profile.get("name"),
+                login_type="facebook",
+                oauth_id=profile.get("id"),
+                role=Role.STUDENT.value  # Default role
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
 
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        user = User(email=email, name=name, avatar=picture)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        access_token = create_access_token(
+            data={
+                "sub": str(user.id),
+                "email": user.email,
+                "role": Role(user.role).name,
+                "login_type": user.login_type.value if isinstance(user.login_type, LoginType) else user.login_type
+            },
+            expires_delta=timedelta(hours=24)
+        )
 
-    access_token = create_access_token(data={"sub": str(user.id)})
-    redirect_url = f"{config.FRONTEND_URL}/oauth-callback?token={access_token}"
-    return RedirectResponse(url=redirect_url)
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user_info": {
+                "email": user.email,
+                "role": Role(user.role).name
+            }
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Lỗi xác thực Facebook: {str(e)}"
+        )
 
 
 
