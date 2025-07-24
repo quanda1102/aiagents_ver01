@@ -77,7 +77,7 @@ class AuthService:
 
         access_token = create_access_token(
             data={
-                "sub": user.email,
+                "sub": str(db_user.id),
                 "role": Role(role_value).name,
                 "login_type": login_type_enum.value
             }
