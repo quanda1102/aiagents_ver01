@@ -22,7 +22,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(hours=1)
+        expire = datetime.utcnow() + timedelta(hours=24)
     
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
@@ -38,31 +38,24 @@ def get_current_user(
 ) -> User:
     try:
         payload = jwt.decode(token, config.SECRET_KEY, algorithms=[config.ALGORITHM])
-        user_id = payload.get("sub")
-        
+        email = payload.get("sub")  # sub bây giờ là email
+
         print("JWT Payload:", payload)
-        
-        if not user_id:
+
+        if not email:
             raise HTTPException(
                 status_code=401,
                 detail="Token thiếu thông tin người dùng (sub)"
             )
-            
-        if not str(user_id).isdigit():
-            raise HTTPException(
-                status_code=401,
-                detail=f"ID người dùng phải là số. Nhận được: {type(user_id)} - {user_id}"
-            )
-            
-        user_id_int = int(user_id)
-        user = db.query(User).filter(User.id == user_id_int).first()
-        
+
+        user = db.query(User).filter(User.email == email).first()
+
         if not user:
             raise HTTPException(
                 status_code=404,
-                detail=f"Không tìm thấy người dùng với ID: {user_id_int}"
+                detail=f"Không tìm thấy người dùng với email: {email}"
             )
-            
+
         return user
 
     except jwt.ExpiredSignatureError:
