@@ -88,10 +88,9 @@ async def login_via_google(request: Request):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Server configuration error"
             )
-
-        # authorize_redirect vẫn dùng được nếu không có session
+            
         return await oauth.google.authorize_redirect(request, redirect_uri)
-
+        
     except Exception as e:
         logger.error(f"Google login redirect failed: {str(e)}", exc_info=True)
         raise HTTPException(
@@ -102,30 +101,35 @@ async def login_via_google(request: Request):
 @router.get("/google/callback", response_model=Token)
 async def google_callback(request: Request, db: Session = Depends(get_db)):
     try:
+        # 1. Xác thực với Google và lấy thông tin user
         token = await oauth.google.authorize_access_token(request)
         userinfo = await oauth.google.userinfo(token=token)
-
+        
         if not userinfo.get("email"):
             raise HTTPException(
                 status_code=400,
                 detail="Không nhận được email từ Google"
             )
 
+        # 2. Tìm hoặc tạo user trong database
         user = db.query(User).filter(User.email == userinfo["email"]).first()
         if not user:
+            # For OAuth users, we can generate a random password or use a placeholder
+            # as they won't use password-based login.
             generated_password = secrets.token_hex(16)
             user = User(
                 email=userinfo["email"],
                 full_name=userinfo.get("name"),
-                hashed_password=AuthService.hash_password(generated_password),
+                hashed_password=AuthService.hash_password(generated_password), # Hash the password
                 login_type="google",
                 oauth_id=userinfo.get("sub"),
-                role=Role.STUDENT.value
+                role=Role.STUDENT.value  # Default role
             )
             db.add(user)
             db.commit()
             db.refresh(user)
 
+        # 3. Tạo JWT token với thông tin phân quyền
         access_token = create_access_token(
             data={
                 "sub": str(user.id),
@@ -133,9 +137,10 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
                 "role": Role(user.role).name,
                 "login_type": user.login_type.value if isinstance(user.login_type, LoginType) else user.login_type
             },
-            expires_delta=timedelta(hours=24)
+            expires_delta=timedelta(hours=24)  # Token hết hạn sau 24h
         )
 
+        # 4. Trả về token dạng JSON
         return {
             "access_token": access_token,
             "token_type": "bearer",
@@ -146,7 +151,6 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         }
 
     except Exception as e:
-        logger.error(f"Lỗi xác thực Google: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Lỗi xác thực Google: {str(e)}"
@@ -173,10 +177,12 @@ async def login_via_facebook(request: Request):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Server configuration error"
             )
+        
+        # Debugging session
+        request.session['facebook_csrf_test'] = 'hello_world'
+        logger.info(f"Session before redirect: {request.session}")
 
-        # Không sử dụng session
         return await oauth.facebook.authorize_redirect(request, redirect_uri)
-
     except Exception as e:
         logger.error(f"Facebook login redirect failed: {str(e)}", exc_info=True)
         raise HTTPException(
@@ -186,6 +192,9 @@ async def login_via_facebook(request: Request):
 
 @router.get("/facebook/callback", response_model=Token)
 async def facebook_callback(request: Request, db: Session = Depends(get_db)):
+    # Debugging session
+    logger.info(f"Session on callback: {request.session}")
+    
     try:
         token = await oauth.facebook.authorize_access_token(request)
         profile = await oauth.facebook.userinfo(token=token)
@@ -203,7 +212,7 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
                 hashed_password=AuthService.hash_password(generated_password),
                 login_type="facebook",
                 oauth_id=profile.get("id"),
-                role=Role.STUDENT.value
+                role=Role.STUDENT.value  # Default role
             )
             db.add(user)
             db.commit()
@@ -214,26 +223,24 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
                 "sub": str(user.id),
                 "email": user.email,
                 "role": Role(user.role).name,
-                "login_type": user.login_type
+                "login_type": user.login_type.value if isinstance(user.login_type, LoginType) else user.login_type
             },
             expires_delta=timedelta(hours=24)
         )
 
-        # Chuyển hướng tới frontend kèm token
-        params = urlencode({
-            "token": access_token,
-            "email": user.email,
-            "role": Role(user.role).name,
-            "login_type": user.login_type
-        })
-
-        redirect_url = f"https://edu.aidia.vn/oauth-callback.html?{params}"
-        return RedirectResponse(url=redirect_url)
-
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user_info": {
+                "email": user.email,
+                "role": Role(user.role).name
+            }
+        }
     except Exception as e:
+        # Log the specific exception
         logger.error(f"Facebook callback error: {e}", exc_info=True)
         if isinstance(e, HTTPException):
-            raise e
+            raise e  # Re-raise the exception with its original status code and detail
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Lỗi xác thực Facebook: {str(e)}"
