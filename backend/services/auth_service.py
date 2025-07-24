@@ -10,7 +10,6 @@ class AuthService:
 
     @staticmethod
     def _parse_role(role_str: str | None) -> int:
-        """Chuyển đổi role từ chuỗi sang Enum value"""
         if not role_str:
             return Role.STUDENT.value
         try:
@@ -23,7 +22,6 @@ class AuthService:
 
     @staticmethod
     def _parse_gender(gender_str: str | None) -> Gender:
-        """Chuyển đổi gender từ chuỗi sang Enum"""
         if not gender_str:
             return Gender.OTHER
         try:
@@ -36,7 +34,6 @@ class AuthService:
 
     @staticmethod
     def _parse_login_type(login_type_str: str | None) -> LoginType:
-        """Chuyển đổi login_type từ chuỗi sang Enum"""
         if not login_type_str:
             return LoginType.DEFAULT
         try:
@@ -77,7 +74,7 @@ class AuthService:
 
         access_token = create_access_token(
             data={
-                "sub": str(db_user.id),
+                "sub": user.email,
                 "role": Role(role_value).name,
                 "login_type": login_type_enum.value
             }
@@ -197,9 +194,8 @@ class AuthService:
     @staticmethod
     def create_oauth_user(user: UserOAuthCreate, db: Session):
         existing_user = db.query(User).filter(User.email == user.email).first()
-        
+
         if existing_user:
-            # Cập nhật thông tin OAuth nếu user đã tồn tại
             existing_user.login_type = AuthService._parse_login_type(user.login_type)
             existing_user.oauth_id = user.oauth_id
             if user.full_name:
@@ -208,11 +204,10 @@ class AuthService:
             db.refresh(existing_user)
             return existing_user
 
-        # Tạo user mới cho OAuth
         db_user = User(
             email=user.email,
-            hashed_password="oauth_user",  # Giá trị đặc biệt cho OAuth user
-            role=Role.STUDENT.value,  # Default role
+            hashed_password="oauth_user",
+            role=Role.STUDENT.value,
             full_name=user.full_name,
             gender=AuthService._parse_gender(user.gender),
             login_type=AuthService._parse_login_type(user.login_type),
