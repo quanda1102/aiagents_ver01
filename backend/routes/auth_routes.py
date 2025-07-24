@@ -173,6 +173,11 @@ async def login_via_facebook(request: Request):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Server configuration error"
             )
+        
+        # Debugging session
+        request.session['facebook_csrf_test'] = 'hello_world'
+        logger.info(f"Session before redirect: {request.session}")
+
         return await oauth.facebook.authorize_redirect(request, redirect_uri)
     except Exception as e:
         logger.error(f"Facebook login redirect failed: {str(e)}", exc_info=True)
@@ -183,6 +188,9 @@ async def login_via_facebook(request: Request):
 
 @router.get("/facebook/callback", response_model=Token)
 async def facebook_callback(request: Request, db: Session = Depends(get_db)):
+    # Debugging session
+    logger.info(f"Session on callback: {request.session}")
+    
     try:
         token = await oauth.facebook.authorize_access_token(request)
         profile = await oauth.facebook.userinfo(token=token)
@@ -223,6 +231,8 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
             }
         }
     except Exception as e:
+        # Log the specific exception
+        logger.error(f"Facebook callback error: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Lỗi xác thực Facebook: {str(e)}"
