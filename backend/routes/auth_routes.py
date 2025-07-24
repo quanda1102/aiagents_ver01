@@ -88,9 +88,10 @@ async def login_via_google(request: Request):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Server configuration error"
             )
-            
+
+        # authorize_redirect vẫn dùng được nếu không có session
         return await oauth.google.authorize_redirect(request, redirect_uri)
-        
+
     except Exception as e:
         logger.error(f"Google login redirect failed: {str(e)}", exc_info=True)
         raise HTTPException(
@@ -101,35 +102,30 @@ async def login_via_google(request: Request):
 @router.get("/google/callback", response_model=Token)
 async def google_callback(request: Request, db: Session = Depends(get_db)):
     try:
-        # 1. Xác thực với Google và lấy thông tin user
         token = await oauth.google.authorize_access_token(request)
         userinfo = await oauth.google.userinfo(token=token)
-        
+
         if not userinfo.get("email"):
             raise HTTPException(
                 status_code=400,
                 detail="Không nhận được email từ Google"
             )
 
-        # 2. Tìm hoặc tạo user trong database
         user = db.query(User).filter(User.email == userinfo["email"]).first()
         if not user:
-            # For OAuth users, we can generate a random password or use a placeholder
-            # as they won't use password-based login.
             generated_password = secrets.token_hex(16)
             user = User(
                 email=userinfo["email"],
                 full_name=userinfo.get("name"),
-                hashed_password=AuthService.hash_password(generated_password), # Hash the password
+                hashed_password=AuthService.hash_password(generated_password),
                 login_type="google",
                 oauth_id=userinfo.get("sub"),
-                role=Role.STUDENT.value  # Default role
+                role=Role.STUDENT.value
             )
             db.add(user)
             db.commit()
             db.refresh(user)
 
-        # 3. Tạo JWT token với thông tin phân quyền
         access_token = create_access_token(
             data={
                 "sub": str(user.id),
@@ -137,10 +133,9 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
                 "role": Role(user.role).name,
                 "login_type": user.login_type.value if isinstance(user.login_type, LoginType) else user.login_type
             },
-            expires_delta=timedelta(hours=24)  # Token hết hạn sau 24h
+            expires_delta=timedelta(hours=24)
         )
 
-        # 4. Trả về token dạng JSON
         return {
             "access_token": access_token,
             "token_type": "bearer",
@@ -151,6 +146,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         }
 
     except Exception as e:
+        logger.error(f"Lỗi xác thực Google: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Lỗi xác thực Google: {str(e)}"
@@ -177,12 +173,10 @@ async def login_via_facebook(request: Request):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Server configuration error"
             )
-        
-        # Debugging session
-        request.session['facebook_csrf_test'] = 'hello_world'
-        logger.info(f"Session before redirect: {request.session}")
 
+        # Không sử dụng session
         return await oauth.facebook.authorize_redirect(request, redirect_uri)
+
     except Exception as e:
         logger.error(f"Facebook login redirect failed: {str(e)}", exc_info=True)
         raise HTTPException(
@@ -225,13 +219,14 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
             expires_delta=timedelta(hours=24)
         )
 
+        # Chuyển hướng tới frontend kèm token
         params = urlencode({
             "token": access_token,
             "email": user.email,
             "role": Role(user.role).name,
             "login_type": user.login_type
         })
-        
+
         redirect_url = f"https://edu.aidia.vn/oauth-callback.html?{params}"
         return RedirectResponse(url=redirect_url)
 
