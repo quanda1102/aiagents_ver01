@@ -10,6 +10,7 @@ dependencies = [
     "bcrypt>=4.3.0",
     "dotenv>=0.9.9",
     "fastapi>=0.115.13",
+    "fastapi-mail>=1.5.0",
     "itsdangerous>=2.2.0",
     "mysql-connector-python>=9.3.0",
     "openai>=1.93.0",

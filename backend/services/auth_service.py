@@ -5,6 +5,11 @@ from schemas.user import UserCreate, UserUpdate, UserOAuthCreate
 from utils.auth import get_password_hash, verify_password, create_access_token
 from typing import Optional, List
 from sqlalchemy import desc
+from utils.email_utils import send_email
+from services.redis_manager import redis_manager
+import random
+import datetime
+from fastapi import BackgroundTasks
 
 class AuthService:
 
@@ -84,6 +89,48 @@ class AuthService:
             "token_type": "bearer",
             "login_type": login_type_enum.value
         }
+
+    @staticmethod
+    async def request_otp(email: str, background_tasks: BackgroundTasks):
+        otp = "".join([str(random.randint(0, 9)) for _ in range(6)])
+        otp_key = f"otp:{email}"
+        await redis_manager.set_with_expiration(otp_key, otp, 600)  # OTP expires in 10 minutes (600 seconds)
+
+        subject = "Mã xác thực OTP của bạn"
+        body = f"""
+        <html>
+            <body>
+                <p>Xin chào,</p>
+                <p>Mã xác thực OTP của bạn là: <strong>{otp}</strong></p>
+                <p>Mã này sẽ hết hạn sau 10 phút.</p>
+                <p>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.</p>
+                <p>Trân trọng,</p>
+                <p>Đội ngũ hỗ trợ</p>
+            </body>
+        </html>
+        """
+        background_tasks.add_task(send_email, subject, email, body)
+        return {"message": "Mã OTP đã được gửi đến email của bạn."}
+
+    @staticmethod
+    async def verify_otp(email: str, otp: str):
+        otp_key = f"otp:{email}"
+        stored_otp = await redis_manager.get(otp_key)
+
+        if not stored_otp:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mã OTP không hợp lệ hoặc đã hết hạn."
+            )
+
+        if stored_otp != otp:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mã OTP không chính xác."
+            )
+
+        await redis_manager.delete(otp_key)  # Invalidate OTP after successful verification
+        return {"message": "Xác thực OTP thành công."}
 
     @staticmethod
     def login_user(email: str, password: str, db: Session):

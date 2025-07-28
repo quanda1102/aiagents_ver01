@@ -145,6 +145,13 @@ class Token(BaseModel):
 class ClassUpdate(BaseModel):
     class_name: List[str]
 
+class EmailRequest(BaseModel):
+    email: EmailStr
+
+class OTPVerification(BaseModel):
+    email: EmailStr
+    otp: str
+
 class OAuthToken(BaseModel):
     access_token: str
     token_type: str = "bearer"

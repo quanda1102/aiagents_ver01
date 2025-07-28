@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from urllib.parse import urlencode
 from config import config
 from models.user import Base, Role, LoginType
-from schemas.user import UserCreate, UserLogin, Token
+from schemas.user import UserCreate, UserLogin, Token, EmailRequest, OTPVerification
 from services.auth_service import AuthService
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -21,6 +21,7 @@ from config import config
 import secrets
 import logging
 from datetime import timedelta
+from fastapi import BackgroundTasks
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,14 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 @router.post("/login", response_model=Token)
 def login(user: UserLogin, db: Session = Depends(get_db)):
     return AuthService.login_user(user.email, user.password, db)
+
+@router.post("/request-otp")
+async def request_otp(email_request: EmailRequest, background_tasks: BackgroundTasks):
+    return await AuthService.request_otp(email_request.email, background_tasks)
+
+@router.post("/verify-otp")
+async def verify_otp(otp_verification: OTPVerification):
+    return await AuthService.verify_otp(otp_verification.email, otp_verification.otp)
 
 @router.get("/me", response_model=UserOut)
 def get_logged_in_user(current_user: User = Depends(get_current_user)):

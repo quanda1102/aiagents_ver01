@@ -19,6 +19,7 @@ from routes.lecture_docx_routes import router as lecture_docx_router
 from routes.lecture_format_routes import router as lecture_format_router
 from starlette.middleware.sessions import SessionMiddleware
 from config import config
+from services.redis_manager import redis_manager
 
 
 app = FastAPI(
@@ -26,6 +27,10 @@ app = FastAPI(
     description="Backend API",
     version="1.0.0"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    await redis_manager.initialize()
 # Add session middleware before routers
 app.add_middleware(
     SessionMiddleware,

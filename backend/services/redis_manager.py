@@ -17,13 +17,16 @@ class RedisManager:
         return cls._instance
     
     def __init__(self):
+        self._client = None
+
+    async def initialize(self):
         if self._client is None:
-            self._connect()
+            await self._connect()
     
-    def _connect(self):
+    async def _connect(self):
         """Initialize Redis connection"""
         try:
-            import redis
+            import redis.asyncio
             
             # Get Redis configuration from environment variables or use defaults
             redis_host = os.getenv("REDIS_HOST", "localhost")
@@ -31,7 +34,7 @@ class RedisManager:
             redis_password = os.getenv("REDIS_PASSWORD", "your_secure_password")
             redis_db = int(os.getenv("REDIS_DB", 0))
             
-            self._client = redis.Redis(
+            self._client = redis.asyncio.Redis(
                 host=redis_host,
                 port=redis_port,
                 password=redis_password,
@@ -43,7 +46,7 @@ class RedisManager:
             )
             
             # Test the connection
-            self._client.ping()
+            await self._client.ping()
             logger.info(f"Successfully connected to Redis at {redis_host}:{redis_port}")
             
         except ImportError:
@@ -54,26 +57,26 @@ class RedisManager:
             self._client = None
     
     @property
-    def client(self) -> Optional:
+    async def client(self) -> Optional:
         """Get the Redis client instance"""
         if self._client is None:
-            self._connect()
+            await self._connect()
         return self._client
     
-    def is_connected(self) -> bool:
+    async def is_connected(self) -> bool:
         """Check if Redis is connected"""
         if self._client is None:
             return False
         try:
-            self._client.ping()
+            await self._client.ping()
             return True
         except Exception:
             return False
     
-    def reconnect(self):
+    async def reconnect(self):
         """Force reconnection to Redis"""
         self._client = None
-        self._connect()
+        await self._connect()
     
     def close(self):
         """Close Redis connection"""
@@ -85,6 +88,45 @@ class RedisManager:
                 logger.error(f"Error closing Redis connection: {e}")
             finally:
                 self._client = None
+
+    async def set_with_expiration(self, key: str, value: str, expiration_time: int):
+        """Set a key-value pair with an expiration time (in seconds)."""
+        if await self.client:
+            try:
+                client = await self.client
+                await client.setex(key, expiration_time, value)
+                logger.debug(f"Redis: Set key '{key}' with value '{value}' and expiration {expiration_time}s.")
+            except Exception as e:
+                logger.error(f"Redis: Error setting key '{key}': {e}")
+        else:
+            logger.warning("Redis client not available. Cannot set key with expiration.")
+
+    async def get(self, key: str) -> Optional[str]:
+        """Get the value associated with a key."""
+        if await self.client:
+            try:
+                client = await self.client
+                value = await client.get(key)
+                logger.debug(f"Redis: Got key '{key}', value: '{value}'.")
+                return value
+            except Exception as e:
+                logger.error(f"Redis: Error getting key '{key}': {e}")
+                return None
+        else:
+            logger.warning("Redis client not available. Cannot get key.")
+            return None
+
+    async def delete(self, key: str):
+        """Delete a key."""
+        if await self.client:
+            try:
+                client = await self.client
+                await client.delete(key)
+                logger.debug(f"Redis: Deleted key '{key}'.")
+            except Exception as e:
+                logger.error(f"Redis: Error deleting key '{key}': {e}")
+        else:
+            logger.warning("Redis client not available. Cannot delete key.")
 
 
 # Global instance for easy access
