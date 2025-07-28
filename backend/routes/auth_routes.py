@@ -54,8 +54,8 @@ async def request_otp(email_request: EmailRequest, background_tasks: BackgroundT
     return await AuthService.request_otp(email_request.email, background_tasks)
 
 @router.post("/verify-otp")
-async def verify_otp(otp_verification: OTPVerification):
-    return await AuthService.verify_otp(otp_verification.email, otp_verification.otp)
+async def verify_otp(otp_verification: OTPVerification, db: Session = Depends(get_db)):
+    return await AuthService.verify_otp(otp_verification.email, otp_verification.otp, db)
 
 @router.get("/me", response_model=UserOut)
 def get_logged_in_user(current_user: User = Depends(get_current_user)):
@@ -219,7 +219,8 @@ async def facebook_callback(request: Request, db: Session = Depends(get_db)):
                 hashed_password=get_password_hash(generated_password),
                 login_type="facebook",
                 oauth_id=fb_id,
-                role=Role.STUDENT.value
+                role=Role.STUDENT.value,
+                verified=True
             )
             db.add(user)
             db.commit()

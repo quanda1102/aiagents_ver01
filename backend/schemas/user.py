@@ -12,6 +12,7 @@ class UserCreate(BaseModel):
     gender: Optional[str] = "other"
     login_type: Optional[str] = "default"
     oauth_id: Optional[str] = None
+    verified: bool = False
 
     class Config:
         json_schema_extra = {
@@ -22,7 +23,8 @@ class UserCreate(BaseModel):
                 "age": 25,
                 "role": "STUDENT",
                 "gender": "male",
-                "login_type": "default"
+                "login_type": "default",
+                "verified": False
             }
         }
 
@@ -49,6 +51,7 @@ class UserOut(BaseModel):
     gender: Optional[str]
     login_type: Optional[str]
     oauth_id: Optional[str]
+    verified: bool
 
     class Config:
         from_attributes = True
@@ -88,7 +91,8 @@ class UserOut(BaseModel):
             class_name=class_name,
             gender=gender_value,
             login_type=login_type,
-            oauth_id=user.oauth_id
+            oauth_id=user.oauth_id,
+            verified=user.verified
         )
 
 class UserUpdate(BaseModel):
@@ -105,6 +109,7 @@ class UserUpdate(BaseModel):
     gender: Optional[str] = None
     login_type: Optional[str] = None
     oauth_id: Optional[str] = None
+    verified: Optional[bool] = None
 
 
     @validator('age', pre=True)

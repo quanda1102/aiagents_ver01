@@ -71,7 +71,8 @@ class AuthService:
             class_name=user.class_name,
             gender=gender_enum,
             login_type=login_type_enum,
-            oauth_id=user.oauth_id
+            oauth_id=user.oauth_id,
+            verified=user.verified
         )
         db.add(db_user)
         db.commit()
@@ -113,7 +114,7 @@ class AuthService:
         return {"message": "Mã OTP đã được gửi đến email của bạn."}
 
     @staticmethod
-    async def verify_otp(email: str, otp: str):
+    async def verify_otp(email: str, otp: str, db: Session):
         otp_key = f"otp:{email}"
         stored_otp = await redis_manager.get(otp_key)
 
@@ -128,6 +129,16 @@ class AuthService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Mã OTP không chính xác."
             )
+
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        user.verified = True
+        db.commit()
 
         await redis_manager.delete(otp_key)  # Invalidate OTP after successful verification
         return {"message": "Xác thực OTP thành công."}
@@ -231,7 +242,8 @@ class AuthService:
             class_name=user.class_name,
             gender=gender_enum,
             login_type=login_type_enum,
-            oauth_id=user.oauth_id
+            oauth_id=user.oauth_id,
+            verified=user.verified
         )
         db.add(db_user)
         db.commit()
@@ -258,7 +270,8 @@ class AuthService:
             full_name=user.full_name,
             gender=AuthService._parse_gender(user.gender),
             login_type=AuthService._parse_login_type(user.login_type),
-            oauth_id=user.oauth_id
+            oauth_id=user.oauth_id,
+            verified=True
         )
         db.add(db_user)
         db.commit()
@@ -305,6 +318,9 @@ class AuthService:
 
         if user_update.class_name:
             db_user.class_name = user_update.class_name
+
+        if user_update.verified is not None:
+            db_user.verified = user_update.verified
 
         db.commit()
         db.refresh(db_user)

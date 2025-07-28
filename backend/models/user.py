@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum as SqlEnum, JSON
+from sqlalchemy import Column, Integer, String, Enum as SqlEnum, JSON, Boolean
 from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
 from models import Base
@@ -36,6 +36,7 @@ class User(Base):
         default=LoginType.DEFAULT.value
     )
     oauth_id = Column(String(255), nullable=True)
+    verified = Column(Boolean, default=False)
     
     # Các relationship
     lectures = relationship("Lecture", back_populates="teacher")
