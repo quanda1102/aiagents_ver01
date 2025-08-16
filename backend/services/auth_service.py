@@ -93,25 +93,22 @@ class AuthService:
 
     @staticmethod
     async def request_otp(email: str, background_tasks: BackgroundTasks):
-        otp = "".join([str(random.randint(0, 9)) for _ in range(6)])
-        otp_key = f"otp:{email}"
-        await redis_manager.set_with_expiration(otp_key, otp, 600)  # OTP expires in 10 minutes (600 seconds)
 
-        subject = "Mã xác thực OTP của bạn"
+        subject = "Đăng ký tài khoản thành công"
         body = f"""
-        <html>
+         <html>
             <body>
                 <p>Xin chào,</p>
-                <p>Mã xác thực OTP của bạn là: <strong>{otp}</strong></p>
-                <p>Mã này sẽ hết hạn sau 10 phút.</p>
-                <p>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.</p>
+                <p>Chúc mừng bạn đã đăng ký tài khoản thành công!</p>
+                <p>Email của bạn: <strong>{email}</strong></p>
+                <p>Bạn có thể bắt đầu sử dụng hệ thống ngay bây giờ.</p>
                 <p>Trân trọng,</p>
                 <p>Đội ngũ hỗ trợ</p>
             </body>
         </html>
         """
         background_tasks.add_task(send_email, subject, email, body)
-        return {"message": "Mã OTP đã được gửi đến email của bạn."}
+        return {"message": "Email thông báo đăng ký thành công đã được gửi đến email của bạn."}
 
     @staticmethod
     async def verify_otp(email: str, otp: str, db: Session):
