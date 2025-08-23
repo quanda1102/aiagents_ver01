@@ -7,11 +7,8 @@ from models.user import Base, Role, User, LoginType
 from schemas.user import UserCreate, UserUpdate, UserOut, UserOAuthCreate
 from services.auth_service import AuthService
 from utils.auth import get_current_user
-
-engine = create_engine(config.DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base.metadata.create_all(bind=engine)
+from database import engine, SessionLocal
+from sqlalchemy import desc
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 

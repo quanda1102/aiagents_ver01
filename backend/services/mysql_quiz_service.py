@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy import create_engine
 from config import config
 from models.quiz import Quiz, QuizAttempt
 from models.user import User
@@ -9,18 +8,19 @@ from datetime import datetime
 import uuid
 import logging
 import json
+from database import engine, SessionLocal
 
 logger = logging.getLogger(__name__)
 
 class MySQLQuizService:
     def __init__(self):
         """Initialize the MySQL Quiz Service"""
-        self.engine = create_engine(config.DATABASE_URL)
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        self.engine = engine  # Use shared engine from database.py
+        self.SessionLocal = SessionLocal  # Use shared SessionLocal from database.py
         
         # Create tables if they don't exist
         Base.metadata.create_all(bind=self.engine)
-        logger.info("MySQLQuizService initialized with database connection")
+        logger.info("MySQLQuizService initialized with shared database connection")
 
     def get_db(self):
         db = self.SessionLocal()

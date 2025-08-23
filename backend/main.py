@@ -20,17 +20,38 @@ from routes.lecture_format_routes import router as lecture_format_router
 from starlette.middleware.sessions import SessionMiddleware
 from config import config
 from services.redis_manager import redis_manager
+from contextlib import asynccontextmanager
+from database import log_pool_status
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup code
+    print("Starting up AI Agent Backend API...")
+    await redis_manager.initialize()
+    print("Redis manager initialized successfully")
+    
+    # Log initial database pool status
+    pool_status = log_pool_status()
+    print(f"Database pool initialized: {pool_status}")
+    
+    yield  # This separates startup from shutdown
+    
+    # Shutdown code
+    print("Shutting down AI Agent Backend API...")
+    # Log final pool status
+    final_pool_status = log_pool_status()
+    print(f"Final database pool status: {final_pool_status}")
+    # Add any cleanup code here if needed
 
 
 app = FastAPI(
     title="AI Agent Backend API",
     description="Backend API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
-@app.on_event("startup")
-async def startup_event():
-    await redis_manager.initialize()
 # Add session middleware before routers
 app.add_middleware(
     SessionMiddleware,

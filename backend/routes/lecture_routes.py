@@ -1,22 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy import create_engine
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from sqlalchemy.orm import Session
 from config import config
-from models import Base
+from models.lecture import Lecture
 from models.user import User, Role
-from schemas.lecture import LectureInput, LectureContext, LectureStructure, LectureOutput
-from services.lecture_service import LectureService
+from models import Base
 from utils.auth import get_current_user
 from fastapi.responses import FileResponse
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from agents_lesson.router_agent import RouterAgent, LessonChatRequest, LessonChatResponse
-
-# Kết nối CSDL
-engine = create_engine(config.DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Tạo bảng
-Base.metadata.create_all(bind=engine)
+from database import engine, SessionLocal
+from schemas.lecture import LectureInput, LectureContext, LectureStructure, LectureOutput
+from services.lecture_service import LectureService
+from typing import List, Optional
+from sqlalchemy import desc
 
 router = APIRouter(prefix="/api/v1/lectures", tags=["lectures"])
 
@@ -55,7 +50,7 @@ async def edit_lecture(structure: LectureStructure, edit_request: str, db: Sessi
 
 @router.get("/{lecture_id}/export")
 async def export_lecture(lecture_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_teacher)):
-    lecture = db.query(Lecture).filter(Lecture.id == lecture_id, Lecture.teacher_id == current_user["id"]).first()
+    lecture = db.query(Lecture).filter(Lecture.id == lecture_id, Lecture.teacher_id == current_user.id).first()
     if not lecture:
         raise HTTPException(status_code=404, detail="Lecture not found")
     lecture_output = LectureOutput.from_orm(lecture)

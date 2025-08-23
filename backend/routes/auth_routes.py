@@ -6,7 +6,6 @@ from config import config
 from models.user import Base, Role, LoginType
 from schemas.user import UserCreate, UserLogin, Token, EmailRequest, OTPVerification
 from services.auth_service import AuthService
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from utils.auth import get_current_user, create_access_token
 from models.user import User
@@ -22,12 +21,17 @@ import secrets
 import logging
 from datetime import timedelta
 from fastapi import BackgroundTasks
+import time
+import functools
+import asyncio
+import statistics
+from collections import defaultdict
+from database import engine, SessionLocal, get_pool_status
 
 logger = logging.getLogger(__name__)
 
-# Kết nối CSDL
-engine = create_engine(config.DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Global timing storage for analysis
+timing_data = defaultdict(list)
 
 # Tạo bảng
 Base.metadata.create_all(bind=engine)
@@ -41,23 +45,114 @@ def get_db():
     finally:
         db.close()
 
+def track_execution_time(route_name: str):
+    """Decorator to track execution time of routes"""
+    def decorator(func):
+        @functools.wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            start_time = time.time()
+            logger.info(f"[{route_name}] Starting execution at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            try:
+                result = await func(*args, **kwargs)
+                end_time = time.time()
+                execution_time = end_time - start_time
+                timing_data[route_name].append(execution_time)
+                logger.info(f"[{route_name}] Completed successfully in {execution_time:.4f} seconds")
+                return result
+            except Exception as e:
+                end_time = time.time()
+                execution_time = end_time - start_time
+                timing_data[route_name].append(execution_time)
+                logger.error(f"[{route_name}] Failed after {execution_time:.4f} seconds with error: {str(e)}")
+                raise
+        
+        @functools.wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            start_time = time.time()
+            logger.info(f"[{route_name}] Starting execution at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            try:
+                result = func(*args, **kwargs)
+                end_time = time.time()
+                execution_time = end_time - start_time
+                timing_data[route_name].append(execution_time)
+                logger.info(f"[{route_name}] Completed successfully in {execution_time:.4f} seconds")
+                return result
+            except Exception as e:
+                end_time = time.time()
+                execution_time = end_time - start_time
+                timing_data[route_name].append(execution_time)
+                logger.error(f"[{route_name}] Failed after {execution_time:.4f} seconds with error: {str(e)}")
+                raise
+        
+        # Return async wrapper for async functions, sync wrapper for sync functions
+        if asyncio.iscoroutinefunction(func):
+            return async_wrapper
+        else:
+            return sync_wrapper
+    
+    return decorator
+
+def get_timing_summary():
+    """Get timing statistics for all tracked routes"""
+    summary = {}
+    for route_name, times in timing_data.items():
+        if times:
+            summary[route_name] = {
+                "count": len(times),
+                "min": min(times),
+                "max": max(times),
+                "mean": statistics.mean(times),
+                "median": statistics.median(times),
+                "std_dev": statistics.stdev(times) if len(times) > 1 else 0,
+                "total_time": sum(times),
+                "avg_time": sum(times) / len(times)
+            }
+    return summary
+
+@router.get("/timing-stats")
+def get_timing_statistics():
+    """Endpoint to get timing statistics for performance analysis"""
+    summary = get_timing_summary()
+    return {
+        "message": "Timing statistics for authentication routes",
+        "data": summary,
+        "timestamp": time.strftime('%Y-%m-%d %H:%M:%S')
+    }
+
+@router.get("/pool-status")
+def get_database_pool_status():
+    """Get database connection pool status for monitoring"""
+    pool_status = get_pool_status()
+    return {
+        "message": "Database pool status",
+        "data": pool_status,
+        "timestamp": time.strftime('%Y-%m-%d %H:%M:%S')
+    }
+
 @router.post("/register", response_model=Token)
+@track_execution_time("REGISTER")
 def register(user: UserCreate, db: Session = Depends(get_db)):
     return AuthService.register_user(user, db)
 
 @router.post("/login", response_model=Token)
+@track_execution_time("LOGIN")
 def login(user: UserLogin, db: Session = Depends(get_db)):
     return AuthService.login_user(user.email, user.password, db)
 
 @router.post("/request-otp")
+@track_execution_time("REQUEST_OTP")
 async def request_otp(email_request: EmailRequest, background_tasks: BackgroundTasks):
     return await AuthService.request_otp(email_request.email, background_tasks)
 
 @router.post("/verify-otp")
+@track_execution_time("VERIFY_OTP")
 async def verify_otp(otp_verification: OTPVerification, db: Session = Depends(get_db)):
     return await AuthService.verify_otp(otp_verification.email, otp_verification.otp, db)
 
 @router.get("/me", response_model=UserOut)
+@track_execution_time("GET_ME")
 def get_logged_in_user(current_user: User = Depends(get_current_user)):
     return UserOut.from_orm_with_role_name(current_user)
 
@@ -65,6 +160,7 @@ class UpdateClassName(BaseModel):
     class_name: List[str]
 
 @router.put("/me/class-name")
+@track_execution_time("UPDATE_CLASS_NAME")
 async def update_class_name(
     update: UpdateClassName,
     current_user: User = Depends(get_current_user),
@@ -90,6 +186,7 @@ oauth.register(
 )
 
 @router.get("/google/login")
+@track_execution_time("GOOGLE_LOGIN")
 async def login_via_google(request: Request):
     try:
         redirect_uri = config.GOOGLE_REDIRECT_URI
@@ -110,6 +207,7 @@ async def login_via_google(request: Request):
         )
 
 @router.get("/google/callback", response_model=None)
+@track_execution_time("GOOGLE_CALLBACK")
 async def google_callback(request: Request, db: Session = Depends(get_db)):
     try:
         # 1. Xác thực với Google và lấy thông tin user
@@ -179,6 +277,7 @@ oauth.register(
 )
 
 @router.get("/facebook/login")
+@track_execution_time("FACEBOOK_LOGIN")
 async def login_via_facebook(request: Request):
     try:
         redirect_uri = config.FACEBOOK_REDIRECT_URI
@@ -202,6 +301,7 @@ async def login_via_facebook(request: Request):
         )
 
 @router.get("/facebook/callback", response_model=Token)
+@track_execution_time("FACEBOOK_CALLBACK")
 async def facebook_callback(request: Request, db: Session = Depends(get_db)):
     try:
         token = await oauth.facebook.authorize_access_token(request)
